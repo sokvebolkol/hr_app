@@ -128,6 +128,26 @@ flutter:
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #
+
+  fonts:
+    - family: Kh Battambang
+      fonts:
+        - asset: assets/fonts/Kh-Battambang.ttf
+    - family: Khmer OS
+      fonts:
+        - asset: assets/fonts/KhmerOS.ttf
+    - family: Khmer OS Battambang
+      fonts:
+        - asset: assets/fonts/KhmerOSbattambang.ttf
+    - family: Khmer Moul
+      fonts:
+        - asset: assets/fonts/KhmerMoul.ttf
+    - family: Khmer OS Content
+      fonts:
+        - asset: assets/fonts/Khmer OS Content Regular.ttf
+    - family: times
+      fonts:
+        - asset: assets/fonts/times.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 flutter_icons:
