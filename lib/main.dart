@@ -3,6 +3,7 @@ import 'package:chokchey_hr_app/views/auth/login-page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'localization/language_logic.dart';
+import 'constants/constant.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,12 +14,46 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider.value(value: languageLogic)],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: LoginScreen(),
-      ),
+      child: const MyApp(),
     ),
   );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Chokchey HR App',
+      theme: ThemeData(
+        fontFamily: 'times',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Color(primary),
+          primary: Color(primary),
+          secondary: Color(secondary),
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color(primary),
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Color(primary), width: 2),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+      home: const LoginScreen(),
+    );
+  }
 }
 
 class MyHttpOverrides extends HttpOverrides {
