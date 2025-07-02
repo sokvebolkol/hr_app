@@ -68,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Text(
                       "Choose Image",
                       style: const TextStyle(
-                        color: Color(primary),
+                        color: primary,
                         fontFamily: 'Khmer OS',
                       ),
                     ),
@@ -78,11 +78,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Navigator.of(context).pop();
                   },
                 ),
-                const Divider(color: Color(primary), thickness: 0.2),
+                const Divider(color: primary, thickness: 0.2),
                 ListTile(
                   leading: const Icon(
                     Icons.photo_camera,
-                    color: Color(primary),
+                    color: primary,
                   ),
                   title: Text("Camera"),
                   onTap: () {
@@ -93,7 +93,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ListTile(
                   leading: const Icon(
                     Icons.photo_library,
-                    color: Color(primary),
+                    color: primary,
                   ),
                   title: Text("Gallery"),
                   onTap: () {
@@ -213,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: screenWidth,
             child: RoundedButton(
               roundSize: screenWidth / 22,
-              color: const Color(primary),
+              color:  primary,
               btnWith: screenWidth,
               btnText: "Register",
               onBtnPressed:

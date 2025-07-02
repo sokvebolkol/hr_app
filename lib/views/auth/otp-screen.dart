@@ -64,7 +64,7 @@ class _OtpScreenState extends State<OtpScreen>
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        backgroundColor: Color(primary),
+        backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -91,12 +91,8 @@ class _OtpScreenState extends State<OtpScreen>
                 children: [
                   CircleAvatar(
                     radius: 32,
-                    backgroundColor: Color(primary).withOpacity(0.1),
-                    child: Icon(
-                      Icons.lock_outline,
-                      size: 38,
-                      color: Color(primary),
-                    ),
+                    backgroundColor: primary.withOpacity(0.1),
+                    child: Icon(Icons.lock_outline, size: 38, color: primary),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -133,7 +129,7 @@ class _OtpScreenState extends State<OtpScreen>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        backgroundColor: Color(primary),
+                        backgroundColor: primary,
                         foregroundColor: Colors.white,
                         textStyle: const TextStyle(
                           fontSize: 18,
@@ -153,10 +149,7 @@ class _OtpScreenState extends State<OtpScreen>
                         const SnackBar(content: Text("OTP resent!")),
                       );
                     },
-                    child: Text(
-                      "Resend OTP",
-                      style: TextStyle(color: Color(primary)),
-                    ),
+                    child: Text("Resend OTP", style: TextStyle(color: primary)),
                   ),
                 ],
               ),
@@ -187,11 +180,11 @@ class _OtpScreenState extends State<OtpScreen>
           fillColor: Colors.grey[100],
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Color(primary), width: 2),
+            borderSide: BorderSide(color: primary, width: 2),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Color(primary), width: 2),
+            borderSide: BorderSide(color: primary, width: 2),
           ),
         ),
         onChanged: (value) {

@@ -1,17 +1,14 @@
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
-import '../../widgets/InputField.dart';
-import '../../widgets/RoundedButton.dart';
+import '../dashboard/dashboard.dart';
 import 'forgot-password.dart';
 import 'register.dart';
 
@@ -31,6 +28,8 @@ class _LoginScreenState extends State<LoginScreen> {
   double screenWidth = 0;
 
   Language language = Language();
+
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -88,16 +87,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               labelText: "User ID",
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: Color(secondary),
+                                color: secondary,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(color: Color(primary)),
+                                borderSide: BorderSide(color: primary),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide(
-                                  color: Color(primary),
+                                  color: primary,
                                   width: 2,
                                 ),
                               ),
@@ -113,38 +112,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 18),
                           _fieldTitle("Password"),
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              bool _obscurePassword = true;
-                              return TextField(
-                                controller: passwordController,
-                                obscureText: _obscurePassword,
-                                decoration: InputDecoration(
-                                  labelText: "Password",
-                                  prefixIcon: Icon(
-                                    Icons.lock_outline,
-                                    color: Color(secondary),
-                                  ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey[100],
+                          TextField(
+                            controller: passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: "Password",
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                color: secondary,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
-                              );
-                            },
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                            ),
                           ),
                           Align(
                             alignment: Alignment.centerRight,
@@ -161,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 "Forgot Password?",
                                 style: TextStyle(
-                                  color: Color(primary),
+                                  color: primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -174,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               icon: Icon(Icons.login, color: Colors.white),
                               label: Text(language.login),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(primary),
+                                backgroundColor: primary,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
@@ -190,7 +184,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               onPressed: () {
                                 // TODO: Implement login logic
-                                print("Login pressed");
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => const DashboardScreen(),
+                                  ),
+                                );
                               },
                             ),
                           ),
@@ -203,7 +202,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
@@ -227,22 +228,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: language.code == 'KH'
-                                    ? Color(primary).withOpacity(0.15)
-                                    : Colors.transparent,
+                                color:
+                                    language.code == 'KH'
+                                        ? primary.withOpacity(0.15)
+                                        : Colors.transparent,
                                 borderRadius: BorderRadius.circular(18),
                               ),
                               child: Row(
                                 children: [
-                                  const Text('\u{1F1F0}\u{1F1ED}',
-                                      style: TextStyle(fontSize: 22)), // 🇰🇭
+                                  const Text(
+                                    '\u{1F1F0}\u{1F1ED}',
+                                    style: TextStyle(fontSize: 22),
+                                  ), // 🇰🇭
                                   if (language.code == 'KH')
                                     const Padding(
                                       padding: EdgeInsets.only(left: 6),
-                                      child: Icon(Icons.check_circle,
-                                          color: Colors.green, size: 18),
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -258,22 +267,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
-                                color: language.code == 'EN'
-                                    ? Color(primary).withOpacity(0.15)
-                                    : Colors.transparent,
+                                color:
+                                    language.code == 'EN'
+                                        ? primary.withOpacity(0.15)
+                                        : Colors.transparent,
                                 borderRadius: BorderRadius.circular(18),
                               ),
                               child: Row(
                                 children: [
-                                  const Text('\u{1F1EC}\u{1F1E7}',
-                                      style: TextStyle(fontSize: 22)), // 🇬🇧
+                                  const Text(
+                                    '\u{1F1EC}\u{1F1E7}',
+                                    style: TextStyle(fontSize: 22),
+                                  ), // 🇬🇧
                                   if (language.code == 'EN')
                                     const Padding(
                                       padding: EdgeInsets.only(left: 6),
-                                      child: Icon(Icons.check_circle,
-                                          color: Colors.green, size: 18),
+                                      child: Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 18,
+                                      ),
                                     ),
                                 ],
                               ),

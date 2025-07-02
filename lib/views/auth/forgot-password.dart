@@ -38,7 +38,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Forgot Password"),
-        backgroundColor: Color(primary),
+        backgroundColor: primary,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -51,12 +51,8 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               Center(
                 child: CircleAvatar(
                   radius: 40,
-                  backgroundColor: Color(primary).withOpacity(0.1),
-                  child: Icon(
-                    Icons.lock_reset,
-                    size: 48,
-                    color: Color(primary),
-                  ),
+                  backgroundColor: primary.withOpacity(0.1),
+                  child: Icon(Icons.lock_reset, size: 48, color: primary),
                 ),
               ),
               const SizedBox(height: 24),
@@ -89,10 +85,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 ],
                 decoration: InputDecoration(
                   labelText: "User ID",
-                  prefixIcon: Icon(
-                    Icons.person_outline,
-                    color: Color(secondary),
-                  ),
+                  prefixIcon: Icon(Icons.person_outline, color: secondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -113,10 +106,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: "Email",
-                  prefixIcon: Icon(
-                    Icons.email_outlined,
-                    color: Color(secondary),
-                  ),
+                  prefixIcon: Icon(Icons.email_outlined, color: secondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -127,7 +117,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(primary),
+                  backgroundColor: primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

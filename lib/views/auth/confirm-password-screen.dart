@@ -49,7 +49,7 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        backgroundColor: Color(primary),
+        backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
         title: const Text(
@@ -65,8 +65,8 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
             children: [
               CircleAvatar(
                 radius: 40,
-                backgroundColor: Color(primary).withOpacity(0.1),
-                child: Icon(Icons.lock, size: 48, color: Color(primary)),
+                backgroundColor: primary.withOpacity(0.1),
+                child: Icon(Icons.lock, size: 48, color: primary),
               ),
               const SizedBox(height: 24),
               Text(
@@ -89,13 +89,17 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
                 obscureText: _obscureNew,
                 decoration: InputDecoration(
                   labelText: "New Password",
-                  prefixIcon: Icon(Icons.lock_outline, color: Color(secondary)),
+                  prefixIcon: Icon(Icons.lock_outline, color: secondary),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureNew ? Icons.visibility_off : Icons.visibility,
-                      color: Color(secondary),
+                      color: secondary,
                     ),
-                    onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                    onPressed: () {
+                      setState(() {
+                        _obscureNew = !_obscureNew;
+                      });
+                    },
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -110,15 +114,17 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
                 obscureText: _obscureConfirm,
                 decoration: InputDecoration(
                   labelText: "Confirm Password",
-                  prefixIcon: Icon(Icons.lock_outline, color: Color(secondary)),
+                  prefixIcon: Icon(Icons.lock_outline, color: secondary),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirm ? Icons.visibility_off : Icons.visibility,
-                      color: Color(secondary),
+                      color: secondary,
                     ),
-                    onPressed:
-                        () =>
-                            setState(() => _obscureConfirm = !_obscureConfirm),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirm = !_obscureConfirm;
+                      });
+                    },
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -136,7 +142,7 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    backgroundColor: Color(primary),
+                    backgroundColor: primary,
                     foregroundColor: Colors.white,
                     textStyle: const TextStyle(
                       fontSize: 18,
