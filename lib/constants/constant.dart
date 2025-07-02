@@ -6,10 +6,18 @@ const primary = 0xFF0fbab5;
 const secondary = 0xFF052744;
 
 /**
- * App size and font
+ * App size padding
  */
 
 const appPadding = 16.0;
+
+/**
+ * font size label
+ */
+
+const labelHeading = 20;
+const labelSubHeading = 18;
+const labelBody = 16;
 
 // Validation for email address
 bool validateEmail(String email) {
