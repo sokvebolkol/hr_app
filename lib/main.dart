@@ -29,12 +29,12 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'times',
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(primary),
-          primary: Color(primary),
-          secondary: Color(secondary),
+          seedColor: primary,
+          primary: primary,
+          secondary: secondary,
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: Color(primary),
+          backgroundColor: primary,
           foregroundColor: Colors.white,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Color(primary), width: 2),
+            borderSide: BorderSide(color: primary, width: 2),
             borderRadius: BorderRadius.circular(16),
           ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),

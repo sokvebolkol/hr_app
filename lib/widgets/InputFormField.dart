@@ -27,8 +27,8 @@ class InputFormField extends StatelessWidget {
     this.isObscureText = false,
     required this.icon,
     this.onTap,
-    this.borderColor = const Color(primary),
-    this.iconColor = const Color(secondary),
+    this.borderColor =  primary,
+    this.iconColor =  secondary,
   });
 
   @override

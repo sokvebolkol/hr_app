@@ -1,9 +1,13 @@
+import 'package:flutter/material.dart';
+
 /**
  * App colors
  */
 
-const primary = 0xFF0fbab5;
-const secondary = 0xFF052744;
+const primary = Color(0xFF0fbab5);
+const secondary = Color(0xFF052744);
+const logoPink = Color(0xffDE6EA0);
+
 
 /**
  * App size padding
