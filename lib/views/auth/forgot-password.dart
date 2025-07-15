@@ -2,38 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../constants/constant.dart';
 import 'otp-screen.dart';
+import '../../viewmodels/forgot_password_viewmodel.dart';
+import 'package:provider/provider.dart';
 
-class ForgotPassword extends StatefulWidget {
-  const ForgotPassword({Key? key}) : super(key: key);
-
-  @override
-  _ForgotPasswordState createState() => _ForgotPasswordState();
-}
-
-class _ForgotPasswordState extends State<ForgotPassword> {
-  final TextEditingController userIdController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final FocusNode emailFocusNode = FocusNode(); // Add this line
-
-  @override
-  void dispose() {
-    userIdController.dispose();
-    emailController.dispose();
-    emailFocusNode.dispose(); // Dispose the focus node
-    super.dispose();
-  }
-
-  bool validateEmail(String email) {
-    // Basic email validation regex
-    final RegExp regex = RegExp(
-      r'^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$',
-    );
-    return regex.hasMatch(email);
-  }
+class ForgotPassword extends StatelessWidget {
+  const ForgotPassword({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return ChangeNotifierProvider(
+      create: (_) => ForgotPasswordViewModel(),
+      child: const ForgotPasswordViewBody(),
+    );
+  }
+}
+
+class ForgotPasswordViewBody extends StatelessWidget {
+  const ForgotPasswordViewBody({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = Provider.of<ForgotPasswordViewModel>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -59,7 +48,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               Center(
                 child: Text(
                   "Reset your password",
-                  style: theme.textTheme.headlineSmall?.copyWith(
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -67,16 +56,16 @@ class _ForgotPasswordState extends State<ForgotPassword> {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  "Enter your User ID and Email to receive an OTP.",
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[700],
-                  ),
+                  "Enter your E-Card and Email to receive an OTP.",
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
                   textAlign: TextAlign.center,
                 ),
               ),
               const SizedBox(height: 32),
               TextField(
-                controller: userIdController,
+                controller: vm.userIdController,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
                 inputFormatters: [
@@ -84,25 +73,25 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   LengthLimitingTextInputFormatter(4),
                 ],
                 decoration: InputDecoration(
-                  labelText: "User ID",
-                  prefixIcon: Icon(Icons.person_outline, color: secondary),
+                  labelText: "E-Card",
+                  prefixIcon: Icon(Icons.credit_card, color: secondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   filled: true,
                   fillColor: Colors.grey[100],
-                  counterText: "", // Hide character counter
+                  counterText: "",
                 ),
                 onChanged: (value) {
                   if (value.length == 4) {
-                    FocusScope.of(context).requestFocus(emailFocusNode);
+                    FocusScope.of(context).requestFocus(vm.emailFocusNode);
                   }
                 },
               ),
               const SizedBox(height: 20),
               TextField(
-                controller: emailController,
-                focusNode: emailFocusNode, // Attach the focus node here
+                controller: vm.emailController,
+                focusNode: vm.emailFocusNode,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: "Email",
@@ -114,6 +103,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   fillColor: Colors.grey[100],
                 ),
               ),
+              if (vm.errorMessage != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  vm.errorMessage!,
+                  style: const TextStyle(color: Colors.redAccent),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 32),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -129,41 +126,42 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   ),
                   elevation: 2,
                 ),
-                icon: Icon(Icons.send, color: Colors.white),
-                label: const Text("Get OTP"),
-                onPressed: () {
-                  if (userIdController.text.isEmpty ||
-                      emailController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Please enter both User ID and Email"),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.redAccent,
-                      ),
-                    );
-                    return;
-                  }
-                  if (!validateEmail(emailController.text)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Please enter a valid email address"),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.redAccent,
-                      ),
-                    );
-                    return;
-                  }
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => OtpScreen(
-                            userId: userIdController.text,
-                            email: emailController.text,
+                icon:
+                    vm.isLoading
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
                           ),
-                    ),
-                  );
-                },
+                        )
+                        : const Icon(Icons.send, color: Colors.white),
+                label: Text(vm.isLoading ? "Sending..." : "Get OTP"),
+                onPressed:
+                    vm.isLoading
+                        ? null
+                        : () async {
+                          if (vm.validateInputs()) {
+                            final success = await vm.requestForgotPassword();
+                            if (success) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => OtpScreen(
+                                        userId: vm.userIdController.text,
+                                        email: vm.emailController.text,
+                                      ),
+                                ),
+                              );
+                            } else if (vm.errorMessage != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(vm.errorMessage!)),
+                              );
+                            }
+                          }
+                        },
               ),
               const SizedBox(height: 16),
               TextButton(

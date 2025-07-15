@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:chokchey_hr_app/constants/responsive.dart';
 import 'package:chokchey_hr_app/localization/language.dart';
 import 'package:chokchey_hr_app/localization/language_logic.dart';
 import 'package:chokchey_hr_app/views/auth/login-page.dart';
@@ -20,66 +18,51 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String profileImagePath = 'assets/images/profile.jpg';
-  double screenHeight = 0;
-  double screenWidth = 0;
-
-  Language language = Language();
 
   @override
   Widget build(BuildContext context) {
-    screenHeight = MediaQuery.of(context).size.height;
-    screenWidth = MediaQuery.of(context).size.width;
-    language = context.watch<LanguageLogic>().language;
-
+    final language = context.watch<LanguageLogic>().language;
     const String username = "Kol Sokvebol";
-    const String position = "HR Manager";
+    const String position = "Mobile App Developer";
 
     final List<_ProfileItem> items = [
-      _ProfileItem(
-        icon: Icons.email,
-        label: "Email",
-        value: "sokvebol.kol@chokchey.com.kh",
-      ),
+      _ProfileItem(icon: Icons.email, label: "Email", value: "sokvebol.kol@chokchey.com.kh"),
       _ProfileItem(icon: Icons.phone, label: "Phone", value: "+855 12 345 678"),
       _ProfileItem(icon: Icons.badge, label: "Employee ID", value: "EMP00123"),
-      _ProfileItem(
-        icon: Icons.location_on,
-        label: "Location",
-        value: "Phnom Penh, Cambodia",
-      ),
-      _ProfileItem(
-        icon: Icons.calendar_today,
-        label: "Joined",
-        value: "Jan 2022",
-      ),
+      _ProfileItem(icon: Icons.location_on, label: "Location", value: "Phnom Penh, Cambodia"),
+      _ProfileItem(icon: Icons.calendar_today, label: "Joined", value: "Jan 2022"),
     ];
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Profile"),
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          Container(
-            height: 165,
-            decoration: BoxDecoration(
-              color: primary,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 48, bottom: 24, left: 16, right: 16),
+              decoration: BoxDecoration(
+                color: primary,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
               ),
-            ),
-          ),
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-                Center(
-                  child: Stack(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.white, size: 28),
+                        tooltip: "Logout",
+                        onPressed: () {
+                          onLogout();
+                        },
+                      ),
+                    ],
+                  ),
+                  Stack(
                     alignment: Alignment.bottomRight,
                     children: [
                       CircleAvatar(
@@ -87,10 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: Colors.white,
                         backgroundImage: profileImagePath.startsWith('assets/')
                             ? AssetImage(profileImagePath) as ImageProvider
-                            : FileImage(
-                                // ignore: prefer_const_constructors
-                                File(profileImagePath),
-                              ),
+                            : FileImage(File(profileImagePath)),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -137,99 +117,72 @@ class _ProfilePageState extends State<ProfilePage> {
                             border: Border.all(color: Colors.white, width: 2),
                           ),
                           padding: const EdgeInsets.all(6),
-                          child: const Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
-                          ),
+                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  username,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  position,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: secondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 18,
-                        horizontal: 8,
-                      ),
-                      child: Column(
-                        children: [
-                          for (int i = 0; i < items.length; i++) ...[
-                            ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: primary.withOpacity(0.13),
-                                child: Icon(items[i].icon, color: primary),
-                              ),
-                              title: Text(
-                                items[i].label,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(items[i].value),
-                            ),
-                            if (i != items.length - 1)
-                              const Divider(
-                                indent: 16,
-                                endIndent: 16,
-                                height: 0,
-                                thickness: 0.7,
-                              ),
-                          ],
-                        ],
-                      ),
+                  const SizedBox(height: 16),
+                  Text(
+                    username,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 14,
+                  const SizedBox(height: 4),
+                  Text(
+                    position,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.85),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  icon: const Icon(Icons.logout),
-                  label: const Text("Logout"),
-                  onPressed: () {
-                    onLogout();
-                  },
-                ),
-                const SizedBox(height: 32),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < items.length; i++) ...[
+                        ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: primary.withOpacity(0.13),
+                            child: Icon(items[i].icon, color: primary),
+                          ),
+                          title: Text(
+                            items[i].label,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(items[i].value),
+                        ),
+                        if (i != items.length - 1)
+                          const Divider(
+                            indent: 16,
+                            endIndent: 16,
+                            height: 0,
+                            thickness: 0.7,
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
@@ -271,33 +224,33 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void onLogout() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      AwesomeDialog(
-        width: Responsive.isMobile(context) ? screenWidth : screenWidth / 2,
-        transitionAnimationDuration: const Duration(milliseconds: 1000),
-        context: context,
-        dialogType: DialogType.info,
-        title: "Logout",
-        desc: "Are you sure you want to logout?",
-        btnCancelText: "No",
-        btnCancelOnPress: () {},
-        btnOkText: "OK",
-        btnOkOnPress: () {
-          pref.remove('uid');
-          pref.remove('eid');
-          pref.remove('ucode');
-          pref.clear();
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) => const LoginScreen(),
-            ),
-            ModalRoute.withName('/'),
-          );
-        },
-      ).show();
-    });
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Logout"),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      await pref.clear();
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (BuildContext context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 }
 

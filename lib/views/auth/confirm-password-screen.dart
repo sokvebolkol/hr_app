@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../constants/constant.dart';
+import '../../services/global_service.dart';
 
 class ConfirmPasswordScreen extends StatefulWidget {
-  const ConfirmPasswordScreen({super.key});
+  const ConfirmPasswordScreen({super.key, this.eCard});
+  final String? eCard; // Pass eCard from previous screen
 
   @override
   _ConfirmPasswordScreenState createState() => _ConfirmPasswordScreenState();
@@ -14,8 +17,9 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
       TextEditingController();
   bool _obscureNew = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
 
-  void _submit() {
+  Future<void> _submit() async {
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
@@ -31,11 +35,42 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
       ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
       return;
     }
-    // TODO: Implement password reset logic here
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Password reset successful!")));
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (widget.eCard == null || widget.eCard!.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("E-Card is missing.")));
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ServerService().baseUrl}set-new-password'),
+        body: {"ecard": widget.eCard!, "password": newPassword},
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Password reset successful!")),
+        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to reset password: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Network error. Please try again.")),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -150,9 +185,19 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
                     ),
                     elevation: 2,
                   ),
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text("Reset Password"),
-                  onPressed: _submit,
+                  icon:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Icon(Icons.check_circle_outline),
+                  label: Text(_isLoading ? "Resetting..." : "Reset Password"),
+                  onPressed: _isLoading ? null : _submit,
                 ),
               ),
             ],
