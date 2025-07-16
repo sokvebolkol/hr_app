@@ -22,7 +22,8 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
   Future<void> _submit() async {
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
-
+    print("New Password: $newPassword");
+    print("Confirm Password: $confirmPassword");
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill in both fields")),

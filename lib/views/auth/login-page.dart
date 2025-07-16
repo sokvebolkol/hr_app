@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
+import '../../services/global_service.dart';
 import '../dashboard/dashboard.dart';
 import 'forgot-password.dart';
 import 'register.dart';
@@ -30,10 +32,57 @@ class _LoginScreenState extends State<LoginScreen> {
   Language language = Language();
 
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  Future<void> _login() async {
+    final eCard = userNameController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (eCard.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter E-Card and Password")),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('${ServerService().baseUrl}login'),
+        body: {"ecard": eCard, "upassword": password},
+      );
+      print(response.statusCode);
+
+      if (response.statusCode == 200) {
+        final data = convert.jsonDecode(response.body);
+        final token = data['token'];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+
+        // You can also save userLoginInfo/userProfile if needed
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login failed: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Network error. Please try again.")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -183,13 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 elevation: 2,
                               ),
                               onPressed: () {
-                                // TODO: Implement login logic
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => const DashboardScreen(),
-                                  ),
-                                );
+                                _login();
                               },
                             ),
                           ),

@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:chokchey_hr_app/views/auth/login-page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'localization/language_logic.dart';
 import 'constants/constant.dart';
+import 'views/auth/splash-screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
