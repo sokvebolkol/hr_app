@@ -2,12 +2,14 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../constants/responsive.dart';
+import '../../viewmodels/dashboardviewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
-import 'package:intl/intl.dart';
 import '../attendance/attendance_clock.dart';
 import '../dashboard/leave_request_screen.dart';
 import '../profile/profile_page.dart';
@@ -16,7 +18,6 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
@@ -26,13 +27,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double screenWidth = 0.0;
   double screenHeight = 0.0;
 
-  // Example pages, replace with your actual widgets
-  final List<Widget> _pages = [
-    const _DashboardHomeContent(), // Dashboard as Home
-    ProfilePage(),
-  ];
+  final List<Widget> _pages = [const _DashboardHomeContent(), ProfilePage()];
 
-  // Android back button handler
   Future<bool> _onBackPressed() async {
     AwesomeDialog(
       context: context,
@@ -57,53 +53,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onBackPressed,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: const Color.fromARGB(237, 255, 255, 255),
-        body: _pages[_currentIndex],
-        bottomNavigationBar: ConvexAppBar(
-          key: ValueKey(_currentIndex),
-          color: Colors.white,
-          backgroundColor: primary,
-          style: TabStyle.react,
-          items: const [
-            TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.home, title: 'Request Leave'), // This will be disabled
-            TabItem(icon: Icons.person, title: 'Profile'),
-          ],
-          initialActiveIndex: _currentIndex == 0 ? 0 : 2, // Only Home or Profile can be active
-          onTap: (int i) {
-            if (i == 1) return; // Prevent selecting "Request Leave"
-            setState(() {
-              _currentIndex = i == 2 ? 1 : 0; // 0: Home, 1: Profile
-            });
-          },
+    return ChangeNotifierProvider(
+      create:
+          (_) =>
+              DashboardViewModel()
+                ..fetchDashboard("200510"), // Replace with actual userId
+      child: WillPopScope(
+        onWillPop: _onBackPressed,
+        child: Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: const Color.fromARGB(237, 255, 255, 255),
+          body: Consumer<DashboardViewModel>(
+            builder: (context, vm, _) {
+              if (vm.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (vm.error != null) {
+                return Center(child: Text(vm.error!));
+              }
+              return _DashboardHomeContent(vm: vm);
+            },
+          ),
+          bottomNavigationBar: ConvexAppBar(
+            key: ValueKey(_currentIndex),
+            color: Colors.white,
+            backgroundColor: primary,
+            style: TabStyle.react,
+            items: const [
+              TabItem(icon: Icons.home, title: 'Home'),
+              TabItem(icon: Icons.home, title: 'Request Leave'),
+              TabItem(icon: Icons.person, title: 'Profile'),
+            ],
+            initialActiveIndex: _currentIndex == 0 ? 0 : 2,
+            onTap: (int i) {
+              if (i == 1) return;
+              setState(() {
+                _currentIndex = i == 2 ? 1 : 0;
+              });
+            },
+          ),
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: primary,
+            child: const Icon(Icons.add, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LeaveRequestScreen(),
+                ),
+              );
+            },
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: primary,
-          child: const Icon(Icons.add, color: Colors.white),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LeaveRequestScreen(),
-              ),
-            );
-          },
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
   }
 }
 
 class _DashboardHomeContent extends StatelessWidget {
-  const _DashboardHomeContent();
+  final DashboardViewModel? vm;
+  const _DashboardHomeContent({this.vm});
 
   @override
   Widget build(BuildContext context) {
+    final leaveBalance = vm?.leaveBalance;
+    final leaves = vm?.leaves ?? [];
+    final user = vm?.user;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -126,18 +144,21 @@ class _DashboardHomeContent extends StatelessWidget {
                       backgroundColor: Colors.blueAccent,
                     ),
                     const SizedBox(width: 16),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Good morning!",
-                            style: TextStyle(fontSize: 14, color: Colors.white),
+                            _greetingByTime(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
                           ),
                           Text(
-                            "Kol Sokvebol",
-                            style: TextStyle(
+                            user?.uname ?? "",
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -196,9 +217,15 @@ class _DashboardHomeContent extends StatelessWidget {
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: AnnualLeaveBalanceWidget(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AnnualLeaveBalanceWidget(
+            usedLeave: leaveBalance?.annualLeaveUsed ?? "0",
+            availableLeave: leaveBalance?.annualLeaveBalance ?? "0",
+            onViewDetails: () {
+              // Show details or navigate
+            },
+          ),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -214,24 +241,30 @@ class _DashboardHomeContent extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>  AttendanceClock(), 
+                        builder: (context) => AttendanceClock(),
                       ),
                     );
                   },
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: FunctionIconCardWidget(
                   iconData: Icons.history,
                   label: 'Leave History',
+                  onPressed: () {
+                    // Implement navigation to leave history
+                  },
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: FunctionIconCardWidget(
                   iconData: Icons.calendar_month,
                   label: 'Attendance Logs',
+                  onPressed: () {
+                    // Implement navigation to attendance logs
+                  },
                 ),
               ),
             ],
@@ -246,12 +279,37 @@ class _DashboardHomeContent extends StatelessWidget {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: 2,
-            itemBuilder: (context, index) => const LeaveRequestWidget(),
+            itemCount: leaves.length,
+            itemBuilder: (context, index) {
+              final leave = leaves[index];
+              return LeaveRequestWidget(
+                leaveType: leave.ltyp,
+                reason: leave.reason,
+                status: leave.statu == "1" ? "Approved" : "Pending",
+                fromDate: leave.frdat,
+                toDate: leave.todat,
+                requesterName: leave.dname,
+                totalDays: leave.numleav,
+                // approvers: leave.prioList.map((p) => p.apstatuText).toList(),
+                approvedSteps:
+                    leave.prioList.where((p) => p.apstatu == 1).length,
+              );
+            },
             padding: const EdgeInsets.symmetric(horizontal: 20),
           ),
         ),
       ],
     );
+  }
+
+  String _greetingByTime() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return "Good morning!";
+    } else if (hour < 18) {
+      return "Good afternoon!";
+    } else {
+      return "Good evening!";
+    }
   }
 }

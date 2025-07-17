@@ -1,10 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class LeaveRequestWidget extends StatelessWidget {
-  const LeaveRequestWidget({super.key});
+  final String leaveType;
+  final String reason;
+  final String status;
+  final String fromDate;
+  final String toDate;
+  final String? requesterName;
+  final String? totalDays;
+  final List<String>? approvers;
+  final int approvedSteps; // Number of steps approved
+
+  const LeaveRequestWidget({
+    super.key,
+    required this.leaveType,
+    required this.reason,
+    required this.status,
+    required this.fromDate,
+    required this.toDate,
+    this.requesterName,
+    this.totalDays,
+    this.approvers,
+    this.approvedSteps = 0,
+  });
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('dd-MMM-yyyy').format(date);
+    } catch (_) {
+      return dateStr;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final approverList =
+        approvers ?? ['First Approver', 'Second Approver', 'HR(Default)'];
+    final name = requesterName ?? 'Employee';
+    final days = totalDays ?? '';
+    final statusColor =
+        status == "Approved"
+            ? Colors.green
+            : status == "Rejected"
+            ? Colors.red
+            : Colors.orangeAccent;
+
     return Card(
       color: Colors.white,
       margin: const EdgeInsets.only(bottom: 16),
@@ -15,27 +57,25 @@ class LeaveRequestWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                // CircleAvatar(
-                //   radius: 16,
-                //   backgroundColor: Colors.grey[300],
-                //   child: Icon(Icons.person, color: Colors.grey[700]),
-                // ),
-                CircleAvatar(
+                const CircleAvatar(
                   backgroundImage: AssetImage('assets/images/my-profile.png'),
                   backgroundColor: Colors.blueAccent,
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Heng Souhouy',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
                 Text(
-                  'Total 1.0 day(s)',
-                  style: TextStyle(
+                  days.isNotEmpty ? 'Total $days day(s)' : '',
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     color: Colors.black54,
@@ -50,19 +90,19 @@ class LeaveRequestWidget extends StatelessWidget {
               children: [
                 Icon(Icons.calendar_month, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   flex: 2,
                   child: Text(
-                    '23-Jan-2025 → 23-Jan-2025',
-                    style: TextStyle(fontSize: 12, color: Colors.black87),
+                    '${_formatDate(fromDate)} → ${_formatDate(toDate)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   flex: 1,
                   child: Text(
-                    'Reason: Development Testing',
-                    style: TextStyle(fontSize: 12, color: Colors.black87),
+                    'Reason: $reason',
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -70,12 +110,12 @@ class LeaveRequestWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
-              'STATUS',
+            Text(
+              'STATUS: $status',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: Colors.black54,
+                color: statusColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -84,33 +124,48 @@ class LeaveRequestWidget extends StatelessWidget {
                 Row(
                   children: [
                     const SizedBox(width: 16),
-                    _buildCircle(true),
-                    _buildConnectingLine(),
-                    _buildCircle(false),
-                    _buildConnectingLine(),
-                    _buildCircle(false),
+                    ...List.generate(
+                      approverList.length,
+                      (i) => Row(
+                        children: [
+                          _buildCircle(i < approvedSteps),
+                          if (i < approverList.length - 1)
+                            _buildConnectingLine(),
+                        ],
+                      ),
+                    ),
                     const SizedBox(width: 16),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'First Approver',
-                      style: TextStyle(fontSize: 12, color: Colors.black),
-                    ),
-                    Text(
-                      'Second Approver',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    Text(
-                      'HR(Default)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
+                  children:
+                      approverList
+                          .map(
+                            (a) => Text(
+                              a,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    approverList.indexOf(a) < approvedSteps
+                                        ? Colors.black
+                                        : Colors.grey,
+                              ),
+                            ),
+                          )
+                          .toList(),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Type: $leaveType',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -130,6 +185,6 @@ class LeaveRequestWidget extends StatelessWidget {
   }
 
   Widget _buildConnectingLine() {
-    return Expanded(child: Container(height: 2, color: Colors.grey[400]));
+    return Container(width: 132, height: 2, color: Colors.grey[400]);
   }
 }
