@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../utils/file_helper.dart';
 
-class LeaveRequestWidget extends StatelessWidget {
-  final String leaveType;
+class LeaveRequestWidget extends StatefulWidget {
   final String reason;
   final String status;
   final String fromDate;
   final String toDate;
   final String? requesterName;
   final String? totalDays;
-  final List<String>? approvers;
-  final int approvedSteps; // Number of steps approved
+  final List<Map<String, dynamic>>? prioList;
 
   const LeaveRequestWidget({
     super.key,
-    required this.leaveType,
     required this.reason,
     required this.status,
     required this.fromDate,
     required this.toDate,
     this.requesterName,
     this.totalDays,
-    this.approvers,
-    this.approvedSteps = 0,
+    this.prioList,
   });
 
+  @override
+  State<LeaveRequestWidget> createState() => _LeaveRequestWidgetState();
+}
+
+class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
+  double screenWidth = 0;
+  double lineWidth = 0;
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
@@ -36,16 +40,18 @@ class LeaveRequestWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final approverList =
-        approvers ?? ['First Approver', 'Second Approver', 'HR(Default)'];
-    final name = requesterName ?? 'Employee';
-    final days = totalDays ?? '';
-    final statusColor =
-        status == "Approved"
-            ? Colors.green
-            : status == "Rejected"
-            ? Colors.red
-            : Colors.orangeAccent;
+    print(widget.prioList?.length);
+
+    screenWidth = MediaQuery.of(context).size.width;
+    widget.prioList?.length == 2
+        ? lineWidth = screenWidth * 0.65
+        : lineWidth = screenWidth / 2 * 0.65;
+    final name = widget.requesterName ?? 'Employee';
+    final days = widget.totalDays ?? '';
+    // Sort prioList by prio ascending
+    final sortedPrioList =
+        (widget.prioList ?? [])
+          ..sort((a, b) => (a['prio'] as int).compareTo(b['prio'] as int));
 
     return Card(
       color: Colors.white,
@@ -93,7 +99,7 @@ class LeaveRequestWidget extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    '${_formatDate(fromDate)} → ${_formatDate(toDate)}',
+                    '${_formatDate(widget.fromDate)} → ${_formatDate(widget.toDate)}',
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                   ),
                 ),
@@ -101,7 +107,7 @@ class LeaveRequestWidget extends StatelessWidget {
                 Expanded(
                   flex: 1,
                   child: Text(
-                    'Reason: $reason',
+                    'Reason: ${widget.reason}',
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -111,80 +117,79 @@ class LeaveRequestWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'STATUS: $status',
+              'STATUS: ${widget.status}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: statusColor,
+                color: FileHelper.statusColor(status: widget.status),
               ),
             ),
             const SizedBox(height: 16),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    const SizedBox(width: 16),
-                    ...List.generate(
-                      approverList.length,
-                      (i) => Row(
-                        children: [
-                          _buildCircle(i < approvedSteps),
-                          if (i < approverList.length - 1)
-                            _buildConnectingLine(),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children:
-                      approverList
-                          .map(
-                            (a) => Text(
-                              a,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    approverList.indexOf(a) < approvedSteps
-                                        ? Colors.black
-                                        : Colors.grey,
-                              ),
+            if (sortedPrioList.isNotEmpty)
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(width: 16),
+                      ...List.generate(
+                        sortedPrioList.length,
+                        (i) => Row(
+                          children: [
+                            _buildCircle(
+                              sortedPrioList[i]['apstatu_text'] ?? "Pending",
                             ),
-                          )
-                          .toList(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Type: $leaveType',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+                            if (i < sortedPrioList.length - 1)
+                              _buildConnectingLine(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children:
+                        sortedPrioList
+                            .map(
+                              (p) => Text(
+                                p['prio_text'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ],
               ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCircle(bool isActive) {
+  Widget _buildCircle(String status) {
+    Color color;
+    switch (status) {
+      case "Approved":
+        color = Colors.green;
+        break;
+      case "Rejected":
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.orangeAccent;
+    }
     return Container(
       width: 10,
       height: 10,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isActive ? Colors.green : Colors.grey[400],
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 
   Widget _buildConnectingLine() {
-    return Container(width: 132, height: 2, color: Colors.grey[400]);
+    return Container(width: lineWidth, height: 2, color: Colors.grey[400]);
   }
 }

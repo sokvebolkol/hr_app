@@ -1,18 +1,16 @@
-import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert' as convert;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
 import '../dashboard/dashboard.dart';
 import 'forgot-password.dart';
-import 'register.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,8 +60,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final data = convert.jsonDecode(response.body);
         final token = data['token'];
+        final userId = data['userLoginInfo']['uid'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
+        await prefs.setString('userId', userId);
 
         // You can also save userLoginInfo/userProfile if needed
 
@@ -357,32 +357,8 @@ class _LoginScreenState extends State<LoginScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold, // Optional: for emphasis
-          // fontFamily removed to use app default ('times')
-        ),
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
-    );
-  }
-
-  /* Launch Telegram  */
-  Future<void> launchURL(String url) async {
-    try {
-      final Uri parsedUrl = Uri.parse(url);
-      await launch(url);
-    } catch (e) {
-      print('An error occurred: $e');
-    }
-  }
-
-  void pageRoute(String token, String userId) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.setString("login", token);
-    await pref.setString("userId", userId);
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const RegisterScreen()),
-      (route) => false,
     );
   }
 }

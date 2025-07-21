@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -31,12 +32,12 @@ class FileHelper {
     }
   }
 
-// Dollar formatter function
+  // Dollar formatter function
   static String toDollarSyntax(double number) {
     return "\$ ${number.toStringAsFixed(2)}";
   }
 
-// Convert Dollar to Riel
+  // Convert Dollar to Riel
   static String toRielSyntax(double dollarAmount) {
     double exchangeRate = 4100.0; // Assume 1 dollar = 4100 riel
     double rielAmount = dollarAmount * exchangeRate;
@@ -103,5 +104,23 @@ class FileHelper {
     var now = DateTime.now();
     var formatter = DateFormat('d MMMM y', 'km');
     return formatter.format(now);
+  }
+
+  /**
+   * Get color based on leave status
+   * @param status: Leave status as a string
+   * @return Color: Corresponding color for the status
+   * Example: statusColor(status: "Approved") returns Colors.green
+   */
+  static Color statusColor({required String status}) {
+    switch (status) {
+      case "Approved":
+        return Colors.green;
+      case "Rejected":
+        return Colors.red;
+      case "Pending":
+      default:
+        return Colors.orangeAccent;
+    }
   }
 }

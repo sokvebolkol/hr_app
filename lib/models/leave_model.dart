@@ -12,6 +12,7 @@ class LeaveModel {
   final String reason;
   final String createdate;
   final List<PrioModel> prioList;
+  final String statuText; 
 
   LeaveModel({
     required this.eid,
@@ -27,6 +28,7 @@ class LeaveModel {
     required this.reason,
     required this.createdate,
     required this.prioList,
+    required this.statuText, 
   });
 
   factory LeaveModel.fromJson(Map<String, dynamic> json) => LeaveModel(
@@ -47,6 +49,7 @@ class LeaveModel {
             ?.map((e) => PrioModel.fromJson(e))
             .toList() ??
         [],
+    statuText: json['statu_text'] ?? '', 
   );
 }
 
@@ -54,16 +57,19 @@ class PrioModel {
   final int prio;
   final int apstatu;
   final String apstatuText;
+  final String priText;
 
   PrioModel({
     required this.prio,
     required this.apstatu,
     required this.apstatuText,
+    required this.priText,
   });
 
   factory PrioModel.fromJson(Map<String, dynamic> json) => PrioModel(
     prio: json['prio'],
     apstatu: json['apstatu'],
     apstatuText: json['apstatu_text'],
+    priText: json['prio_text'] ?? '',
   );
 }
