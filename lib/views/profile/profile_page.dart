@@ -7,7 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../constants/constant.dart';
+import '../../services/global_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,17 +23,35 @@ class _ProfilePageState extends State<ProfilePage> {
   String profileImagePath = 'assets/images/profile.jpg';
 
   @override
+  void initState() {
+    super.initState();
+    fetchUserProfile();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final language = context.watch<LanguageLogic>().language;
     const String username = "Kol Sokvebol";
     const String position = "Mobile App Developer";
 
     final List<_ProfileItem> items = [
-      _ProfileItem(icon: Icons.email, label: "Email", value: "sokvebol.kol@chokchey.com.kh"),
+      _ProfileItem(
+        icon: Icons.email,
+        label: "Email",
+        value: "sokvebol.kol@chokchey.com.kh",
+      ),
       _ProfileItem(icon: Icons.phone, label: "Phone", value: "+855 12 345 678"),
       _ProfileItem(icon: Icons.badge, label: "Employee ID", value: "EMP00123"),
-      _ProfileItem(icon: Icons.location_on, label: "Location", value: "Phnom Penh, Cambodia"),
-      _ProfileItem(icon: Icons.calendar_today, label: "Joined", value: "Jan 2022"),
+      _ProfileItem(
+        icon: Icons.location_on,
+        label: "Location",
+        value: "Phnom Penh, Cambodia",
+      ),
+      _ProfileItem(
+        icon: Icons.calendar_today,
+        label: "Joined",
+        value: "Jan 2022",
+      ),
     ];
 
     return Scaffold(
@@ -40,7 +61,12 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 48, bottom: 24, left: 16, right: 16),
+              padding: const EdgeInsets.only(
+                top: 48,
+                bottom: 24,
+                left: 16,
+                right: 16,
+              ),
               decoration: BoxDecoration(
                 color: primary,
                 borderRadius: const BorderRadius.only(
@@ -54,7 +80,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.logout, color: Colors.white, size: 28),
+                        icon: const Icon(
+                          Icons.logout,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                         tooltip: "Logout",
                         onPressed: () {
                           onLogout();
@@ -68,46 +98,70 @@ class _ProfilePageState extends State<ProfilePage> {
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.white,
-                        backgroundImage: profileImagePath.startsWith('assets/')
-                            ? AssetImage(profileImagePath) as ImageProvider
-                            : FileImage(File(profileImagePath)),
+                        backgroundImage:
+                            profileImagePath.startsWith('http')
+                                ? NetworkImage(profileImagePath)
+                                : profileImagePath.startsWith('assets/')
+                                ? AssetImage(profileImagePath) as ImageProvider
+                                : FileImage(File(profileImagePath)),
                       ),
                       GestureDetector(
                         onTap: () {
                           showModalBottomSheet(
                             context: context,
                             shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                            ),
-                            builder: (context) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    "Please choose one",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ListTile(
-                                    leading: const Icon(Icons.camera_alt, color: Colors.black87),
-                                    title: const Text("Camera"),
-                                    onTap: () async {
-                                      Navigator.pop(context);
-                                      await _pickImage(context, ImageSource.camera);
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.photo_library, color: Colors.black87),
-                                    title: const Text("Gallery"),
-                                    onTap: () async {
-                                      Navigator.pop(context);
-                                      await _pickImage(context, ImageSource.gallery);
-                                    },
-                                  ),
-                                ],
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(24),
                               ),
                             ),
+                            builder:
+                                (context) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 24,
+                                    horizontal: 16,
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        "Please choose one",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.black87,
+                                        ),
+                                        title: const Text("Camera"),
+                                        onTap: () async {
+                                          Navigator.pop(context);
+                                          await _pickImage(
+                                            context,
+                                            ImageSource.camera,
+                                          );
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.photo_library,
+                                          color: Colors.black87,
+                                        ),
+                                        title: const Text("Gallery"),
+                                        onTap: () async {
+                                          Navigator.pop(context);
+                                          await _pickImage(
+                                            context,
+                                            ImageSource.gallery,
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
                           );
                         },
                         child: Container(
@@ -117,7 +171,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             border: Border.all(color: Colors.white, width: 2),
                           ),
                           padding: const EdgeInsets.all(6),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -152,7 +210,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 8,
+                  ),
                   child: Column(
                     children: [
                       for (int i = 0; i < items.length; i++) ...[
@@ -186,25 +247,62 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
+    void showPermissionDialog(BuildContext context, String permissionType) {
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: Text('$permissionType Permission Required'),
+              content: Text(
+                'Please enable $permissionType permission in app settings to use this feature.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    await openAppSettings();
+                  },
+                  child: const Text('Open Settings'),
+                ),
+              ],
+            ),
+      );
+    }
+
     PermissionStatus status;
     if (source == ImageSource.camera) {
       status = await Permission.camera.request();
       if (!status.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Camera permission denied')),
-        );
+        if (status.isPermanentlyDenied) {
+          showPermissionDialog(context, 'Camera');
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Camera permission denied')),
+          );
+        }
         return;
       }
     } else {
       status = await Permission.photos.request(); // For iOS
       if (!status.isGranted) {
+        if (status.isPermanentlyDenied) {
+          showPermissionDialog(context, 'Photos');
+          return;
+        }
         status = await Permission.storage.request(); // For Android
         if (!status.isGranted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Gallery permission denied')),
-          );
+          if (status.isPermanentlyDenied) {
+            showPermissionDialog(context, 'Storage');
+          } else if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Gallery permission denied')),
+            );
+          }
           return;
         }
       }
@@ -217,29 +315,68 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         profileImagePath = pickedFile.path;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Selected: ${pickedFile.path}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Selected: ${pickedFile.path}')));
+      }
+      await uploadProfileImage(File(pickedFile.path));
+    }
+  }
+
+  Future<void> uploadProfileImage(File imageFile) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final userId = pref.getString("userId");
+    if (userId == null) return;
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ServerService().baseUrl}user/upload-profile'),
+    );
+    request.fields['uid'] = userId;
+    request.files.add(
+      await http.MultipartFile.fromPath('profile_image', imageFile.path),
+    );
+
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final respStr = await response.stream.bytesToString();
+      final data = json.decode(respStr);
+      if (mounted) {
+        setState(() {
+          profileImagePath = data['profile_image_url'];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Profile image uploaded')),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload profile image')),
+        );
+      }
     }
   }
 
   void onLogout() async {
     final shouldLogout = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Logout"),
-        content: const Text("Are you sure you want to logout?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("Cancel"),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Logout"),
+            content: const Text("Are you sure you want to logout?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text("Logout"),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Logout"),
-          ),
-        ],
-      ),
     );
 
     if (shouldLogout == true) {
@@ -247,9 +384,41 @@ class _ProfilePageState extends State<ProfilePage> {
       await pref.clear();
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (BuildContext context) => const LoginScreen()),
+        MaterialPageRoute(
+          builder: (BuildContext context) => const LoginScreen(),
+        ),
         (route) => false,
       );
+    }
+  }
+
+  void fetchUserProfile() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final userId = pref.getString("userId");
+    if (userId == null) return;
+
+    final response = await http.post(
+      Uri.parse('${ServerService().baseUrl}user/profile'),
+      body: {"uid": userId},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (mounted) {
+        setState(() {
+          if (data['profile_image_url'] != null &&
+              data['profile_image_url'].toString().isNotEmpty) {
+            profileImagePath = data['profile_image_url'];
+          }
+          // You can also update other profile fields here if needed
+        });
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to fetch user profile')),
+        );
+      }
     }
   }
 }

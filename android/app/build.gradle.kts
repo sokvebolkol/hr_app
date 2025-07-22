@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.chokchey_hr_app"
+    namespace = "com.app.chokchey_hr_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

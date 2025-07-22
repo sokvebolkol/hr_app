@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'localization/language_logic.dart';
 import 'constants/constant.dart';
 import 'views/auth/splash-screen.dart';
@@ -10,6 +11,8 @@ void main() async {
   final languageLogic = LanguageLogic();
   await languageLogic.initialize();
   HttpOverrides.global = MyHttpOverrides();
+
+  await _requestPermissions(); 
 
   runApp(
     MultiProvider(
@@ -53,6 +56,30 @@ class MyApp extends StatelessWidget {
       ),
       home: const SplashScreen(),
     );
+  }
+}
+
+Future<void> _requestPermissions() async {
+  final permissions = <Permission>[
+    Permission.camera,
+    Permission.photos, // iOS: read access to photos
+    Permission.locationWhenInUse, 
+  ];
+
+  for (final permission in permissions) {
+    final status = await permission.request();
+    debugPrint('Permission for $permission is $status');
+
+    if (status.isPermanentlyDenied) {
+      debugPrint(
+        'Permission $permission is permanently denied. Please enable it in Settings.',
+      );
+    }
+  }
+
+  if (Platform.isAndroid) {
+    final storageStatus = await Permission.storage.request();
+    debugPrint('Permission for storage is $storageStatus');
   }
 }
 
