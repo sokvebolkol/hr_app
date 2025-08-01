@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../dashboard/dashboard.dart';
 import 'login-page.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,7 +17,71 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLogin();
+    _handleStartup();
+  }
+
+  Future<void> _handleStartup() async {
+    await _requestPermissions();
+    await _checkLogin();
+  }
+
+  Future<void> _requestPermissions() async {
+    final permissions = <Permission>[
+      Permission.camera,
+      Permission.photos,
+      Permission.locationWhenInUse,
+    ];
+
+    for (final permission in permissions) {
+      final status = await permission.request();
+      debugPrint('Permission for $permission is $status');
+
+      if (status.isPermanentlyDenied) {
+        debugPrint(
+          'Permission $permission is permanently denied. Please enable it in Settings.',
+        );
+        _showPermissionDialog(); // show settings prompt
+      }
+    }
+
+    if (Platform.isAndroid) {
+      final storageStatus = await Permission.storage.request();
+      debugPrint('Permission for storage is $storageStatus');
+      if (storageStatus.isPermanentlyDenied) {
+        _showPermissionDialog();
+      }
+    }
+  }
+
+  void _showPermissionDialog() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Permissions Required'),
+              content: const Text(
+                'Some permissions are permanently denied. Please go to settings and enable them manually.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await openAppSettings(); // open device settings
+                  },
+                  child: const Text('Open Settings'),
+                ),
+              ],
+            ),
+      );
+    });
   }
 
   Future<void> _checkLogin() async {
@@ -23,6 +89,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     debugPrint("Token: $token");
+    if (!mounted) return;
     if (token != null && token.isNotEmpty) {
       Navigator.pushReplacement(
         context,

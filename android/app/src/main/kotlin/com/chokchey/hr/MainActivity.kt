@@ -1,4 +1,4 @@
-package com.example.chokchey_hr_app
+package com.chokchey.hr
 
 import io.flutter.embedding.android.FlutterActivity
 

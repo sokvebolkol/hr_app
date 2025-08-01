@@ -12,7 +12,7 @@ void main() async {
   await languageLogic.initialize();
   HttpOverrides.global = MyHttpOverrides();
 
-  await _requestPermissions(); 
+  await _requestPermissions();
 
   runApp(
     MultiProvider(
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chokchey HR App',
+      title: 'Chokchey HR',
       theme: ThemeData(
         fontFamily: 'times',
         colorScheme: ColorScheme.fromSeed(
@@ -63,7 +63,7 @@ Future<void> _requestPermissions() async {
   final permissions = <Permission>[
     Permission.camera,
     Permission.photos, // iOS: read access to photos
-    Permission.locationWhenInUse, 
+    Permission.locationWhenInUse,
   ];
 
   for (final permission in permissions) {
