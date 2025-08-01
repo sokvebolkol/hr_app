@@ -1,16 +1,13 @@
 import 'dart:io';
-import 'package:chokchey_hr_app/localization/language.dart';
-import 'package:chokchey_hr_app/localization/language_logic.dart';
-import 'package:chokchey_hr_app/views/auth/login-page.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
+import '../auth/login-page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -21,6 +18,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   String profileImagePath = 'assets/images/profile.jpg';
+  bool isLoading = true;
+  Map<String, dynamic>? userProfile;
 
   @override
   void initState() {
@@ -30,219 +29,250 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<LanguageLogic>().language;
-    const String username = "Kol Sokvebol";
-    const String position = "Mobile App Developer";
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[100],
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final String username = userProfile?['username'] ?? "Unknown User";
+    final String position = userProfile?['position_name'] ?? "Unknown Position";
+    final String email = userProfile?['email'] ?? "";
+    final String employeeId = userProfile?['employee_id'] ?? "";
+    final String fullName = userProfile?['full_name'] ?? "";
+    final String department = userProfile?['department_name'] ?? "";
+    final String branch = userProfile?['branch_full_name'] ?? "";
+    final String joinedDate =
+        userProfile?['joined_date'] != null
+            ? userProfile!['joined_date'].toString().split(
+              ' ',
+            )[0] // Get date part only
+            : "";
+    final String employmentType = userProfile?['employment_type'] ?? "";
+    final String gender = userProfile?['gender'] ?? "";
 
     final List<_ProfileItem> items = [
+      _ProfileItem(icon: Icons.email, label: "Email", value: email),
+      _ProfileItem(icon: Icons.badge, label: "Employee ID", value: employeeId),
+      _ProfileItem(icon: Icons.person, label: "Full Name", value: fullName),
+      _ProfileItem(icon: Icons.wc, label: "Gender", value: gender),
       _ProfileItem(
-        icon: Icons.email,
-        label: "Email",
-        value: "sokvebol.kol@chokchey.com.kh",
+        icon: Icons.business,
+        label: "Department",
+        value: department,
       ),
-      _ProfileItem(icon: Icons.phone, label: "Phone", value: "+855 12 345 678"),
-      _ProfileItem(icon: Icons.badge, label: "Employee ID", value: "EMP00123"),
+      _ProfileItem(icon: Icons.location_on, label: "Branch", value: branch),
       _ProfileItem(
-        icon: Icons.location_on,
-        label: "Location",
-        value: "Phnom Penh, Cambodia",
+        icon: Icons.work,
+        label: "Employment Type",
+        value: employmentType,
       ),
       _ProfileItem(
         icon: Icons.calendar_today,
-        label: "Joined",
-        value: "Jan 2022",
+        label: "Joined Date",
+        value: joinedDate,
       ),
     ];
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(
-                top: 48,
-                bottom: 24,
-                left: 16,
-                right: 16,
-              ),
-              decoration: BoxDecoration(
-                color: primary,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await fetchUserProfile();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(
+                  top: 48,
+                  bottom: 24,
+                  left: 16,
+                  right: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.logout,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          tooltip: "Logout",
+                          onPressed: () {
+                            onLogout();
+                          },
+                        ),
+                      ],
+                    ),
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          backgroundImage:
+                              profileImagePath.startsWith('http')
+                                  ? NetworkImage(profileImagePath)
+                                  : profileImagePath.startsWith('assets/')
+                                  ? AssetImage(profileImagePath)
+                                      as ImageProvider
+                                  : FileImage(File(profileImagePath)),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(24),
+                                ),
+                              ),
+                              builder:
+                                  (context) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 24,
+                                      horizontal: 16,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          "Please choose one",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.camera_alt,
+                                            color: Colors.black87,
+                                          ),
+                                          title: const Text("Camera"),
+                                          onTap: () async {
+                                            Navigator.pop(context);
+                                            await _pickImage(
+                                              context,
+                                              ImageSource.camera,
+                                            );
+                                          },
+                                        ),
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.photo_library,
+                                            color: Colors.black87,
+                                          ),
+                                          title: const Text("Gallery"),
+                                          onTap: () async {
+                                            Navigator.pop(context);
+                                            await _pickImage(
+                                              context,
+                                              ImageSource.gallery,
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            padding: const EdgeInsets.all(6),
+                            child: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      username,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      position,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.85),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.logout,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        tooltip: "Logout",
-                        onPressed: () {
-                          onLogout();
-                        },
-                      ),
-                    ],
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            profileImagePath.startsWith('http')
-                                ? NetworkImage(profileImagePath)
-                                : profileImagePath.startsWith('assets/')
-                                ? AssetImage(profileImagePath) as ImageProvider
-                                : FileImage(File(profileImagePath)),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 18,
+                      horizontal: 8,
+                    ),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < items.length; i++) ...[
+                          ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: primary.withOpacity(0.13),
+                              child: Icon(items[i].icon, color: primary),
+                            ),
+                            title: Text(
+                              items[i].label,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            builder:
-                                (context) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 24,
-                                    horizontal: 16,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        "Please choose one",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.camera_alt,
-                                          color: Colors.black87,
-                                        ),
-                                        title: const Text("Camera"),
-                                        onTap: () async {
-                                          Navigator.pop(context);
-                                          await _pickImage(
-                                            context,
-                                            ImageSource.camera,
-                                          );
-                                        },
-                                      ),
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.photo_library,
-                                          color: Colors.black87,
-                                        ),
-                                        title: const Text("Gallery"),
-                                        onTap: () async {
-                                          Navigator.pop(context);
-                                          await _pickImage(
-                                            context,
-                                            ImageSource.gallery,
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+                            subtitle: Text(items[i].value),
                           ),
-                          padding: const EdgeInsets.all(6),
-                          child: const Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    username,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    position,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.85),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 18,
-                    horizontal: 8,
-                  ),
-                  child: Column(
-                    children: [
-                      for (int i = 0; i < items.length; i++) ...[
-                        ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: primary.withOpacity(0.13),
-                            child: Icon(items[i].icon, color: primary),
-                          ),
-                          title: Text(
-                            items[i].label,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text(items[i].value),
-                        ),
-                        if (i != items.length - 1)
-                          const Divider(
-                            indent: 16,
-                            endIndent: 16,
-                            height: 0,
-                            thickness: 0.7,
-                          ),
+                          if (i != items.length - 1)
+                            const Divider(
+                              indent: 16,
+                              endIndent: 16,
+                              height: 0,
+                              thickness: 0.7,
+                            ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-          ],
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -402,32 +432,56 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void fetchUserProfile() async {
+  Future<void> fetchUserProfile() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     final userId = pref.getString("userId");
-    if (userId == null) return;
+    if (userId == null) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
 
-    final response = await http.post(
-      Uri.parse('${ServerService().baseUrl}user/profile'),
-      body: {"uid": userId},
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('${ServerService().baseUrl}user/profile/$userId'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            userProfile = data;
+            if (data['profile_image_url'] != null &&
+                data['profile_image_url'].toString().isNotEmpty) {
+              profileImagePath = data['profile_image_url'];
+            }
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to fetch user profile: ${response.statusCode}',
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
-          if (data['profile_image_url'] != null &&
-              data['profile_image_url'].toString().isNotEmpty) {
-            profileImagePath = data['profile_image_url'];
-          }
-          // You can also update other profile fields here if needed
+          isLoading = false;
         });
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch user profile')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error fetching profile: $e')));
       }
     }
   }
