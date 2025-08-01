@@ -60,24 +60,44 @@ class MyApp extends StatelessWidget {
 }
 
 Future<void> _requestPermissions() async {
-  final permissions = <Permission>[
-    Permission.camera,
-    Permission.photos, // iOS: read access to photos
-    Permission.locationWhenInUse,
-  ];
+  // For iOS, permissions are requested when actually needed
+  // Here we just check current status and inform user
+  if (Platform.isIOS) {
+    final permissions = <Permission>[
+      Permission.camera,
+      Permission.photos,
+      Permission.locationWhenInUse,
+    ];
 
-  for (final permission in permissions) {
-    final status = await permission.request();
-    debugPrint('Permission for $permission is $status');
+    for (final permission in permissions) {
+      final status = await permission.status;
+      debugPrint('iOS Permission for $permission is $status');
 
-    if (status.isPermanentlyDenied) {
-      debugPrint(
-        'Permission $permission is permanently denied. Please enable it in Settings.',
-      );
+      if (status.isDenied) {
+        debugPrint(
+          'iOS Permission $permission is denied, will request when needed',
+        );
+      }
     }
-  }
+  } else {
+    // Android: Request permissions at startup
+    final permissions = <Permission>[
+      Permission.camera,
+      Permission.photos,
+      Permission.locationWhenInUse,
+    ];
 
-  if (Platform.isAndroid) {
+    for (final permission in permissions) {
+      final status = await permission.request();
+      debugPrint('Android Permission for $permission is $status');
+
+      if (status.isPermanentlyDenied) {
+        debugPrint(
+          'Permission $permission is permanently denied. Please enable it in Settings.',
+        );
+      }
+    }
+
     final storageStatus = await Permission.storage.request();
     debugPrint('Permission for storage is $storageStatus');
   }

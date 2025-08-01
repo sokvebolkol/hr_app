@@ -26,25 +26,38 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _requestPermissions() async {
-    final permissions = <Permission>[
-      Permission.camera,
-      Permission.photos,
-      Permission.locationWhenInUse,
-    ];
+    if (Platform.isIOS) {
+      // iOS: Check permissions but don't request at startup
+      final permissions = <Permission>[
+        Permission.camera,
+        Permission.photos,
+        Permission.locationWhenInUse,
+      ];
 
-    for (final permission in permissions) {
-      final status = await permission.request();
-      debugPrint('Permission for $permission is $status');
-
-      if (status.isPermanentlyDenied) {
-        debugPrint(
-          'Permission $permission is permanently denied. Please enable it in Settings.',
-        );
-        _showPermissionDialog(); // show settings prompt
+      for (final permission in permissions) {
+        final status = await permission.status;
+        debugPrint('iOS Permission for $permission is $status');
       }
-    }
+    } else {
+      // Android: Request permissions at startup
+      final permissions = <Permission>[
+        Permission.camera,
+        Permission.photos,
+        Permission.locationWhenInUse,
+      ];
 
-    if (Platform.isAndroid) {
+      for (final permission in permissions) {
+        final status = await permission.request();
+        debugPrint('Android Permission for $permission is $status');
+
+        if (status.isPermanentlyDenied) {
+          debugPrint(
+            'Permission $permission is permanently denied. Please enable it in Settings.',
+          );
+          _showPermissionDialog(); // show settings prompt
+        }
+      }
+
       final storageStatus = await Permission.storage.request();
       debugPrint('Permission for storage is $storageStatus');
       if (storageStatus.isPermanentlyDenied) {

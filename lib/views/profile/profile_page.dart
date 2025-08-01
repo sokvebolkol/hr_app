@@ -247,6 +247,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     void showPermissionDialog(BuildContext context, String permissionType) {
       showDialog(
@@ -288,19 +289,28 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
     } else {
-      status = await Permission.photos.request(); // For iOS
-      if (!status.isGranted) {
-        if (status.isPermanentlyDenied) {
-          showPermissionDialog(context, 'Photos');
+      // Gallery permission handling
+      if (Platform.isIOS) {
+        status = await Permission.photos.request();
+        if (!status.isGranted) {
+          if (status.isPermanentlyDenied) {
+            showPermissionDialog(context, 'Photos');
+          } else if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Photo library permission denied')),
+            );
+          }
           return;
         }
-        status = await Permission.storage.request(); // For Android
+      } else {
+        // Android
+        status = await Permission.storage.request();
         if (!status.isGranted) {
           if (status.isPermanentlyDenied) {
             showPermissionDialog(context, 'Storage');
           } else if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Gallery permission denied')),
+              const SnackBar(content: Text('Storage permission denied')),
             );
           }
           return;
