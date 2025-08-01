@@ -15,6 +15,12 @@ class Language {
       "Would you really like to delete your account?";
 
   String get register => " Register";
+
+  String get selectLanguage => "Select Language";
+
+  String get language => "Language";
+
+  String get cancel => "Cancel";
 }
 
 class Khmer implements Language {
@@ -38,4 +44,13 @@ class Khmer implements Language {
 
   @override
   String get register => "ចុះឈ្មោះ";
+
+  @override
+  String get selectLanguage => "ជ្រើសរើសភាសា";
+
+  @override
+  String get language => "ភាសា";
+
+  @override
+  String get cancel => "បោះបង់";
 }

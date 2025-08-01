@@ -1,42 +1,135 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
 import '../models/user_model.dart';
-import '../services/global_service.dart';
+import '../models/user_profile_model.dart';
+import '../repositories/dashboard_repository.dart';
+import '../repositories/profile_repository.dart';
 
 class DashboardViewModel extends ChangeNotifier {
-  UserModel? user;
-  List<LeaveModel> leaves = [];
-  LeaveBalanceModel? leaveBalance;
-  bool isLoading = false;
-  String? error;
+  final DashboardRepository _repository = DashboardRepository();
+  final ProfileRepository _profileRepository = ProfileRepository();
 
-  Future<void> fetchDashboard(String userId) async {
-    isLoading = true;
-    error = null;
-    notifyListeners();
-    try {
-      final response = await http.get(
-        Uri.parse('${ServerService().baseUrl}home/$userId'),
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        // debugPrint(data);
-        user = UserModel.fromJson(data['user']);
-        leaves =
-            (data['leaves'] as List)
-                .map((e) => LeaveModel.fromJson(e))
-                .toList();
-        leaveBalance = LeaveBalanceModel.fromJson(data['leaveBalances'][0]);
-      } else {
-        error = "Failed to load dashboard";
-      }
-    } catch (e) {
-      error = "Network error";
+  // State variables
+  UserModel? _user;
+  UserProfile? _userProfile;
+  List<LeaveModel> _leaves = [];
+  LeaveBalanceModel? _leaveBalance;
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  // Getters
+  UserModel? get user => _user;
+  UserProfile? get userProfile => _userProfile;
+  List<LeaveModel> get leaves => _leaves;
+  LeaveBalanceModel? get leaveBalance => _leaveBalance;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+
+  // Computed properties
+  String get greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return "Good morning!";
+    } else if (hour < 18) {
+      return "Good afternoon!";
+    } else {
+      return "Good evening!";
     }
-    isLoading = false;
+  }
+
+  String get username => _userProfile?.fullName ?? _user?.uname ?? "User";
+  String? get profileImageUrl =>
+      _userProfile?.profileImageUrl ?? _userProfile?.profileImage;
+  String get usedLeave => _leaveBalance?.annualLeaveUsed ?? "0";
+  String get availableLeave => _leaveBalance?.annualLeaveBalance ?? "0";
+
+  // Sorted priority list for leaves
+  List<LeaveModel> get sortedLeaves {
+    final sortedList = [..._leaves];
+    // Sort by date or any other criteria you prefer
+    sortedList.sort((a, b) => b.frdat.compareTo(a.frdat));
+    return sortedList;
+  }
+
+  // Initialize dashboard data
+  Future<void> initialize() async {
+    await fetchDashboard();
+  }
+
+  // Fetch dashboard data
+  Future<void> fetchDashboard() async {
+    try {
+      _setLoading(true);
+      _setError(null);
+
+      // Fetch dashboard data and user profile in parallel
+      final results = await Future.wait([
+        _repository.getDashboardData(),
+        _profileRepository.getUserProfile(),
+      ]);
+
+      final dashboardData = results[0] as DashboardData;
+      final userProfile = results[1] as UserProfile?;
+
+      _user = dashboardData.user;
+      _leaves = dashboardData.leaves;
+      _leaveBalance = dashboardData.leaveBalance;
+      _userProfile = userProfile;
+
+      _setLoading(false);
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+    }
+  }
+
+  // Get user ID
+  Future<String?> getUserId() async {
+    try {
+      return await _repository.getUserId();
+    } catch (e) {
+      _setError('Error getting user ID: $e');
+      return null;
+    }
+  }
+
+  // Refresh dashboard data
+  Future<void> refresh() async {
+    await fetchDashboard();
+  }
+
+  // Refresh only user profile data (more efficient when only profile changed)
+  Future<void> refreshProfile() async {
+    try {
+      final userProfile = await _profileRepository.getUserProfile();
+      _userProfile = userProfile;
+      notifyListeners();
+    } catch (e) {
+      // Don't show error for profile refresh failures, just keep existing data
+      print('Failed to refresh profile: $e');
+    }
+  }
+
+  // Private helper methods
+  void _setLoading(bool loading) {
+    _isLoading = loading;
     notifyListeners();
+  }
+
+  void _setError(String? error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  // Clear error message
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

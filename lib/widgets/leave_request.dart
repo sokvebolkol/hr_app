@@ -10,6 +10,8 @@ class LeaveRequestWidget extends StatefulWidget {
   final String? requesterName;
   final String? totalDays;
   final List<Map<String, dynamic>>? prioList;
+  final String? currentUserName;
+  final String? currentUserProfileImageUrl;
 
   const LeaveRequestWidget({
     super.key,
@@ -20,6 +22,8 @@ class LeaveRequestWidget extends StatefulWidget {
     this.requesterName,
     this.totalDays,
     this.prioList,
+    this.currentUserName,
+    this.currentUserProfileImageUrl,
   });
 
   @override
@@ -40,7 +44,7 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.prioList?.length);
+    // print(widget.prioList?.length);
 
     screenWidth = MediaQuery.of(context).size.width;
     widget.prioList?.length == 2
@@ -65,10 +69,7 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundImage: AssetImage('assets/images/my-profile.png'),
-                  backgroundColor: Colors.blueAccent,
-                ),
+                _buildEmployeeAvatar(name),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -191,5 +192,93 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
 
   Widget _buildConnectingLine() {
     return Container(width: lineWidth, height: 2, color: Colors.grey[400]);
+  }
+
+  Widget _buildEmployeeAvatar(String employeeName) {
+    // Check if this is the current user's leave request
+    final isCurrentUser =
+        widget.currentUserName != null &&
+        employeeName.toLowerCase() == widget.currentUserName!.toLowerCase();
+
+    if (isCurrentUser &&
+        widget.currentUserProfileImageUrl != null &&
+        widget.currentUserProfileImageUrl!.isNotEmpty) {
+      // Show actual profile image for current user
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.blueAccent,
+        ),
+        child: ClipOval(
+          child: FadeInImage.assetNetwork(
+            placeholder: 'assets/images/profile.png',
+            image: widget.currentUserProfileImageUrl!,
+            fit: BoxFit.cover,
+            imageErrorBuilder: (context, error, stackTrace) {
+              return const CircleAvatar(
+                backgroundImage: AssetImage('assets/images/profile.png'),
+                backgroundColor: Colors.blueAccent,
+              );
+            },
+          ),
+        ),
+      );
+    } else if (isCurrentUser) {
+      // Current user but no profile image - show default asset image
+      return const CircleAvatar(
+        backgroundImage: AssetImage('assets/images/profile.png'),
+        backgroundColor: Colors.blueAccent,
+      );
+    } else {
+      // Show initials avatar for other employees
+      return _buildInitialsAvatar(employeeName);
+    }
+  }
+
+  Widget _buildInitialsAvatar(String employeeName) {
+    // Extract initials from employee name
+    String getInitials(String name) {
+      if (name.isEmpty) return 'E';
+
+      List<String> nameParts = name.trim().split(' ');
+      if (nameParts.length == 1) {
+        return nameParts[0].substring(0, 1).toUpperCase();
+      } else {
+        return (nameParts[0].substring(0, 1) +
+                nameParts[nameParts.length - 1].substring(0, 1))
+            .toUpperCase();
+      }
+    }
+
+    // Generate a color based on the name
+    Color getAvatarColor(String name) {
+      final colors = [
+        Colors.blue,
+        Colors.green,
+        Colors.orange,
+        Colors.purple,
+        Colors.red,
+        Colors.teal,
+        Colors.indigo,
+        Colors.brown,
+      ];
+
+      int hash = name.hashCode;
+      return colors[hash.abs() % colors.length];
+    }
+
+    return CircleAvatar(
+      backgroundColor: getAvatarColor(employeeName),
+      child: Text(
+        getInitials(employeeName),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
+    );
   }
 }
