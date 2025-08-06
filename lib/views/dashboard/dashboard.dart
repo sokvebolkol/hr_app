@@ -14,6 +14,7 @@ import '../../widgets/leave_request.dart';
 import '../attendance/attendance_clock.dart';
 import '../auth/login-page.dart';
 import '../dashboard/leave_request_screen.dart';
+import '../leaves/leave_balance/leave_balance.dart';
 import '../profile/profile_page.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -389,7 +390,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
         usedLeave: viewModel.usedLeave,
         availableLeave: viewModel.availableLeave,
         onViewDetails: () {
-          // Show details or navigate
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LeaveDetailScreen()),
+          );
         },
       ),
     );
@@ -419,7 +423,12 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
               iconData: Icons.history,
               label: 'Leave History',
               onPressed: () {
-                // Implement navigation to leave history
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LeaveDetailScreen(),
+                  ),
+                );
               },
             ),
           ),
