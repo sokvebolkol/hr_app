@@ -8,6 +8,7 @@ import '../../constants/constant.dart';
 import '../../constants/responsive.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import '../../viewmodels/leave_balance_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
@@ -15,6 +16,7 @@ import '../attendance/attendance_clock.dart';
 import '../auth/login-page.dart';
 import '../dashboard/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
+import '../leaves/leave_history/leave_history_screen.dart';
 import '../profile/profile_page.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -392,7 +394,13 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
         onViewDetails: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const LeaveDetailScreen()),
+            MaterialPageRoute(
+              builder:
+                  (context) => ChangeNotifierProvider(
+                    create: (context) => LeaveBalanceViewModel(),
+                    child: const LeaveDetailScreen(),
+                  ),
+            ),
           );
         },
       ),
@@ -426,7 +434,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const LeaveDetailScreen(),
+                    builder: (context) => const LeaveHistoryScreen(),
                   ),
                 );
               },
