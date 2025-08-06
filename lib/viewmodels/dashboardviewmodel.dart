@@ -44,6 +44,9 @@ class DashboardViewModel extends ChangeNotifier {
   String get usedLeave => _leaveBalance?.annualLeaveUsed ?? "0";
   String get availableLeave => _leaveBalance?.annualLeaveBalance ?? "0";
 
+  // Check if user status is inactive
+  bool get isUserInactive => _user?.ustatus == "I";
+
   // Sorted priority list for leaves
   List<LeaveModel> get sortedLeaves {
     final sortedList = [..._leaves];
@@ -126,6 +129,16 @@ class DashboardViewModel extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // Force logout (for inactive users)
+  Future<void> forceLogout() async {
+    try {
+      await _profileRepository.logout();
+    } catch (e) {
+      // Even if logout API fails, we should proceed with clearing local data
+      print('Error during force logout: $e');
+    }
   }
 
   @override

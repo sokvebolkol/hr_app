@@ -12,6 +12,7 @@ import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_clock.dart';
+import '../auth/login-page.dart';
 import '../dashboard/leave_request_screen.dart';
 import '../profile/profile_page.dart';
 
@@ -83,6 +84,32 @@ class _DashboardScreenState extends State<DashboardScreen>
             builder: (context, viewModel, child) {
               if (viewModel.isLoading) {
                 return const Center(child: CircularProgressIndicator());
+              }
+
+              // Check if user is inactive and force logout
+              if (viewModel.isUserInactive) {
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  await viewModel.forceLogout();
+                  if (mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => const LoginScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                });
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text("Your account is inactive. Logging out..."),
+                    ],
+                  ),
+                );
               }
 
               if (viewModel.errorMessage != null) {

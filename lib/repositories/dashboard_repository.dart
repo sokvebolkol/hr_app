@@ -14,14 +14,23 @@ class DashboardRepository {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final userId = pref.getString("userId");
+      final token = pref.getString("token");
 
       if (userId == null) {
         throw Exception('User ID not found in local storage');
       }
 
+      if (token == null) {
+        throw Exception('Token not found in local storage');
+      }
+
       final response = await http.get(
         Uri.parse('${_serverService.baseUrl}home/$userId'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {

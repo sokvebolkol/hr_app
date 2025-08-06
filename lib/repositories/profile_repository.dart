@@ -13,14 +13,22 @@ class ProfileRepository {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final userId = pref.getString("userId");
+      final token = pref.getString("token");
 
       if (userId == null) {
         throw Exception('User ID not found in local storage');
       }
 
+      if (token == null) {
+        throw Exception('Token not found in local storage');
+      }
       final response = await http.get(
         Uri.parse('${_serverService.baseUrl}user/profile/$userId'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
       );
 
       if (response.statusCode == 200) {
@@ -39,15 +47,25 @@ class ProfileRepository {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final userId = pref.getString("userId");
+      final token = pref.getString("token");
 
       if (userId == null) {
         throw Exception('User ID not found');
+      }
+
+      if (token == null) {
+        throw Exception('Token not found');
       }
 
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${_serverService.baseUrl}user/upload-profile'),
       );
+
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
 
       request.fields['uid'] = userId;
       request.files.add(
@@ -89,10 +107,34 @@ class ProfileRepository {
     }
   }
 
-  // Logout user (clear local data)
+  // Logout user (call API and clear local data)
   Future<void> logout() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    await pref.clear();
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      final token = pref.getString("token");
+
+      if (token != null) {
+        // Call logout endpoint
+        final response = await http.post(
+          Uri.parse('${_serverService.baseUrl}logout'),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+
+        // Log the response for debugging (optional)
+        print('Logout response: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Even if the API call fails, we should still clear local data
+      print('Error during logout API call: $e');
+    } finally {
+      // Always clear local data regardless of API response
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      await pref.clear();
+    }
   }
 }
 

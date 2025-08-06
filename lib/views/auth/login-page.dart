@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert' as convert;
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:device_info_plus/device_info_plus.dart';
 import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
@@ -37,6 +39,22 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
   }
 
+  Future<String> _getDeviceName() async {
+    final deviceInfo = DeviceInfoPlugin();
+    try {
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        return '${androidInfo.brand} ${androidInfo.model}';
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return '${iosInfo.name} ${iosInfo.model}';
+      }
+    } catch (e) {
+      return 'Unknown Device';
+    }
+    return 'Unknown Device';
+  }
+
   Future<void> _login() async {
     final eCard = userNameController.text.trim();
     final password = passwordController.text.trim();
@@ -51,11 +69,16 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final deviceName = await _getDeviceName();
+
       final response = await http.post(
         Uri.parse('${ServerService().baseUrl}login'),
-        body: {"ecard": eCard, "upassword": password},
+        body: {
+          "ecard": eCard,
+          "upassword": password,
+          "device_name": deviceName,
+        },
       );
-      print(response.statusCode);
 
       if (response.statusCode == 200) {
         final data = convert.jsonDecode(response.body);
@@ -214,8 +237,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
-                              icon: Icon(Icons.login, color: Colors.white),
-                              label: Text(language.login),
+                              icon:
+                                  _isLoading
+                                      ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                      : const Icon(
+                                        Icons.login,
+                                        color: Colors.white,
+                                      ),
+                              label: Text(
+                                _isLoading ? "Logging in..." : language.login,
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: primary,
                                 foregroundColor: Colors.white,
@@ -231,9 +272,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 elevation: 2,
                               ),
-                              onPressed: () {
-                                _login();
-                              },
+                              onPressed:
+                                  _isLoading
+                                      ? null
+                                      : () {
+                                        _login();
+                                      },
                             ),
                           ),
                         ],
