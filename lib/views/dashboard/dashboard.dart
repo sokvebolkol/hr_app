@@ -14,7 +14,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_clock.dart';
 import '../auth/login-page.dart';
-import '../dashboard/leave_request_screen.dart';
+import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
 import '../profile/profile_page.dart';

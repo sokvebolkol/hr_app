@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../viewmodels/leave_history_viewmodel.dart';
 import '../../../models/leave_history_model.dart';
+import '../leave_detail/leave_detail_screen.dart';
 
 class LeaveHistoryScreen extends StatefulWidget {
   const LeaveHistoryScreen({super.key});
@@ -269,111 +270,140 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     final toDate = _formatDate(leave.todat);
     final createDate = _formatDate(leave.createdate);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LeaveDetailScreen(leaveRequest: leave),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    leave.ltyp,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(leave.statu),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    leave.statusText,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
+        ).then((result) {
+          // Refresh the list if the leave was updated/cancelled
+          if (result == true) {
+            _viewModel.refresh();
+          }
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border:
+              leave.statu == '0'
+                  ? Border.all(color: Colors.orange.withOpacity(0.3), width: 1)
+                  : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  fromDate == toDate ? fromDate : '$fromDate - $toDate',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                ),
-                const Spacer(),
-                Text(
-                  '${leave.numleav} day${(double.parse(leave.numleav) == 1 || double.parse(leave.numleav) == 0.5) ? '' : 's'}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-            if (leave.reason.isNotEmpty) ...[
-              const SizedBox(height: 8),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.notes, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      leave.reason,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      leave.ltyp,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(leave.statu),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      leave.statusText,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Applied: $createDate',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
-                Text(
-                  'ID: ${leave.lreid}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                  const SizedBox(width: 8),
+                  Text(
+                    fromDate == toDate ? fromDate : '$fromDate - $toDate',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${leave.numleav} day${(double.parse(leave.numleav) == 1 || double.parse(leave.numleav) == 0.5) ? '' : 's'}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              if (leave.reason.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.notes, size: 16, color: Colors.grey[600]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        leave.reason,
+                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Applied: $createDate',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'ID: ${leave.lreid}',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: Colors.grey[400],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
