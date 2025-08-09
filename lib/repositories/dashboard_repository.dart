@@ -35,7 +35,6 @@ class DashboardRepository {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         return DashboardData(
           user: UserModel.fromJson(data['user']),
           leaves:

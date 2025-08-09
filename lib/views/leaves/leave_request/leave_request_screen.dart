@@ -36,6 +36,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   String? documentSupport;
   XFile? documentPhoto;
 
+  // Submission state
+  bool isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -114,6 +117,94 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     final start = DateFormat('yyyy-MM-dd').format(leaveDateRange!.start);
     final end = DateFormat('yyyy-MM-dd').format(leaveDateRange!.end);
     return start == end ? start : '$start to $end';
+  }
+
+  // Add helper function to format approvers
+  List<Map<String, dynamic>> get formattedApprovers {
+    return sortedApprovers.map((approver) {
+      return {
+        "eid": approver.approverId.toString(),
+        "applev": approver.approvalLevel,
+        "prio": approver.approvalLevel,
+      };
+    }).toList();
+  }
+
+  // Add helper function to convert leave_for to integer
+  int get leaveForValue {
+    return leaveFor == 'Full Day' ? 1 : 0; // 1 for Full Day, 0 for Half Day
+  }
+
+  // Add submit function
+  Future<void> _submitLeaveRequest() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Check if document is required but not provided
+    if ((selectedLeaveType?.requiresDocument ?? false) &&
+        documentPhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Document support is required for this leave type'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      setState(() {
+        isSubmitting = true;
+      });
+
+      // Format dates
+      final fromDate = DateFormat('yyyy-MM-dd').format(leaveDateRange!.start);
+      final toDate = DateFormat('yyyy-MM-dd').format(leaveDateRange!.end);
+
+      // Submit leave request
+      final response = await _repository.submitLeaveRequest(
+        leaveType: selectedLeaveType!.leaid,
+        fromDate: fromDate,
+        toDate: toDate,
+        reason: reason.trim(),
+        leaveFor: leaveForValue,
+        totalLeave: totalLeaveDays,
+        approvers: formattedApprovers,
+      );
+
+      if (response.success && mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        // Navigate back to previous screen
+        Navigator.pop(context, true); // Return true to indicate success
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -684,8 +775,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                     ],
 
                                     // Approvers - Updated to use backend data
-                                    if (approvers
-                                        .isNotEmpty) 
+                                    if (approvers.isNotEmpty)
                                       Card(
                                         color: Colors.white,
                                         elevation: 2,
@@ -820,37 +910,22 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                   ),
                                   elevation: 1,
                                 ),
-                                icon: const Icon(Icons.send),
-                                label: const Text("Submit"),
-                                onPressed: () {
-                                  if (_formKey.currentState!.validate()) {
-                                    // Check if document is required but not provided
-                                    if ((selectedLeaveType?.requiresDocument ??
-                                            false) &&
-                                        documentPhoto == null) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Document support is required for this leave type',
+                                icon:
+                                    isSubmitting
+                                        ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
                                           ),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                      return;
-                                    }
-
-                                    // TODO: Submit leave request to backend
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Leave request submitted!',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
+                                        )
+                                        : const Icon(Icons.send),
+                                label: Text(
+                                  isSubmitting ? "Submitting..." : "Submit",
+                                ),
+                                onPressed:
+                                    isSubmitting ? null : _submitLeaveRequest,
                               ),
                             ),
                           ],

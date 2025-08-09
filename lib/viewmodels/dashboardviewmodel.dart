@@ -79,7 +79,6 @@ class DashboardViewModel extends ChangeNotifier {
       _leaves = dashboardData.leaves;
       _leaveBalance = dashboardData.leaveBalance;
       _userProfile = userProfile;
-
       _setLoading(false);
     } catch (e) {
       _setError(e.toString());

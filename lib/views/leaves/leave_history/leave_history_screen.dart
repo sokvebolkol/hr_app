@@ -581,11 +581,11 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   Color _getStatusColor(String status) {
     switch (status) {
       case '0':
-        return Colors.orange;
+        return Colors.red;
       case '1':
         return Colors.green;
       case '2':
-        return Colors.red;
+        return Colors.orange;
       default:
         return Colors.grey;
     }
@@ -594,11 +594,13 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   String _getStatusText(String status) {
     switch (status) {
       case '0':
-        return 'Pending';
+        return 'Rejected';
       case '1':
         return 'Approved';
       case '2':
-        return 'Rejected';
+        return 'Pending';
+      case '3':
+        return 'Cancelled';
       default:
         return 'Unknown';
     }

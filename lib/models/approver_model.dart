@@ -7,7 +7,7 @@ class ApproverModel {
   final String? updatedAt;
   final String dname;
   final String? userApproverToken;
-  final String approverLevelName; // Add this new field
+  final String approverLevelName;
 
   ApproverModel({
     required this.id,
@@ -18,7 +18,7 @@ class ApproverModel {
     this.updatedAt,
     required this.dname,
     this.userApproverToken,
-    required this.approverLevelName, // Add this to constructor
+    required this.approverLevelName,
   });
 
   factory ApproverModel.fromJson(Map<String, dynamic> json) {
@@ -33,7 +33,7 @@ class ApproverModel {
       userApproverToken: json['user_approver_token'],
       approverLevelName:
           json['approver_level_name'] ??
-          'Level ${json['approval_level']} Approver', // Add with fallback
+          'Level ${json['approval_level']} Approver',
     );
   }
 }
