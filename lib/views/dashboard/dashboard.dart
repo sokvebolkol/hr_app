@@ -1,4 +1,5 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_clock.dart';
 import '../auth/login-page.dart';
+import '../leaves/leave_detail/leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
@@ -398,7 +400,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
               builder:
                   (context) => ChangeNotifierProvider(
                     create: (context) => LeaveBalanceViewModel(),
-                    child: const LeaveDetailScreen(),
+                    child: const LeaveBalanceDetailScreen(),
                   ),
             ),
           );
@@ -475,26 +477,48 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
               // Sort prioList by prio ascending
               final sortedPrioList = [...leave.prioList]
                 ..sort((a, b) => a.prio.compareTo(b.prio));
-              return LeaveRequestWidget(
-                reason: leave.reason,
-                status: leave.statuText,
-                fromDate: leave.frdat,
-                toDate: leave.todat,
-                requesterName: leave.dname,
-                totalDays: leave.numleav,
-                currentUserName: viewModel.username,
-                currentUserProfileImageUrl: viewModel.profileImageUrl,
-                prioList:
-                    sortedPrioList
-                        .map(
-                          (p) => {
-                            'prio': p.prio,
-                            'apstatu': p.apstatu,
-                            'apstatu_text': p.apstatuText,
-                            'prio_text': p.priText,
-                          },
-                        )
-                        .toList(),
+
+              return GestureDetector(
+                onTap: () {
+                  // Navigate to leave detail screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => LeaveDetailScreen(
+                            leaveRequest:
+                                leave
+                                    .toLeaveHistoryModel(), // Convert to LeaveHistoryModel
+                          ),
+                    ),
+                  ).then((result) {
+                    // Refresh the dashboard if the leave was updated/cancelled
+                    if (result == true) {
+                      viewModel.refresh();
+                    }
+                  });
+                },
+                child: LeaveRequestWidget(
+                  reason: leave.reason,
+                  status: leave.statuText,
+                  fromDate: leave.frdat,
+                  toDate: leave.todat,
+                  requesterName: leave.dname,
+                  totalDays: leave.numleav,
+                  currentUserName: viewModel.username,
+                  currentUserProfileImageUrl: viewModel.profileImageUrl,
+                  prioList:
+                      sortedPrioList
+                          .map(
+                            (p) => {
+                              'prio': p.prio,
+                              'apstatu': p.apstatu,
+                              'apstatu_text': p.apstatuText,
+                              'prio_text': p.priText,
+                            },
+                          )
+                          .toList(),
+                ),
               );
             },
             padding: const EdgeInsets.symmetric(horizontal: 20),

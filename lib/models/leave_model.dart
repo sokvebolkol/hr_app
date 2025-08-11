@@ -1,3 +1,5 @@
+import 'leave_history_model.dart';
+
 class LeaveModel {
   final String eid;
   final String dname;
@@ -12,7 +14,7 @@ class LeaveModel {
   final String reason;
   final String createdate;
   final List<PrioModel> prioList;
-  final String statuText; 
+  final String statuText;
 
   LeaveModel({
     required this.eid,
@@ -28,7 +30,7 @@ class LeaveModel {
     required this.reason,
     required this.createdate,
     required this.prioList,
-    required this.statuText, 
+    required this.statuText,
   });
 
   factory LeaveModel.fromJson(Map<String, dynamic> json) => LeaveModel(
@@ -49,17 +51,21 @@ class LeaveModel {
             ?.map((e) => PrioModel.fromJson(e))
             .toList() ??
         [],
-    statuText: json['statu_text'] ?? '', 
+    statuText: json['statu_text'] ?? '',
   );
 }
 
 class PrioModel {
+  final String? approverName; // Add this field if it exists in your JSON
+  final String? userApproverToken; // Add this field if it exists in your JSON
   final int prio;
   final int apstatu;
   final String apstatuText;
   final String priText;
 
   PrioModel({
+    this.approverName,
+    this.userApproverToken,
     required this.prio,
     required this.apstatu,
     required this.apstatuText,
@@ -67,9 +73,47 @@ class PrioModel {
   });
 
   factory PrioModel.fromJson(Map<String, dynamic> json) => PrioModel(
+    approverName: json['approver_name'],
+    userApproverToken: json['user_approver_token'],
     prio: json['prio'],
     apstatu: json['apstatu'],
     apstatuText: json['apstatu_text'],
     priText: json['prio_text'] ?? '',
   );
+}
+
+// Updated extension method with proper conversion
+extension LeaveModelExtension on LeaveModel {
+  LeaveHistoryModel toLeaveHistoryModel() {
+    return LeaveHistoryModel(
+      eid: eid,
+      dname: dname,
+      lreid: lreid,
+      frdat: frdat,
+      todat: todat,
+      leaid: leaid,
+      ltyp: ltyp,
+      numleav: numleav,
+      lfor: lfor,
+      statu: statu,
+      reason: reason,
+      createdate: createdate,
+      prioList:
+          prioList
+              .map(
+                (prioModel) => PriorityModel(
+                  approverName:
+                      prioModel.approverName ??
+                      'Unknown', // Provide default if null
+                  userApproverToken: prioModel.userApproverToken,
+                  prio: prioModel.prio,
+                  apstatu: prioModel.apstatu,
+                  apstatuText: prioModel.apstatuText,
+                  prioText: prioModel.priText,
+                ),
+              )
+              .toList(),
+      statusText: statuText,
+    );
+  }
 }

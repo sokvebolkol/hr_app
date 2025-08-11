@@ -1,20 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:skeletonizer/skeletonizer.dart';
-
 import '../../../constants/constant.dart';
 import '../../../widgets/leave_balance_item.dart';
 import '../../../viewmodels/leave_balance_viewmodel.dart';
 
-class LeaveDetailScreen extends StatefulWidget {
-  const LeaveDetailScreen({super.key});
+class LeaveBalanceDetailScreen extends StatefulWidget {
+  const LeaveBalanceDetailScreen({super.key});
 
   @override
-  State<LeaveDetailScreen> createState() => _LeaveDetailScreenState();
+  State<LeaveBalanceDetailScreen> createState() =>
+      _LeaveBalanceDetailScreenState();
 }
 
-class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
+class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
   late LeaveBalanceViewModel _viewModel;
 
   @override
