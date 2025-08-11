@@ -1,3 +1,4 @@
+import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -153,19 +154,19 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             viewModel.leaveHistory.length.toString(),
             Colors.blue,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           _buildStatItem(
             'Pending',
             viewModel.pendingCount.toString(),
             Colors.orange,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           _buildStatItem(
             'Approved',
             viewModel.approvedCount.toString(),
             Colors.green,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           _buildStatItem(
             'Rejected',
             viewModel.rejectedCount.toString(),
@@ -227,7 +228,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('Status: ${_getStatusText(_selectedStatus!)}'),
+                  label: Text(
+                    'Status: ${FileHelper().getStatusText(_selectedStatus!)}',
+                  ),
                   onDeleted: () {
                     setState(() {
                       _selectedStatus = null;
@@ -266,9 +269,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   }
 
   Widget _buildLeaveHistoryCard(LeaveHistoryModel leave) {
-    final fromDate = _formatDate(leave.frdat);
-    final toDate = _formatDate(leave.todat);
-    final createDate = _formatDate(leave.createdate);
+    final fromDate = FileHelper.formatDate(leave.fromDate);
+    final toDate = FileHelper.formatDate(leave.toDate);
+    final createDate = FileHelper.formatDate(leave.createdDate);
 
     return GestureDetector(
       onTap: () {
@@ -290,7 +293,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border:
-              leave.statu == '0'
+              leave.isPending
                   ? Border.all(color: Colors.orange.withOpacity(0.3), width: 1)
                   : null,
           boxShadow: [
@@ -326,7 +329,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(leave.statu),
+                      color: FileHelper.statusColor(status: leave.statusText),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -350,8 +353,14 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                     style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                   ),
                   const Spacer(),
+                  Icon(
+                    leave.isFullDay ? Icons.wb_sunny : Icons.schedule,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
                   Text(
-                    '${leave.numleav} day${(double.parse(leave.numleav) == 1 || double.parse(leave.numleav) == 0.5) ? '' : 's'}',
+                    '${leave.numleav} day${leave.numberOfDays > 1 ? 's' : ''}${leave.isFullDay ? '' : ' (Half Day)'}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -371,7 +380,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                       child: Text(
                         leave.reason,
                         style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -409,6 +418,52 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     );
   }
 
+  Widget _buildPriorityIndicator(PriorityModel priority) {
+    Color color;
+    IconData icon;
+
+    if (priority.isApproved) {
+      color = Colors.green;
+      icon = Icons.check_circle;
+    } else if (priority.isRejected) {
+      color = Colors.red;
+      icon = Icons.cancel;
+    } else {
+      color = Colors.orange;
+      icon = Icons.schedule;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Tooltip(
+        message: '${priority.prioText}: ${priority.apstatuText}',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 12, color: color),
+              const SizedBox(width: 4),
+              Text(
+                priority.prioText.split(' ').first, // Show first word only
+                style: TextStyle(
+                  fontSize: 10,
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -435,7 +490,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   }
 
   void _showFilterDialog() {
-    final currentViewModel = _viewModel; // Capture the current viewModel
+    final currentViewModel = _viewModel;
 
     showModalBottomSheet(
       context: context,
@@ -489,10 +544,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                         ),
                         FilterChip(
                           label: const Text('Pending'),
-                          selected: _selectedStatus == '0',
+                          selected: _selectedStatus == '2',
                           onSelected: (selected) {
                             setState(() {
-                              _selectedStatus = selected ? '0' : null;
+                              _selectedStatus = selected ? '2' : null;
                             });
                             Navigator.pop(context);
                           },
@@ -509,10 +564,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                         ),
                         FilterChip(
                           label: const Text('Rejected'),
-                          selected: _selectedStatus == '2',
+                          selected: _selectedStatus == '0',
                           onSelected: (selected) {
                             setState(() {
-                              _selectedStatus = selected ? '2' : null;
+                              _selectedStatus = selected ? '0' : null;
                             });
                             Navigator.pop(context);
                           },
@@ -520,7 +575,6 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    // Use the captured viewModel directly instead of Consumer
                     if (currentViewModel.availableLeaveTypes.isNotEmpty) ...[
                       const Text(
                         'Leave Type',
@@ -567,42 +621,5 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         );
       },
     );
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('MMM dd, yyyy').format(date);
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case '0':
-        return Colors.red;
-      case '1':
-        return Colors.green;
-      case '2':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case '0':
-        return 'Rejected';
-      case '1':
-        return 'Approved';
-      case '2':
-        return 'Pending';
-      case '3':
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
   }
 }

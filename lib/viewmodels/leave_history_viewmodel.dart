@@ -5,7 +5,6 @@ import '../repositories/leave_history_repository.dart';
 class LeaveHistoryViewModel extends ChangeNotifier {
   final LeaveHistoryRepository _repository = LeaveHistoryRepository();
 
-  // State variables
   List<LeaveHistoryModel> _leaveHistory = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -15,37 +14,34 @@ class LeaveHistoryViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Fetch leave history data
-  Future<void> fetchLeaveHistory() async {
-    _setLoading(true);
-    _clearError();
+  // Computed properties
+  int get pendingCount =>
+      _leaveHistory.where((leave) => leave.isPending).length;
+  int get approvedCount =>
+      _leaveHistory.where((leave) => leave.isApproved).length;
+  int get rejectedCount =>
+      _leaveHistory.where((leave) => leave.isRejected).length;
+  int get cancelledCount =>
+      _leaveHistory.where((leave) => leave.isCancelled).length;
 
-    try {
-      final response = await _repository.getLeaveHistory();
-      if (response != null) {
-        _leaveHistory = response.data;
-        _sortLeaveHistory();
-      } else {
-        _setError('No leave history data found');
-      }
-    } catch (e) {
-      _setError(e.toString());
-    } finally {
-      _setLoading(false);
-    }
+  List<String> get availableLeaveTypes {
+    return _leaveHistory.map((leave) => leave.ltyp).toSet().toList();
   }
 
-  // Sort leave history by creation date (newest first)
-  void _sortLeaveHistory() {
-    _leaveHistory.sort((a, b) {
-      try {
-        final dateA = DateTime.parse(a.createdate);
-        final dateB = DateTime.parse(b.createdate);
-        return dateB.compareTo(dateA); // Newest first
-      } catch (e) {
-        return 0; // Keep original order if date parsing fails
-      }
-    });
+  // Fetch leave history
+  Future<void> fetchLeaveHistory() async {
+    try {
+      _setLoading(true);
+      _setError(null);
+
+      final history = await _repository.getLeaveHistory();
+      _leaveHistory = history;
+
+      _setLoading(false);
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+    }
   }
 
   // Refresh data
@@ -53,56 +49,35 @@ class LeaveHistoryViewModel extends ChangeNotifier {
     await fetchLeaveHistory();
   }
 
-  // Filter methods
+  // Filter leave history
   List<LeaveHistoryModel> getFilteredHistory({
     String? status,
     String? leaveType,
   }) {
     var filtered = _leaveHistory;
 
-    if (status != null && status.isNotEmpty) {
+    if (status != null) {
       filtered = filtered.where((leave) => leave.statu == status).toList();
     }
 
-    if (leaveType != null && leaveType.isNotEmpty) {
+    if (leaveType != null) {
       filtered = filtered.where((leave) => leave.ltyp == leaveType).toList();
     }
+
+    // Sort by created date (newest first)
+    filtered.sort((a, b) => b.createdDate.compareTo(a.createdDate));
 
     return filtered;
   }
 
-  // Get unique leave types for filtering
-  List<String> get availableLeaveTypes {
-    final types = <String>{};
-    for (final leave in _leaveHistory) {
-      if (leave.ltyp.isNotEmpty) {
-        types.add(leave.ltyp);
-      }
-    }
-    return types.toList()..sort();
-  }
-
-  // Get counts by status
-  int get pendingCount =>
-      _leaveHistory.where((leave) => leave.statu == '0').length;
-  int get approvedCount =>
-      _leaveHistory.where((leave) => leave.statu == '1').length;
-  int get rejectedCount =>
-      _leaveHistory.where((leave) => leave.statu == '2').length;
-
-  // Helper methods
+  // Private helper methods
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
 
-  void _setError(String error) {
+  void _setError(String? error) {
     _errorMessage = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _errorMessage = null;
     notifyListeners();
   }
 

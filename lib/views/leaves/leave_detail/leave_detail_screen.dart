@@ -2,180 +2,197 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../models/leave_history_model.dart';
-import '../../../viewmodels/leave_detail_viewmodel.dart';
-import '../update_leave/update_leave_screen.dart';
-import 'package:provider/provider.dart';
 
-class LeaveDetailScreen extends StatefulWidget {
+class LeaveDetailScreen extends StatelessWidget {
   final LeaveHistoryModel leaveRequest;
 
   const LeaveDetailScreen({super.key, required this.leaveRequest});
 
   @override
-  State<LeaveDetailScreen> createState() => _LeaveDetailScreenState();
-}
-
-class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
-  late LeaveDetailViewModel _viewModel;
-
-  @override
-  void initState() {
-    super.initState();
-    _viewModel = LeaveDetailViewModel(widget.leaveRequest);
-  }
-
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          title: const Text(
-            'Leave Details',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: primary,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text(
+          'Leave Details',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
           ),
         ),
-        body: Consumer<LeaveDetailViewModel>(
-          builder: (context, viewModel, child) {
-            return Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLeaveInfoCard(viewModel.leaveRequest),
-                      const SizedBox(height: 16),
-                      _buildStatusCard(viewModel.leaveRequest),
-                      const SizedBox(height: 16),
-                      _buildDetailsCard(viewModel.leaveRequest),
-                      if (viewModel.leaveRequest.statu == '0') ...[
-                        const SizedBox(height: 24),
-                        _buildPendingActionsCard(viewModel),
-                      ],
-                      const SizedBox(height: 16),
-                      _buildTimestampCard(viewModel.leaveRequest),
-                    ],
-                  ),
-                ),
-                if (viewModel.isLoading)
-                  Container(
-                    color: Colors.black.withOpacity(0.3),
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
-              ],
-            );
-          },
+        backgroundColor: primary,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStatusCard(),
+            const SizedBox(height: 16),
+            _buildDetailsCard(),
+            const SizedBox(height: 16),
+            _buildApprovalFlowCard(),
+            const SizedBox(height: 20),
+            if (leaveRequest.isPending) _buildActionButtons(context),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildLeaveInfoCard(LeaveHistoryModel leave) {
-    final fromDate = _formatDate(leave.frdat);
-    final toDate = _formatDate(leave.todat);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+  Widget _buildStatusCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              _getStatusColor(leaveRequest.statu),
+              _getStatusColor(leaveRequest.statu).withOpacity(0.8),
+            ],
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              _getStatusIcon(leaveRequest.statu),
+              size: 48,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              leaveRequest.statusText,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Request ID: ${leaveRequest.lreid}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
+    );
+  }
+
+  Widget _buildDetailsCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Leave Details',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildDetailRow('Leave Type', leaveRequest.ltyp, Icons.category),
+            _buildDetailRow('Employee', leaveRequest.dname, Icons.person),
+            _buildDetailRow(
+              'Duration',
+              leaveRequest.isFullDay ? 'Full Day' : 'Half Day',
+              leaveRequest.isFullDay ? Icons.wb_sunny : Icons.schedule,
+            ),
+            _buildDetailRow(
+              'Number of Days',
+              '${leaveRequest.numleav} day${leaveRequest.numberOfDays > 1 ? 's' : ''}',
+              Icons.calendar_today,
+            ),
+            _buildDetailRow(
+              'From Date',
+              _formatDate(leaveRequest.fromDate),
+              Icons.date_range,
+            ),
+            _buildDetailRow(
+              'To Date',
+              _formatDate(leaveRequest.toDate),
+              Icons.date_range,
+            ),
+            _buildDetailRow(
+              'Applied Date',
+              _formatDate(leaveRequest.createdDate),
+              Icons.schedule,
+            ),
+            if (leaveRequest.reason.isNotEmpty)
+              _buildDetailRow(
+                'Reason',
+                leaveRequest.reason,
+                Icons.notes,
+                isLongText: true,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon, {
+    bool isLongText = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  leave.ltyp,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(leave.statu),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  leave.statusText,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: primary),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 20, color: Colors.blue[600]),
-              const SizedBox(width: 12),
-              Text(
-                'Duration',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 32),
+          const SizedBox(width: 16),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  fromDate == toDate ? fromDate : '$fromDate - $toDate',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${leave.numleav} day${double.parse(leave.numleav) != 1 ? 's' : ''}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: isLongText ? null : 1,
+                  overflow: isLongText ? null : TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -185,381 +202,148 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     );
   }
 
-  Widget _buildStatusCard(LeaveHistoryModel leave) {
-    IconData statusIcon;
-    Color statusIconColor;
-    String statusDescription;
+  Widget _buildApprovalFlowCard() {
+    // Sort priorities by priority level
+    final sortedPriorities = [...leaveRequest.prioList];
+    sortedPriorities.sort((a, b) => a.prio.compareTo(b.prio));
 
-    switch (leave.statu) {
-      case '0':
-        statusIcon = Icons.pending_actions;
-        statusIconColor = Colors.orange;
-        statusDescription =
-            'Your leave request is pending approval from your manager.';
-        break;
-      case '1':
-        statusIcon = Icons.check_circle;
-        statusIconColor = Colors.green;
-        statusDescription =
-            'Your leave request has been approved by your manager.';
-        break;
-      case '2':
-        statusIcon = Icons.cancel;
-        statusIconColor = Colors.red;
-        statusDescription =
-            'Your leave request has been rejected by your manager.';
-        break;
-      default:
-        statusIcon = Icons.help_outline;
-        statusIconColor = Colors.grey;
-        statusDescription = 'Status unknown.';
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(statusIcon, size: 24, color: statusIconColor),
-              const SizedBox(width: 12),
-              const Text(
-                'Status',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Approval Flow',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            statusDescription,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              height: 1.4,
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            ...sortedPriorities.asMap().entries.map((entry) {
+              final index = entry.key;
+              final priority = entry.value;
+              final isLast = index == sortedPriorities.length - 1;
+
+              return _buildApprovalStep(priority, isLast);
+            }),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetailsCard(LeaveHistoryModel leave) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Details',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildDetailRow('Request ID', leave.lreid),
-          _buildDetailRow('Leave Type', leave.ltyp),
-          _buildDetailRow(
-            'Duration',
-            '${leave.numleav} day${double.parse(leave.numleav) != 1 ? 's' : ''}',
-          ),
-          if (leave.reason.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Text(
-              'Reason',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
+  Widget _buildApprovalStep(PriorityModel priority, bool isLast) {
+    Color statusColor;
+    IconData statusIcon;
+    String statusText = priority.apstatuText;
+
+    if (priority.isApproved) {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle;
+    } else if (priority.isRejected) {
+      statusColor = Colors.red;
+      statusIcon = Icons.cancel;
+    } else {
+      statusColor = Colors.orange;
+      statusIcon = Icons.schedule;
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[200]!),
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: statusColor, width: 2),
               ),
-              child: Text(
-                leave.reason,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                  height: 1.4,
-                ),
+              child: Icon(statusIcon, color: statusColor, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    priority.prioText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: statusColor.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ],
-      ),
+        ),
+        if (!isLast)
+          Container(
+            margin: const EdgeInsets.only(left: 19, top: 8, bottom: 8),
+            width: 2,
+            height: 30,
+            color: Colors.grey[300],
+          ),
+      ],
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              _showCancelConfirmation(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-          ),
-          const Text(': '),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
+            icon: const Icon(Icons.cancel),
+            label: const Text(
+              'Cancel Request',
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildPendingActionsCard(LeaveDetailViewModel viewModel) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Actions',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.edit,
-                  label: 'Update',
-                  color: Colors.blue,
-                  onTap: () => _showUpdateDialog(viewModel),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.message,
-                  label: 'Follow Up',
-                  color: Colors.orange,
-                  onTap: () => _showFollowUpDialog(viewModel),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: _buildActionButton(
-              icon: Icons.cancel_outlined,
-              label: 'Cancel Request',
-              color: Colors.red,
-              onTap: () => _showCancelDialog(viewModel),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-
-  Widget _buildTimestampCard(LeaveHistoryModel leave) {
-    final createDate = _formatDateTime(leave.createdate);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.schedule, size: 20, color: Colors.grey[600]),
-              const SizedBox(width: 8),
-              const Text(
-                'Timeline',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Applied on: $createDate',
-            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showUpdateDialog(LeaveDetailViewModel viewModel) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) =>
-                UpdateLeaveScreen(leaveRequest: viewModel.leaveRequest),
-      ),
-    ).then((result) {
-      // If the leave was successfully updated, refresh the current screen
-      if (result == true) {
-        Navigator.pop(context, true); // Return to leave history with refresh
-      }
-    });
-  }
-
-  void _showFollowUpDialog(LeaveDetailViewModel viewModel) {
-    final TextEditingController messageController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Follow Up with Manager'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Send a follow-up message to your manager regarding this leave request.',
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: messageController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your message...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (messageController.text.trim().isNotEmpty) {
-                    Navigator.pop(context);
-                    // TODO: Send follow-up message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Follow-up message sent successfully!'),
-                      ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                child: const Text(
-                  'Send',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _showCancelDialog(LeaveDetailViewModel viewModel) {
+  void _showCancelConfirmation(BuildContext context) {
     showDialog(
       context: context,
       builder:
@@ -571,71 +355,59 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('No, Keep It'),
+                child: const Text('No'),
               ),
               ElevatedButton(
                 onPressed: () {
+                  // TODO: Implement cancel functionality
                   Navigator.pop(context);
-                  // TODO: Cancel leave request
-                  viewModel.cancelLeaveRequest().then((_) {
-                    if (viewModel.errorMessage == null) {
-                      Navigator.pop(context, true); // Return to previous screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Leave request cancelled successfully!',
-                          ),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(viewModel.errorMessage!),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  });
+                  Navigator.pop(context, true); // Return to previous screen
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Leave request cancelled'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text(
-                  'Yes, Cancel',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text('Yes, Cancel'),
               ),
             ],
           ),
     );
   }
 
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('MMM dd, yyyy').format(date);
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  String _formatDateTime(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('MMM dd, yyyy at hh:mm a').format(date);
-    } catch (e) {
-      return dateString;
-    }
+  String _formatDate(DateTime date) {
+    return DateFormat('EEEE, MMM dd, yyyy').format(date);
   }
 
   Color _getStatusColor(String status) {
     switch (status) {
       case '0':
-        return Colors.orange;
+        return Colors.red;
       case '1':
         return Colors.green;
       case '2':
-        return Colors.red;
+        return Colors.orange;
+      case '3':
+        return Colors.grey;
       default:
         return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case '0':
+        return Icons.cancel;
+      case '1':
+        return Icons.check_circle;
+      case '2':
+        return Icons.schedule;
+      case '3':
+        return Icons.block;
+      default:
+        return Icons.help;
     }
   }
 }

@@ -8,7 +8,8 @@ class ServerService {
   static const String prodUrl =
       'http://192.168.111.23:2004/api/'; // prod running
   static const String uatUrl = 'http://192.168.111.23:2004/api/'; // uat running
-  static const String devUrl = 'http://192.168.1.15:8000/api/'; // local running
+  static const String devUrl =
+      'http://192.168.53.129:8000/api/'; // local running
 
   String _baseUrl = devUrl;
   String _baseUrlName = "";

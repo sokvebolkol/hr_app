@@ -106,6 +106,14 @@ class FileHelper {
     return formatter.format(now);
   }
 
+
+  /**
+   * Date format
+   */
+  static formatDate(DateTime date) {
+    return DateFormat('MMM dd, yyyy').format(date);
+  }
+
   /**
    * Get color based on leave status
    * @param status: Leave status as a string
@@ -119,8 +127,26 @@ class FileHelper {
       case "Rejected":
         return Colors.red;
       case "Pending":
+        return Colors.orangeAccent;
+      case "Cancelled":
+        return Colors.grey;
       default:
         return Colors.orangeAccent;
+    }
+  }
+
+  String getStatusText(String status) {
+    switch (status) {
+      case '0':
+        return 'Rejected';
+      case '1':
+        return 'Approved';
+      case '2':
+        return 'Pending';
+      case '3':
+        return 'Cancelled';
+      default:
+        return 'Unknown';
     }
   }
 }

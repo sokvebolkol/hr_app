@@ -8,7 +8,7 @@ class LeaveHistoryRepository {
   final ServerService _serverService = ServerService();
 
   // Get leave history data
-  Future<LeaveHistoryResponse?> getLeaveHistory() async {
+  Future<List<LeaveHistoryModel>> getLeaveHistory() async {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");
@@ -18,7 +18,9 @@ class LeaveHistoryRepository {
       }
 
       final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}get-leaves'),
+        Uri.parse(
+          '${_serverService.baseUrl}get-leaves',
+        ), // Update with your actual endpoint
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -28,11 +30,12 @@ class LeaveHistoryRepository {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         if (data['success'] == true) {
-          return LeaveHistoryResponse.fromJson(data);
+          return (data['leaves'] as List)
+              .map((e) => LeaveHistoryModel.fromJson(e))
+              .toList();
         } else {
-          throw Exception('Failed to fetch leave history');
+          throw Exception('Failed to load leave history');
         }
       } else {
         throw Exception(
