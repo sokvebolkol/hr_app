@@ -135,7 +135,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     return leaveFor == 'Full Day' ? 1 : 0; // 1 for Full Day, 0 for Half Day
   }
 
-  // Add submit function
+  // Updated submit function with file upload support
   Future<void> _submitLeaveRequest() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -153,6 +153,46 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       return;
     }
 
+    // Validate file if provided
+    if (documentPhoto != null) {
+      final file = File(documentPhoto!.path);
+
+      // Check if file exists
+      if (!await file.exists()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Selected file does not exist. Please select again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Validate file type
+      if (!_repository.isValidImageFile(file)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please select a valid image file (JPG, JPEG, PNG, PDF)',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Validate file size
+      if (!await _repository.isValidFileSize(file)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('File size must be less than 5MB'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
     try {
       setState(() {
         isSubmitting = true;
@@ -162,7 +202,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       final fromDate = DateFormat('yyyy-MM-dd').format(leaveDateRange!.start);
       final toDate = DateFormat('yyyy-MM-dd').format(leaveDateRange!.end);
 
-      // Submit leave request
+      // Prepare file for upload
+      File? fileToUpload;
+      if (documentPhoto != null) {
+        fileToUpload = File(documentPhoto!.path);
+      }
+
+      // Submit leave request with file
       final response = await _repository.submitLeaveRequest(
         leaveType: selectedLeaveType!.leaid,
         fromDate: fromDate,
@@ -171,15 +217,36 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         leaveFor: leaveForValue,
         totalLeave: totalLeaveDays,
         approvers: formattedApprovers,
+        file: fileToUpload, // Pass the file
       );
 
       if (response.success && mounted) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.message),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(response.message),
+                if (response.lreid != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Request ID: ${response.lreid}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+                if (response.fileUrl != null) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Document uploaded successfully',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
           ),
         );
 
@@ -188,13 +255,31 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = e.toString().replaceAll('Exception: ', '');
+
+        // Handle specific error cases
+        if (errorMessage.contains('requires medical certificate')) {
+          errorMessage =
+              'This leave type requires a medical certificate or supporting document.';
+        } else if (errorMessage.contains('file')) {
+          errorMessage =
+              'File upload failed. Please check your file and try again.';
+        } else if (errorMessage.contains('network') ||
+            errorMessage.contains('connection')) {
+          errorMessage =
+              'Network error. Please check your connection and try again.';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Error: ${e.toString().replaceAll('Exception: ', '')}',
-            ),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _submitLeaveRequest(),
+            ),
           ),
         );
       }
@@ -772,6 +857,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           ),
                                         ],
                                       ),
+                                      const SizedBox(height: 16),
                                     ],
 
                                     // Approvers - Updated to use backend data
