@@ -53,7 +53,7 @@ class LeaveRequestRepository {
     }
   }
 
-  // Updated submit leave request function with single file upload support
+  // Updated submit leave request function with validation
   Future<LeaveRequestResponse> submitLeaveRequest({
     required String leaveType,
     required String fromDate,
@@ -65,6 +65,42 @@ class LeaveRequestRepository {
     File? file,
   }) async {
     try {
+      // Validate total leave
+      if (totalLeave <= 0) {
+        throw Exception('Total leave days must be greater than 0');
+      }
+
+      // Validate other required fields
+      if (leaveType.isEmpty) {
+        throw Exception('Please select a leave type');
+      }
+
+      if (fromDate.isEmpty || toDate.isEmpty) {
+        throw Exception('Please select valid dates');
+      }
+
+      if (reason.trim().isEmpty) {
+        throw Exception('Please provide a reason for your leave');
+      }
+
+      if (approvers.isEmpty) {
+        throw Exception('Please select at least one approver');
+      }
+
+      // Validate date range
+      final startDate = DateTime.parse(fromDate);
+      final endDate = DateTime.parse(toDate);
+
+      if (endDate.isBefore(startDate)) {
+        throw Exception('End date cannot be before start date');
+      }
+
+      // Validate future dates (optional - remove if past dates are allowed)
+      final today = DateTime.now();
+      if (startDate.isBefore(DateTime(today.year, today.month, today.day))) {
+        throw Exception('Leave start date cannot be in the past');
+      }
+
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");
 
@@ -78,6 +114,23 @@ class LeaveRequestRepository {
         throw Exception(
           '${_getLeaveTypeName(leaveType)} requires medical certificate or supporting document',
         );
+      }
+
+      // Additional file validation if file is provided
+      if (file != null) {
+        if (!await file.exists()) {
+          throw Exception('Selected file does not exist');
+        }
+
+        if (!isValidImageFile(file)) {
+          throw Exception(
+            'Please select a valid file type (JPG, JPEG, PNG)',
+          );
+        }
+
+        if (!await isValidFileSize(file)) {
+          throw Exception('File size must be less than 5MB');
+        }
       }
 
       // Use multipart request if there is a file
@@ -160,10 +213,6 @@ class LeaveRequestRepository {
       }
       if (await file.exists()) {
         try {
-          // Check file type before upload
-          final extension = _getFileExtension(file.path);
-          print('File extension: $extension');
-
           final multipartFile = await http.MultipartFile.fromPath(
             'file',
             file.path,
@@ -178,36 +227,24 @@ class LeaveRequestRepository {
       }
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+      final data = json.decode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = json.decode(response.body);
         return LeaveRequestResponse.fromJson(data);
       } else {
-        // Try to parse error response
-        try {
-          final errorData = json.decode(response.body);
-          // Handle validation errors
-          if (errorData['errors'] != null) {
-            final errors = errorData['errors'] as Map<String, dynamic>;
-            String errorMessage = 'Validation failed:\n';
+        // For non-success status codes, still parse the response
+        // but the response object will have success: false
+        final errorResponse = LeaveRequestResponse.fromJson(data);
 
-            errors.forEach((field, messages) {
-              if (messages is List) {
-                errorMessage += '• $field: ${messages.join(', ')}\n';
-              }
-            });
-
-            throw Exception(errorMessage.trim());
-          }
-
-          throw Exception(
-            errorData['message'] ?? 'Failed to submit leave request with file',
-          );
-        } catch (jsonError) {
-          throw Exception(
-            'Server error (${response.statusCode}): ${response.body}',
-          );
+        // If the backend returned a structured error, throw with the message
+        if (!errorResponse.success) {
+          throw Exception(errorResponse.message);
         }
+
+        // Fallback error handling
+        throw Exception(
+          data['message'] ?? 'Failed to submit leave request with file',
+        );
       }
     } catch (e) {
       print('Error in _submitWithFile: $e');
@@ -233,10 +270,8 @@ class LeaveRequestRepository {
       "reason": reason,
       "leave_for": leaveFor,
       "total_leave": totalLeave,
-      "approvers": approvers, // Keep as array for JSON requests
+      "approvers": approvers,
     };
-
-    print('Request body: ${json.encode(body)}');
 
     final response = await http.post(
       Uri.parse('${_serverService.baseUrl}request-leave'),
@@ -248,35 +283,22 @@ class LeaveRequestRepository {
       body: json.encode(body),
     );
 
+    // Parse response regardless of status code
+    final data = json.decode(response.body);
+
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = json.decode(response.body);
       return LeaveRequestResponse.fromJson(data);
     } else {
-      try {
-        final errorData = json.decode(response.body);
+      // For non-success status codes, still parse the response
+      final errorResponse = LeaveRequestResponse.fromJson(data);
 
-        // Handle validation errors
-        if (errorData['errors'] != null) {
-          final errors = errorData['errors'] as Map<String, dynamic>;
-          String errorMessage = 'Validation failed:\n';
-
-          errors.forEach((field, messages) {
-            if (messages is List) {
-              errorMessage += '• $field: ${messages.join(', ')}\n';
-            }
-          });
-
-          throw Exception(errorMessage.trim());
-        }
-
-        throw Exception(
-          errorData['message'] ?? 'Failed to submit leave request',
-        );
-      } catch (jsonError) {
-        throw Exception(
-          'Server error (${response.statusCode}): ${response.body}',
-        );
+      // If the backend returned a structured error, throw with the message
+      if (!errorResponse.success) {
+        throw Exception(errorResponse.message);
       }
+
+      // Fallback error handling
+      throw Exception(data['message'] ?? 'Failed to submit leave request');
     }
   }
 
@@ -323,6 +345,112 @@ class LeaveRequestRepository {
 
     return fileSizeInBytes <= maxSizeInBytes;
   }
+
+  // Helper method to validate leave request data
+  String? validateLeaveRequest({
+    required String leaveType,
+    required String fromDate,
+    required String toDate,
+    required String reason,
+    required double totalLeave,
+    required List<Map<String, dynamic>> approvers,
+    File? file,
+  }) {
+    // Validate total leave
+    if (totalLeave <= 0) {
+      return 'Total leave days must be greater than 0';
+    }
+
+    // Validate leave type
+    if (leaveType.isEmpty) {
+      return 'Please select a leave type';
+    }
+
+    // Validate dates
+    if (fromDate.isEmpty || toDate.isEmpty) {
+      return 'Please select valid dates';
+    }
+
+    try {
+      final startDate = DateTime.parse(fromDate);
+      final endDate = DateTime.parse(toDate);
+
+      if (endDate.isBefore(startDate)) {
+        return 'End date cannot be before start date';
+      }
+
+      // Check if dates are in the past (optional)
+      final today = DateTime.now();
+      if (startDate.isBefore(DateTime(today.year, today.month, today.day))) {
+        return 'Leave start date cannot be in the past';
+      }
+    } catch (e) {
+      return 'Invalid date format';
+    }
+
+    // Validate reason
+    if (reason.trim().isEmpty) {
+      return 'Please provide a reason for your leave';
+    }
+
+    if (reason.trim().length < 10) {
+      return 'Reason must be at least 10 characters long';
+    }
+
+    // Validate approvers
+    if (approvers.isEmpty) {
+      return 'Please select at least one approver';
+    }
+
+    // Validate file if required
+    final requiresFile = _leaveTypeRequiresFile(leaveType);
+    if (requiresFile && file == null) {
+      return '${_getLeaveTypeName(leaveType)} requires medical certificate or supporting document';
+    }
+
+    return null; // No validation errors
+  }
+
+  // Enhanced validation for total leave calculation
+  static double calculateTotalLeave({
+    required DateTime fromDate,
+    required DateTime toDate,
+    required int leaveFor, // 1 = Full Day, 2 = Half Day
+    List<String> holidays = const [],
+  }) {
+    if (toDate.isBefore(fromDate)) {
+      throw Exception('End date cannot be before start date');
+    }
+
+    double totalDays = 0;
+    DateTime currentDate = fromDate;
+
+    while (currentDate.isBefore(toDate) ||
+        currentDate.isAtSameMomentAs(toDate)) {
+      // Skip weekends (Saturday = 6, Sunday = 7)
+      if (currentDate.weekday != DateTime.saturday &&
+          currentDate.weekday != DateTime.sunday) {
+        // Check if it's not a holiday
+        final dateString = currentDate.toIso8601String().split('T')[0];
+        if (!holidays.contains(dateString)) {
+          if (leaveFor == 2) {
+            // Half day
+            totalDays += 0.5;
+          } else {
+            // Full day
+            totalDays += 1.0;
+          }
+        }
+      }
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+
+    if (totalDays <= 0) {
+      throw Exception('No valid working days found in the selected date range');
+    }
+
+    return totalDays;
+  }
 }
 
 class LeaveRequestData {
@@ -344,7 +472,7 @@ class LeaveRequestResponse {
   final bool success;
   final String message;
   final String? lreid;
-  final String? fileUrl; // Single file URL instead of list
+  final String? fileUrl;
 
   LeaveRequestResponse({
     required this.success,

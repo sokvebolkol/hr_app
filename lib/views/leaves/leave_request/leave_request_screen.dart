@@ -72,11 +72,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   List<ApproverModel> get sortedApprovers {
     final sorted = [...approvers];
     sorted.sort((a, b) => a.approvalLevel.compareTo(b.approvalLevel));
-    // If you want to show all approvers including HR:
     return sorted;
-
-    // If you want to keep excluding level 98 (HR):
-    // return sorted.where((approver) => approver.approvalLevel < 98).toList();
   }
 
   double get totalLeaveDays {
@@ -135,7 +131,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     return leaveFor == 'Full Day' ? 1 : 0; // 1 for Full Day, 0 for Half Day
   }
 
-  // Updated submit function with file upload support
+  // Updated submit function - simplified success handling
   Future<void> _submitLeaveRequest() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -217,71 +213,33 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         leaveFor: leaveForValue,
         totalLeave: totalLeaveDays,
         approvers: formattedApprovers,
-        file: fileToUpload, // Pass the file
+        file: fileToUpload,
       );
 
       if (response.success && mounted) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(response.message),
-                if (response.lreid != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Request ID: ${response.lreid}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-                if (response.fileUrl != null) ...[
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Document uploaded successfully',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-
-        // Navigate back to previous screen
-        Navigator.pop(context, true); // Return true to indicate success
+        // Show simple success dialog
+        await _showSuccessDialog(response.message);
+      } else if (mounted) {
+        // Handle failed response from backend (success: false)
+        await _showErrorDialog(response.message);
       }
     } catch (e) {
       if (mounted) {
-        String errorMessage = e.toString().replaceAll('Exception: ', '');
+        // Extract the actual error message from the exception
+        String errorMessage = e.toString();
 
-        // Handle specific error cases
-        if (errorMessage.contains('requires medical certificate')) {
-          errorMessage =
-              'This leave type requires a medical certificate or supporting document.';
-        } else if (errorMessage.contains('file')) {
-          errorMessage =
-              'File upload failed. Please check your file and try again.';
-        } else if (errorMessage.contains('network') ||
-            errorMessage.contains('connection')) {
-          errorMessage =
-              'Network error. Please check your connection and try again.';
+        // Remove "Exception: " prefix if present
+        if (errorMessage.startsWith('Exception: ')) {
+          errorMessage = errorMessage.substring(11);
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: () => _submitLeaveRequest(),
-            ),
-          ),
-        );
+        // Remove "Error submitting leave request: " prefix if present
+        if (errorMessage.startsWith('Error submitting leave request: ')) {
+          errorMessage = errorMessage.substring(33);
+        }
+
+        // Show the cleaned error message
+        await _showErrorDialog(errorMessage);
       }
     } finally {
       if (mounted) {
@@ -290,6 +248,218 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         });
       }
     }
+  }
+
+  // Simple success dialog with backend message and OK button
+  Future<void> _showSuccessDialog(String message) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button to close
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Success Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 50,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Success Title
+              const Text(
+                'Success!',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Backend Message
+              Text(
+                message, // Direct backend message: "Leave request submitted successfully"
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(true); // Return to home/dashboard
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Simple error dialog
+  Future<void> _showErrorDialog(String errorMessage) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Error Icon
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 50,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Error Title
+              const Text(
+                'Request Failed',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Error Message
+              Text(
+                errorMessage,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _submitLeaveRequest(); // Retry submission
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Reset form for new request
+  void _resetForm() {
+    setState(() {
+      selectedLeaveType = null;
+      leaveDateRange = null;
+      leaveFor = 'Full Day';
+      halfDaySession = 'Morning';
+      reason = '';
+      approver = null;
+      documentSupport = null;
+      documentPhoto = null;
+    });
+
+    // Clear form validation
+    _formKey.currentState?.reset();
   }
 
   @override
