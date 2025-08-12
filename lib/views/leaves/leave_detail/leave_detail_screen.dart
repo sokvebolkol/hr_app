@@ -1,7 +1,10 @@
+import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../models/leave_history_model.dart';
+import '../../../widgets/compact_detail_row.dart';
+import '../../../widgets/compact_follow_up_button.dart';
+import '../../../repositories/leave_detail_repository.dart'; // Add this import
 
 class LeaveDetailScreen extends StatefulWidget {
   final LeaveHistoryModel leaveRequest;
@@ -16,6 +19,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  final LeaveDetailRepository _repository =
+      LeaveDetailRepository(); // Add repository instance
+  bool _isCancelling = false; // Add loading state
 
   @override
   void initState() {
@@ -63,12 +69,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
               // Compact Status Header
               _buildCompactStatusCard(),
               const SizedBox(height: 16),
-
               // Combined Details and Approval Flow
               _buildMainContentCard(),
-
               const SizedBox(height: 16),
-
               // Action Buttons (if needed)
               if (widget.leaveRequest.isPending) _buildActionButtons(),
             ],
@@ -87,13 +90,17 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _getStatusColor(widget.leaveRequest.statu),
-            _getStatusColor(widget.leaveRequest.statu).withOpacity(0.8),
+            FileHelper.getStatusColor(widget.leaveRequest.statu),
+            FileHelper.getStatusColor(
+              widget.leaveRequest.statu,
+            ).withOpacity(0.8),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: _getStatusColor(widget.leaveRequest.statu).withOpacity(0.3),
+            color: FileHelper.getStatusColor(
+              widget.leaveRequest.statu,
+            ).withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 8,
             offset: const Offset(0, 4),
@@ -109,7 +116,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              _getStatusIcon(widget.leaveRequest.statu),
+              FileHelper.getStatusIcon(widget.leaveRequest.statu),
               size: 32,
               color: Colors.white,
             ),
@@ -180,7 +187,6 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
         children: [
           // Details Section
           _buildDetailsSection(),
-
           // Divider
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -222,22 +228,26 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
               Expanded(
                 child: Column(
                   children: [
-                    _buildCompactDetailRow(
-                      'Employee',
-                      widget.leaveRequest.dname,
-                      Icons.person,
+                    CompactDetailRow(
+                      label: 'Employee',
+                      value: widget.leaveRequest.dname,
+                      icon: Icons.person,
                     ),
                     const SizedBox(height: 12),
-                    _buildCompactDetailRow(
-                      'From',
-                      _formatCompactDate(widget.leaveRequest.fromDate),
-                      Icons.date_range,
+                    CompactDetailRow(
+                      label: 'From',
+                      value: FileHelper.formatDate(
+                        widget.leaveRequest.fromDate,
+                      ),
+                      icon: Icons.date_range,
                     ),
                     const SizedBox(height: 12),
-                    _buildCompactDetailRow(
-                      'Applied',
-                      _formatCompactDate(widget.leaveRequest.createdDate),
-                      Icons.schedule,
+                    CompactDetailRow(
+                      label: 'Applied',
+                      value: FileHelper.formatDate(
+                        widget.leaveRequest.createdDate,
+                      ),
+                      icon: Icons.schedule,
                     ),
                   ],
                 ),
@@ -247,22 +257,23 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
               Expanded(
                 child: Column(
                   children: [
-                    _buildCompactDetailRow(
-                      'Type',
-                      widget.leaveRequest.ltyp,
-                      Icons.category,
+                    CompactDetailRow(
+                      label: 'Type',
+                      value: widget.leaveRequest.ltyp,
+                      icon: Icons.category,
                     ),
                     const SizedBox(height: 12),
-                    _buildCompactDetailRow(
-                      'To',
-                      _formatCompactDate(widget.leaveRequest.toDate),
-                      Icons.date_range,
+                    CompactDetailRow(
+                      label: 'To',
+                      value: FileHelper.formatDate(widget.leaveRequest.toDate),
+                      icon: Icons.date_range,
                     ),
                     const SizedBox(height: 12),
-                    _buildCompactDetailRow(
-                      'Duration',
-                      '${widget.leaveRequest.numleav} day${widget.leaveRequest.numberOfDays > 1 ? 's' : ''}',
-                      Icons.access_time,
+                    CompactDetailRow(
+                      label: 'Duration',
+                      value:
+                          '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
+                      icon: Icons.access_time,
                     ),
                   ],
                 ),
@@ -307,47 +318,6 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
               ),
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactDetailRow(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: primary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
         ],
       ),
     );
@@ -457,7 +427,6 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
                 ),
               ),
               const SizedBox(width: 12),
-
               // Approver info
               Expanded(
                 child: Column(
@@ -484,9 +453,11 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
                 ),
               ),
 
-              // Status and Follow-up
+              // Status and Follow-up - UPDATED TO USE GLOBAL WIDGET
               if (priority.isPending && widget.leaveRequest.isPending)
-                _buildCompactFollowUpButton(priority)
+                CompactFollowUpButton(
+                  onTap: () => _showFollowUpDialog(priority),
+                )
               else
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -511,179 +482,6 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
         ),
         if (!isLast) const SizedBox(height: 8),
       ],
-    );
-  }
-
-  Widget _buildHorizontalApprovalStep(
-    PriorityModel priority,
-    bool isLast,
-    int stepIndex,
-  ) {
-    Color statusColor;
-    IconData statusIcon;
-
-    if (priority.isApproved) {
-      statusColor = Colors.green;
-      statusIcon = Icons.check_circle;
-    } else if (priority.isRejected) {
-      statusColor = Colors.red;
-      statusIcon = Icons.cancel;
-    } else {
-      statusColor = Colors.orange;
-      statusIcon = Icons.schedule;
-    }
-
-    return Row(
-      children: [
-        Container(
-          width: 130, // Reduced width
-          padding: const EdgeInsets.all(10), // Reduced padding
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: statusColor.withOpacity(0.2)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min, // Important: prevent overflow
-            children: [
-              // Step indicator
-              Container(
-                width: 36, // Reduced size
-                height: 36,
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: statusColor, width: 2),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Text(
-                        '${stepIndex + 1}',
-                        style: TextStyle(
-                          fontSize: 12, // Reduced font size
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: -1,
-                      bottom: -1,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(statusIcon, color: statusColor, size: 10),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 6), // Reduced spacing
-              // Approver info
-              Text(
-                priority.prioText.split(' ').first, // First word only
-                style: TextStyle(
-                  fontSize: 9, // Reduced font size
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                priority.approverName.split(' ').first, // First name only
-                style: const TextStyle(
-                  fontSize: 11, // Reduced font size
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-
-              // Status and Follow-up
-              Flexible(
-                // Use Flexible to prevent overflow
-                child:
-                    priority.isPending && widget.leaveRequest.isPending
-                        ? _buildCompactFollowUpButton(priority)
-                        : Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            priority.apstatuText,
-                            style: TextStyle(
-                              fontSize: 9, // Reduced font size
-                              fontWeight: FontWeight.w600,
-                              color: statusColor,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-              ),
-            ],
-          ),
-        ),
-
-        // Arrow connector
-        if (!isLast)
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6,
-            ), // Reduced padding
-            child: Icon(Icons.arrow_forward, color: Colors.grey[400], size: 18),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCompactFollowUpButton(PriorityModel priority) {
-    return GestureDetector(
-      onTap: () => _showFollowUpDialog(priority),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 6,
-          vertical: 3,
-        ), // Reduced padding
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.blue, Colors.blue.shade600]),
-          borderRadius: BorderRadius.circular(6), // Reduced border radius
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.message,
-              size: 8,
-              color: Colors.white,
-            ), // Reduced icon size
-            SizedBox(width: 3), // Reduced spacing
-            Text(
-              'Follow Up',
-              style: TextStyle(
-                fontSize: 8, // Reduced font size
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -726,99 +524,163 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
 
   void _showFollowUpDialog(PriorityModel priority) {
     final messageController = TextEditingController();
+    bool isSending = false;
 
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+          (context) => StatefulBuilder(
+            builder:
+                (context, setDialogState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
-                    Icons.message,
-                    color: Colors.blue,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text('Follow Up', style: TextStyle(fontSize: 18)),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  title: Row(
                     children: [
-                      Text(
-                        priority.approverName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.message,
+                          color: Colors.blue,
+                          size: 20,
                         ),
                       ),
-                      Text(
-                        priority.prioText,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      const SizedBox(width: 12),
+                      const Text('Follow Up', style: TextStyle(fontSize: 18)),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              priority.approverName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              priority.prioText,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: messageController,
+                        maxLines: 3,
+                        enabled: !isSending,
+                        decoration: InputDecoration(
+                          hintText: 'Enter your message...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: messageController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your message...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  actions: [
+                    TextButton(
+                      onPressed:
+                          isSending ? null : () => Navigator.pop(context),
+                      child: const Text('Cancel'),
                     ),
-                    contentPadding: const EdgeInsets.all(12),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (messageController.text.trim().isNotEmpty) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Follow-up sent to ${priority.approverName}',
-                        ),
-                        backgroundColor: Colors.green,
+                    ElevatedButton(
+                      onPressed:
+                          isSending
+                              ? null
+                              : () async {
+                                if (messageController.text.trim().isNotEmpty) {
+                                  setDialogState(() {
+                                    isSending = true;
+                                  });
+
+                                  try {
+                                    final success = await _repository
+                                        .sendFollowUpMessage(
+                                          widget.leaveRequest.lreid,
+                                          messageController.text.trim(),
+                                        );
+
+                                    if (!mounted) return;
+
+                                    Navigator.pop(context);
+
+                                    if (success) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Follow-up sent to ${priority.approverName}',
+                                          ),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Failed to send follow-up. Please try again.',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (!mounted) return;
+
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Error: ${e.toString()}'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
                       ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text(
-                  'Send',
-                  style: TextStyle(color: Colors.white),
+                      child:
+                          isSending
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'Send',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
           ),
     );
   }
@@ -826,6 +688,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
   void _showCancelConfirmation() {
     showDialog(
       context: context,
+      barrierDismissible: false, // Prevent dismissing during loading
       builder:
           (context) => AlertDialog(
             shape: RoundedRectangleBorder(
@@ -843,62 +706,149 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isCancelling ? null : () => Navigator.pop(context),
                 child: const Text('No'),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context, true);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Leave request cancelled'),
-                      backgroundColor: Colors.red,
+              StatefulBuilder(
+                builder:
+                    (context, setDialogState) => ElevatedButton(
+                      onPressed:
+                          _isCancelling
+                              ? null
+                              : () => _cancelLeaveRequest(setDialogState),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child:
+                          _isCancelling
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'Yes, Cancel',
+                                style: TextStyle(color: Colors.white),
+                              ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text(
-                  'Yes, Cancel',
-                  style: TextStyle(color: Colors.white),
-                ),
               ),
             ],
           ),
     );
   }
 
-  String _formatCompactDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy').format(date);
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case '0':
-        return Colors.red;
-      case '1':
-        return Colors.green;
-      case '2':
-        return Colors.orange;
-      case '3':
-        return Colors.grey;
-      default:
-        return Colors.grey;
+  // Updated method to handle cancel leave request with API call
+  Future<void> _cancelLeaveRequest([StateSetter? setDialogState]) async {
+    // Update both dialog state and widget state
+    if (setDialogState != null) {
+      setDialogState(() {
+        _isCancelling = true;
+      });
     }
-  }
 
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case '0':
-        return Icons.cancel;
-      case '1':
-        return Icons.check_circle;
-      case '2':
-        return Icons.schedule;
-      case '3':
-        return Icons.block;
-      default:
-        return Icons.help;
+    if (mounted) {
+      setState(() {
+        _isCancelling = true;
+      });
+    }
+
+    try {
+      // Add null check for repository
+      if (_repository == null) {
+        throw Exception('Repository not initialized');
+      }
+
+      final success = await _repository.cancelLeaveRequest(
+        widget.leaveRequest.lreid,
+      );
+
+      // Update states
+      if (setDialogState != null) {
+        setDialogState(() {
+          _isCancelling = false;
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _isCancelling = false;
+        });
+      }
+
+      if (!mounted) return;
+
+      if (success) {
+        Navigator.pop(context); // Close dialog
+        Navigator.pop(context, true); // Go back to previous screen with result
+
+        // Use a post frame callback to ensure the widget is still mounted
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Leave request cancelled successfully'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        });
+      } else {
+        Navigator.pop(context); // Close dialog
+
+        // Use a post frame callback to ensure the widget is still mounted
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Failed to cancel leave request. Please try again.',
+                ),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      // Update states on error
+      if (setDialogState != null) {
+        setDialogState(() {
+          _isCancelling = false;
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          _isCancelling = false;
+        });
+      }
+
+      if (!mounted) return;
+
+      Navigator.pop(context); // Close dialog
+
+      // Use a post frame callback to ensure the widget is still mounted
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: () => _showCancelConfirmation(),
+              ),
+            ),
+          );
+        }
+      });
     }
   }
 }

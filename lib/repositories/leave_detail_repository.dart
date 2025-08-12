@@ -17,7 +17,7 @@ class LeaveDetailRepository {
       }
 
       final response = await http.post(
-        Uri.parse('${_serverService.baseUrl}cancel-leave'),
+        Uri.parse('${_serverService.baseUrl}leave/$leaveId/cancel'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

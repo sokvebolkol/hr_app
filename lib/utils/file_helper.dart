@@ -106,7 +106,6 @@ class FileHelper {
     return formatter.format(now);
   }
 
-
   /**
    * Date format
    */
@@ -147,6 +146,36 @@ class FileHelper {
         return 'Cancelled';
       default:
         return 'Unknown';
+    }
+  }
+
+  static IconData getStatusIcon(String status) {
+    switch (status) {
+      case '0':
+        return Icons.cancel;
+      case '1':
+        return Icons.check_circle;
+      case '2':
+        return Icons.schedule;
+      case '3':
+        return Icons.block;
+      default:
+        return Icons.help;
+    }
+  }
+
+  static getStatusColor(String status) {
+    switch (status) {
+      case '0':
+        return Colors.red;
+      case '1':
+        return Colors.green;
+      case '2':
+        return Colors.orange;
+      case '3':
+        return Colors.grey;
+      default:
+        return Colors.grey;
     }
   }
 }
