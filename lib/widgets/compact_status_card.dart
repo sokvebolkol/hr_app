@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import '../utils/file_helper.dart';
 
 class CompactStatusCard extends StatelessWidget {
   final String status;
   final String statusText;
   final String id;
   final String duration;
-  final String dayType;
-  final Color Function(String) getStatusColor;
-  final IconData Function(String) getStatusIcon;
+  final String durationType;
+  final bool hasDocument;
   final EdgeInsetsGeometry? padding;
   final double? borderRadius;
   final double? iconSize;
-  final List<BoxShadow>? boxShadow;
-  final Widget? additionalInfo;
-  final String? idLabel;
+  final TextStyle? titleStyle;
+  final TextStyle? idStyle;
+  final TextStyle? durationStyle;
+  final TextStyle? typeStyle;
+  final TextStyle? documentStyle;
+  final String? customTitle;
+  final Widget? customRightWidget;
 
   const CompactStatusCard({
     super.key,
@@ -21,20 +25,24 @@ class CompactStatusCard extends StatelessWidget {
     required this.statusText,
     required this.id,
     required this.duration,
-    required this.dayType,
-    required this.getStatusColor,
-    required this.getStatusIcon,
+    required this.durationType,
+    this.hasDocument = false,
     this.padding,
     this.borderRadius,
     this.iconSize,
-    this.boxShadow,
-    this.additionalInfo,
-    this.idLabel = 'ID',
+    this.titleStyle,
+    this.idStyle,
+    this.durationStyle,
+    this.typeStyle,
+    this.documentStyle,
+    this.customTitle,
+    this.customRightWidget,
   });
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = getStatusColor(status);
+    final statusColor = FileHelper.getStatusColor(status);
+    final statusIcon = FileHelper.getStatusIcon(status);
 
     return Container(
       padding: padding ?? const EdgeInsets.all(20),
@@ -45,79 +53,100 @@ class CompactStatusCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [statusColor, statusColor.withOpacity(0.8)],
         ),
-        boxShadow:
-            boxShadow ??
-            [
-              BoxShadow(
-                color: statusColor.withOpacity(0.3),
-                spreadRadius: 1,
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
+          // Status Icon
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              getStatusIcon(status),
-              size: iconSize ?? 32,
-              color: Colors.white,
-            ),
+            child: Icon(statusIcon, size: iconSize ?? 32, color: Colors.white),
           ),
           const SizedBox(width: 16),
+
+          // Main Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  statusText,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                  customTitle ?? statusText,
+                  style:
+                      titleStyle ??
+                      const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$idLabel: $id',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  'ID: $id',
+                  style:
+                      idStyle ??
+                      const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ],
             ),
           ),
-          // Quick info on the right
-          additionalInfo ?? _buildDefaultRightInfo(),
+
+          // Right Side Info
+          customRightWidget ?? _buildDefaultRightWidget(),
         ],
       ),
     );
   }
 
-  Widget _buildDefaultRightInfo() {
+  Widget _buildDefaultRightWidget() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
           duration,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style:
+              durationStyle ??
+              const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
         ),
         Text(
-          dayType,
-          style: const TextStyle(fontSize: 12, color: Colors.white70),
+          durationType,
+          style:
+              typeStyle ?? const TextStyle(fontSize: 12, color: Colors.white70),
         ),
+        if (hasDocument) ...[
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.attach_file, size: 12, color: Colors.white70),
+              const SizedBox(width: 2),
+              Text(
+                'Document',
+                style:
+                    documentStyle ??
+                    const TextStyle(fontSize: 10, color: Colors.white70),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

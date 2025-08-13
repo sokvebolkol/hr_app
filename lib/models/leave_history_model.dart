@@ -13,6 +13,9 @@ class LeaveHistoryModel {
   final String createdate;
   final List<PriorityModel> prioList;
   final String statusText;
+  final String? documentUrl;
+  final bool? hasDocument;
+  final String? leaveSupportDoc;
 
   LeaveHistoryModel({
     required this.eid,
@@ -29,6 +32,9 @@ class LeaveHistoryModel {
     required this.createdate,
     required this.prioList,
     required this.statusText,
+    this.documentUrl,
+    this.hasDocument,
+    this.leaveSupportDoc,
   });
 
   factory LeaveHistoryModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +56,9 @@ class LeaveHistoryModel {
               .map((e) => PriorityModel.fromJson(e))
               .toList(),
       statusText: json['statu_text'],
+      documentUrl: json['document_url'],
+      hasDocument: json['has_document'] ?? false,
+      leaveSupportDoc: json['leave_support_doc'],
     );
   }
 

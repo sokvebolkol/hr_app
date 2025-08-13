@@ -1,5 +1,5 @@
-import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
+import '../constants/constant.dart';
 
 class InputFormField extends StatelessWidget {
   final String textString;
@@ -27,17 +27,15 @@ class InputFormField extends StatelessWidget {
     this.isObscureText = false,
     required this.icon,
     this.onTap,
-    this.borderColor =  primary,
-    this.iconColor =  secondary,
+    this.borderColor = primary,
+    this.iconColor = secondary,
   });
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = 0;
-    double screenHeight = 0;
 
     screenWidth = MediaQuery.of(context).size.width;
-    screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
       margin: EdgeInsets.all(screenWidth / 40),

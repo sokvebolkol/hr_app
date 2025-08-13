@@ -99,11 +99,14 @@ String getBranchName(String branchId) {
   return branches[branchId] ?? 'Branch ID not found';
 }
 
-const annualLeave    = '700001';
-const sickLeave      = '700002';
-const unPaidLeave    = '700003';
+const annualLeave = '700001';
+const sickLeave = '700002';
+const unPaidLeave = '700003';
 const maternityLeave = '700004';
-const specialLeave   = '700005';
+const specialLeave = '700005';
+
+// Leave Status that is cancelled by user
+String leaveCancelled = 'Unknown';
 
 getDateTimeYMD(time) {
   DateTime dateTimeApproved = DateTime.parse(time);

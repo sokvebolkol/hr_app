@@ -4,7 +4,10 @@ import '../../../constants/constant.dart';
 import '../../../models/leave_history_model.dart';
 import '../../../widgets/compact_detail_row.dart';
 import '../../../widgets/compact_follow_up_button.dart';
-import '../../../repositories/leave_detail_repository.dart'; // Add this import
+import '../../../widgets/compact_status_card.dart';
+import '../../../widgets/action_buttons_card.dart'; // Add this import
+import '../../../repositories/leave_detail_repository.dart';
+import '../update_leave/update_leave_screen.dart';
 
 class LeaveDetailScreen extends StatefulWidget {
   final LeaveHistoryModel leaveRequest;
@@ -19,9 +22,8 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  final LeaveDetailRepository _repository =
-      LeaveDetailRepository(); // Add repository instance
-  bool _isCancelling = false; // Add loading state
+  final LeaveDetailRepository _repository = LeaveDetailRepository();
+  bool _isCancelling = false;
 
   @override
   void initState() {
@@ -66,13 +68,21 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Compact Status Header
+              // Compact Status Header - UPDATED TO USE GLOBAL WIDGET
               _buildCompactStatusCard(),
               const SizedBox(height: 16),
+
               // Combined Details and Approval Flow
               _buildMainContentCard(),
+
               const SizedBox(height: 16),
-              // Action Buttons (if needed)
+
+              // Document Support Section (if available)
+              if (_hasDocumentSupport()) _buildDocumentSupportCard(),
+
+              const SizedBox(height: 16),
+
+              // Action Buttons (if pending)
               if (widget.leaveRequest.isPending) _buildActionButtons(),
             ],
           ),
@@ -81,88 +91,154 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
     );
   }
 
+  // Updated to use global widget
   Widget _buildCompactStatusCard() {
+    return CompactStatusCard(
+      status: widget.leaveRequest.statu,
+      statusText: widget.leaveRequest.statusText,
+      id: widget.leaveRequest.lreid,
+      duration:
+          '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
+      durationType: widget.leaveRequest.isFullDay ? 'Full Day' : 'Half Day',
+      hasDocument: _hasDocumentSupport(),
+    );
+  }
+
+  // Check if leave request has document support
+  bool _hasDocumentSupport() {
+    return widget.leaveRequest.hasDocument == true;
+  }
+
+  // Build document support card - RESTORED
+  Widget _buildDocumentSupportCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            FileHelper.getStatusColor(widget.leaveRequest.statu),
-            FileHelper.getStatusColor(
-              widget.leaveRequest.statu,
-            ).withOpacity(0.8),
-          ],
-        ),
         boxShadow: [
           BoxShadow(
-            color: FileHelper.getStatusColor(
-              widget.leaveRequest.statu,
-            ).withOpacity(0.3),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              FileHelper.getStatusIcon(widget.leaveRequest.statu),
-              size: 32,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  widget.leaveRequest.statusText,
-                  style: const TextStyle(
-                    fontSize: 22,
+                Icon(Icons.attach_file, color: primary, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Document Support',
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ID: ${widget.leaveRequest.lreid}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+
+            // Check if document URL exists
+            if (widget.leaveRequest.documentUrl != null &&
+                widget.leaveRequest.documentUrl!.isNotEmpty)
+              _buildDocumentImage()
+            else
+              _buildNoDocumentPlaceholder(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Build document image with preview - RESTORED
+  Widget _buildDocumentImage() {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          widget.leaveRequest.documentUrl!,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value:
+                        loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('Loading document...'),
+                ],
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, size: 48, color: Colors.grey[400]),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Failed to load document',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Build placeholder when no document is available - RESTORED
+  Widget _buildNoDocumentPlaceholder() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.description_outlined, size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 12),
+          Text(
+            'Document Expected',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+            ),
           ),
-          // Quick info on the right
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${widget.leaveRequest.numleav} day${widget.leaveRequest.numberOfDays > 1 ? 's' : ''}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                widget.leaveRequest.isFullDay ? 'Full Day' : 'Half Day',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            'This leave type requires supporting documents, but none were uploaded or document failed to load',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -187,6 +263,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
         children: [
           // Details Section
           _buildDetailsSection(),
+
           // Divider
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -348,7 +425,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
           ),
           const SizedBox(height: 16),
 
-          // Vertical list of approvers (more compact)
+          // Vertical list of approvers
           ...sortedPriorities.asMap().entries.map((entry) {
             final index = entry.key;
             final priority = entry.value;
@@ -453,12 +530,12 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
                 ),
               ),
 
-              // Status and Follow-up - UPDATED TO USE GLOBAL WIDGET
+              // Status and Follow-up
               if (priority.isPending && widget.leaveRequest.isPending)
                 CompactFollowUpButton(
                   onTap: () => _showFollowUpDialog(priority),
                 )
-              else
+              else if (priority.apstatuText != leaveCancelled)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -485,41 +562,159 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
     );
   }
 
+  // Updated to use global widget
   Widget _buildActionButtons() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: () => _showCancelConfirmation(),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          icon: const Icon(Icons.cancel_outlined, size: 18),
-          label: const Text(
-            'Cancel Request',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-          ),
+    return ActionButtonsCard(
+      layout: ButtonLayout.row,
+      spacing: 16,
+      buttons: [
+        ActionButtonData(
+          label: 'Update',
+          icon: Icons.edit,
+          onPressed: _navigateToUpdateScreen,
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
         ),
+        ActionButtonData(
+          label: 'Cancel',
+          icon: Icons.cancel_outlined,
+          onPressed: _showCancelConfirmation,
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          isLoading: _isCancelling,
+        ),
+      ],
+    );
+  }
+
+  // Navigate to update screen
+  Future<void> _navigateToUpdateScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => UpdateLeaveScreen(leaveRequest: widget.leaveRequest),
       ),
     );
+
+    if (result == true && mounted) {
+      Navigator.pop(context, true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Leave request updated successfully!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Show cancel confirmation dialog
+  void _showCancelConfirmation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (dialogContext, setDialogState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: const Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Cancel Request'),
+                    ],
+                  ),
+                  content: const Text(
+                    'Are you sure you want to cancel this leave request? This action cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed:
+                          _isCancelling
+                              ? null
+                              : () => Navigator.of(dialogContext).pop(),
+                      child: const Text('No'),
+                    ),
+                    ElevatedButton(
+                      onPressed:
+                          _isCancelling
+                              ? null
+                              : () => _handleCancelRequest(
+                                dialogContext,
+                                setDialogState,
+                              ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child:
+                          _isCancelling
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'Yes, Cancel',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                    ),
+                  ],
+                ),
+          ),
+    );
+  }
+
+  Future<void> _handleCancelRequest(
+    BuildContext dialogContext,
+    StateSetter setDialogState,
+  ) async {
+    try {
+      setDialogState(() {
+        _isCancelling = true;
+      });
+
+      final success = await _repository.cancelLeaveRequest(
+        widget.leaveRequest.lreid,
+      );
+
+      setDialogState(() {
+        _isCancelling = false;
+      });
+
+      if (Navigator.of(dialogContext).canPop()) {
+        Navigator.of(dialogContext).pop();
+      }
+
+      if (success) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        }
+
+        _showSnackBar('Leave request cancelled successfully', Colors.green);
+      } else {
+        _showSnackBar(
+          'Failed to cancel leave request. Please try again.',
+          Colors.red,
+        );
+      }
+    } catch (e) {
+      setDialogState(() {
+        _isCancelling = false;
+      });
+
+      if (Navigator.of(dialogContext).canPop()) {
+        Navigator.of(dialogContext).pop();
+      }
+
+      _showErrorSnackBar(e.toString());
+    }
   }
 
   void _showFollowUpDialog(PriorityModel priority) {
@@ -685,170 +880,32 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
     );
   }
 
-  void _showCancelConfirmation() {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Prevent dismissing during loading
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: const Row(
-              children: [
-                Icon(Icons.warning, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Cancel Request'),
-              ],
-            ),
-            content: const Text(
-              'Are you sure you want to cancel this leave request? This action cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: _isCancelling ? null : () => Navigator.pop(context),
-                child: const Text('No'),
-              ),
-              StatefulBuilder(
-                builder:
-                    (context, setDialogState) => ElevatedButton(
-                      onPressed:
-                          _isCancelling
-                              ? null
-                              : () => _cancelLeaveRequest(setDialogState),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      child:
-                          _isCancelling
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Text(
-                                'Yes, Cancel',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                    ),
-              ),
-            ],
-          ),
-    );
+  void _showSnackBar(String message, Color color) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
-  // Updated method to handle cancel leave request with API call
-  Future<void> _cancelLeaveRequest([StateSetter? setDialogState]) async {
-    // Update both dialog state and widget state
-    if (setDialogState != null) {
-      setDialogState(() {
-        _isCancelling = true;
-      });
-    }
-
+  void _showErrorSnackBar(String error) {
     if (mounted) {
-      setState(() {
-        _isCancelling = true;
-      });
-    }
-
-    try {
-      // Add null check for repository
-      if (_repository == null) {
-        throw Exception('Repository not initialized');
-      }
-
-      final success = await _repository.cancelLeaveRequest(
-        widget.leaveRequest.lreid,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $error'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: () => _showCancelConfirmation(),
+          ),
+        ),
       );
-
-      // Update states
-      if (setDialogState != null) {
-        setDialogState(() {
-          _isCancelling = false;
-        });
-      }
-
-      if (mounted) {
-        setState(() {
-          _isCancelling = false;
-        });
-      }
-
-      if (!mounted) return;
-
-      if (success) {
-        Navigator.pop(context); // Close dialog
-        Navigator.pop(context, true); // Go back to previous screen with result
-
-        // Use a post frame callback to ensure the widget is still mounted
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Leave request cancelled successfully'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
-        });
-      } else {
-        Navigator.pop(context); // Close dialog
-
-        // Use a post frame callback to ensure the widget is still mounted
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Failed to cancel leave request. Please try again.',
-                ),
-                backgroundColor: Colors.red,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
-        });
-      }
-    } catch (e) {
-      // Update states on error
-      if (setDialogState != null) {
-        setDialogState(() {
-          _isCancelling = false;
-        });
-      }
-
-      if (mounted) {
-        setState(() {
-          _isCancelling = false;
-        });
-      }
-
-      if (!mounted) return;
-
-      Navigator.pop(context); // Close dialog
-
-      // Use a post frame callback to ensure the widget is still mounted
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-              action: SnackBarAction(
-                label: 'Retry',
-                textColor: Colors.white,
-                onPressed: () => _showCancelConfirmation(),
-              ),
-            ),
-          );
-        }
-      });
     }
   }
 }
