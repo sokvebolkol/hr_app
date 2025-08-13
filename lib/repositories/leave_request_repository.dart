@@ -123,9 +123,7 @@ class LeaveRequestRepository {
         }
 
         if (!isValidImageFile(file)) {
-          throw Exception(
-            'Please select a valid file type (JPG, JPEG, PNG)',
-          );
+          throw Exception('Please select a valid file type (JPG, JPEG, PNG)');
         }
 
         if (!await isValidFileSize(file)) {
@@ -331,7 +329,7 @@ class LeaveRequestRepository {
 
   // Validate image file - updated to be more permissive
   bool isValidImageFile(File file) {
-    final validExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'];
+    final validExtensions = ['jpg', 'jpeg', 'png'];
     final extension = _getFileExtension(file.path);
     return validExtensions.contains(extension);
   }

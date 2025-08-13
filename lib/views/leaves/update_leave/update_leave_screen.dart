@@ -8,6 +8,8 @@ import '../../../models/leave_history_model.dart';
 import '../../../utils/file_helper.dart';
 import '../../../viewmodels/update_leave_viewmodel.dart';
 import '../../../widgets/compact_detail_row.dart';
+import '../../../widgets/compact_status_card.dart';
+import '../../../widgets/action_buttons_card.dart';
 
 class UpdateLeaveScreen extends StatefulWidget {
   final LeaveHistoryModel leaveRequest;
@@ -24,6 +26,7 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
   late UpdateLeaveViewModel _viewModel;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  late TabController _tabController;
 
   String? leaveType;
   DateTimeRange? leaveDateRange;
@@ -47,14 +50,6 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
 
   List<String> leaveForOptions = ['Full Day', 'Half Day'];
   List<String> halfDayOptions = ['Morning', 'Afternoon'];
-  List<String> documentSupportOptions = [
-    'None',
-    'Medical Certificate',
-    'Marriage Certificate',
-    'Death Certificate',
-    'Birth Certificate',
-    'Other',
-  ];
 
   List<String> approvers = [
     'Mr. John Doe',
@@ -66,8 +61,8 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
   void initState() {
     super.initState();
     _viewModel = UpdateLeaveViewModel(widget.leaveRequest);
-    _initializeFormData();
     _setupAnimations();
+    _initializeFormData();
   }
 
   void _setupAnimations() {
@@ -75,6 +70,8 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+
+    _tabController = TabController(length: 3, vsync: this);
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
@@ -95,8 +92,8 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
 
     // Parse date range from leave request
     try {
-      final startDate = FileHelper.formatDate(leave.fromDate);
-      final endDate = FileHelper.formatDate(leave.toDate);
+      final startDate = leave.fromDate;
+      final endDate = leave.toDate;
       leaveDateRange = DateTimeRange(start: startDate, end: endDate);
     } catch (e) {
       print('Error parsing dates: $e');
@@ -122,6 +119,7 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _tabController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -155,27 +153,23 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
         appBar: _buildAppBar(),
         body: FadeTransition(
           opacity: _fadeAnimation,
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
+          child: Column(
+            children: [
+              // Tab Bar
+              _buildTabBar(),
+
+              // Tab Content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
                   children: [
-                    _buildCurrentRequestCard(),
-                    const SizedBox(height: 20),
-                    _buildUpdateFormCard(),
-                    const SizedBox(height: 20),
-                    Consumer<UpdateLeaveViewModel>(
-                      builder: (context, viewModel, child) {
-                        return _buildUpdateButton(viewModel);
-                      },
-                    ),
-                    const SizedBox(height: 32),
+                    _buildCurrentDetailsTab(),
+                    _buildUpdateFormTab(),
+                    _buildPreviewTab(),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -207,26 +201,73 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
     );
   }
 
-  Widget _buildCurrentRequestCard() {
+  Widget _buildTabBar() {
+    return Container(
+      color: primary,
+      child: TabBar(
+        controller: _tabController,
+        indicatorColor: Colors.white,
+        indicatorWeight: 3,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white70,
+        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        tabs: const [
+          Tab(icon: Icon(Icons.info_outline, size: 20), text: 'Current'),
+          Tab(icon: Icon(Icons.edit, size: 20), text: 'Update'),
+          Tab(icon: Icon(Icons.preview, size: 20), text: 'Preview'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentDetailsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Current Request Status Card
+          CompactStatusCard(
+            status: widget.leaveRequest.statu,
+            statusText: widget.leaveRequest.statusText,
+            id: widget.leaveRequest.lreid,
+            duration:
+                '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
+            durationType:
+                widget.leaveRequest.isFullDay ? 'Full Day' : 'Half Day',
+            hasDocument: _hasExistingDocument,
+            customTitle: 'Current Request',
+          ),
+
+          const SizedBox(height: 20),
+
+          // Current Details Card
+          _buildCurrentDetailsCard(),
+
+          const SizedBox(height: 20),
+
+          // Current Document Card (if exists)
+          if (_hasExistingDocument) _buildCurrentDocumentCard(),
+
+          const SizedBox(height: 20),
+
+          // Update Info Card
+          _buildUpdateInfoCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentDetailsCard() {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            FileHelper.getStatusColor(widget.leaveRequest.statu),
-            FileHelper.getStatusColor(
-              widget.leaveRequest.statu,
-            ).withOpacity(0.8),
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: FileHelper.getStatusColor(
-              widget.leaveRequest.statu,
-            ).withOpacity(0.3),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -237,86 +278,596 @@ class _UpdateLeaveScreenState extends State<UpdateLeaveScreen>
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.edit_document,
-                    size: 24,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Updating Request',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'ID: ${widget.leaveRequest.lreid}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    widget.leaveRequest.statusText,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+                Icon(Icons.info_outline, color: primary, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Current Leave Details',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.white70, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Changes will require re-approval from your managers.',
-                      style: TextStyle(
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      CompactDetailRow(
+                        label: 'Employee',
+                        value: widget.leaveRequest.dname,
+                        icon: Icons.person,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'From',
+                        value: FileHelper.formatDate(
+                          widget.leaveRequest.fromDate,
+                        ),
+                        icon: Icons.date_range,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'Applied',
+                        value: FileHelper.formatDate(
+                          widget.leaveRequest.createdDate,
+                        ),
+                        icon: Icons.schedule,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    children: [
+                      CompactDetailRow(
+                        label: 'Type',
+                        value: widget.leaveRequest.ltyp,
+                        icon: Icons.category,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'To',
+                        value: FileHelper.formatDate(
+                          widget.leaveRequest.toDate,
+                        ),
+                        icon: Icons.date_range,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'Duration',
+                        value:
+                            '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
+                        icon: Icons.access_time,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            if (widget.leaveRequest.reason.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.notes, size: 16, color: primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Current Reason',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.leaveRequest.reason,
+                      style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.white70,
-                        height: 1.3,
+                        color: Colors.black87,
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentDocumentCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.attach_file, color: primary, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Current Document',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (widget.leaveRequest.documentUrl != null) ...[
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    widget.leaveRequest.documentUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (context, error, stackTrace) => Container(
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Failed to load document',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpdateInfoCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.amber[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber[200]!),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning_amber, color: Colors.amber[700], size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Update Information',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber[700],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              '• Updated requests require re-approval from all managers',
+            ),
+            const SizedBox(height: 4),
+            const Text('• All approvers will be notified of changes'),
+            const SizedBox(height: 4),
+            const Text('• Original request history is preserved'),
+            const SizedBox(height: 4),
+            const Text('• Status will reset to "Pending"'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpdateFormTab() {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildUpdateFormCard(),
+            const SizedBox(height: 20),
+
+            // Action Buttons
+            Consumer<UpdateLeaveViewModel>(
+              builder: (context, viewModel, child) {
+                return ActionButtonsCard(
+                  buttons: [
+                    ActionButtonData(
+                      label: 'Preview Changes',
+                      icon: Icons.preview,
+                      onPressed: () => _tabController.animateTo(2),
+                      backgroundColor: Colors.blue,
+                    ),
+                    ActionButtonData(
+                      label: 'Update Request',
+                      icon: Icons.save,
+                      onPressed: _updateLeave,
+                      backgroundColor: primary,
+                      isLoading: viewModel.isLoading,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPreviewTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Preview Status Card
+          CompactStatusCard(
+            status: '2', // Pending status
+            statusText: 'Pending (After Update)',
+            id: widget.leaveRequest.lreid,
+            duration: '${totalLeaveDays} day${totalLeaveDays != 1 ? 's' : ''}',
+            durationType: leaveFor,
+            hasDocument:
+                documentPhoto != null ||
+                (_hasExistingDocument && !_removeExistingDocument),
+            customTitle: 'Updated Request Preview',
+          ),
+
+          const SizedBox(height: 20),
+
+          // Preview Details Card
+          _buildPreviewDetailsCard(),
+
+          const SizedBox(height: 20),
+
+          // Changes Summary Card
+          _buildChangesSummaryCard(),
+
+          const SizedBox(height: 20),
+
+          // Final Action Buttons
+          Consumer<UpdateLeaveViewModel>(
+            builder: (context, viewModel, child) {
+              return ActionButtonsCard(
+                layout: ButtonLayout.row,
+                buttons: [
+                  ActionButtonData(
+                    label: 'Back to Edit',
+                    icon: Icons.edit,
+                    onPressed: () => _tabController.animateTo(1),
+                    backgroundColor: Colors.grey,
+                  ),
+                  ActionButtonData(
+                    label: 'Submit Update',
+                    icon: Icons.send,
+                    onPressed: _updateLeave,
+                    backgroundColor: Colors.green,
+                    isLoading: viewModel.isLoading,
                   ),
                 ],
-              ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreviewDetailsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.preview, color: primary, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Updated Details Preview',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
+
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      CompactDetailRow(
+                        label: 'Leave Type',
+                        value: leaveType ?? 'Not selected',
+                        icon: Icons.category,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'From Date',
+                        value:
+                            leaveDateRange != null
+                                ? DateFormat(
+                                  'MMM dd, yyyy',
+                                ).format(leaveDateRange!.start)
+                                : 'Not selected',
+                        icon: Icons.date_range,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'Duration Type',
+                        value: leaveFor,
+                        icon: Icons.schedule,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    children: [
+                      CompactDetailRow(
+                        label: 'Total Days',
+                        value:
+                            '${totalLeaveDays} day${totalLeaveDays != 1 ? 's' : ''}',
+                        icon: Icons.access_time,
+                      ),
+                      const SizedBox(height: 12),
+                      CompactDetailRow(
+                        label: 'To Date',
+                        value:
+                            leaveDateRange != null
+                                ? DateFormat(
+                                  'MMM dd, yyyy',
+                                ).format(leaveDateRange!.end)
+                                : 'Not selected',
+                        icon: Icons.date_range,
+                      ),
+                      if (leaveFor == 'Half Day') ...[
+                        const SizedBox(height: 12),
+                        CompactDetailRow(
+                          label: 'Session',
+                          value: halfDaySession,
+                          icon: Icons.schedule_outlined,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            if (reason.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.notes, size: 16, color: Colors.green[700]),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Updated Reason',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      reason,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChangesSummaryCard() {
+    final changes = <String>[];
+
+    if (leaveType != widget.leaveRequest.ltyp) {
+      changes.add('Leave type: ${widget.leaveRequest.ltyp} → $leaveType');
+    }
+
+    if (leaveDateRange != null) {
+      final currentStart = DateFormat(
+        'MMM dd, yyyy',
+      ).format(widget.leaveRequest.fromDate);
+      final currentEnd = DateFormat(
+        'MMM dd, yyyy',
+      ).format(widget.leaveRequest.toDate);
+      final newStart = DateFormat('MMM dd, yyyy').format(leaveDateRange!.start);
+      final newEnd = DateFormat('MMM dd, yyyy').format(leaveDateRange!.end);
+
+      if (currentStart != newStart || currentEnd != newEnd) {
+        changes.add('Dates: $currentStart - $currentEnd → $newStart - $newEnd');
+      }
+    }
+
+    if (reason != widget.leaveRequest.reason) {
+      changes.add('Reason updated');
+    }
+
+    if (_removeExistingDocument) {
+      changes.add('Document removed');
+    }
+
+    if (documentPhoto != null) {
+      changes.add('New document attached');
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.compare_arrows, color: primary, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Changes Summary',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (changes.isEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.grey[600]),
+                    const SizedBox(width: 12),
+                    const Text('No changes detected'),
+                  ],
+                ),
+              ),
+            ] else ...[
+              ...changes.map(
+                (change) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.arrow_right,
+                        color: Colors.green[600],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          change,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
