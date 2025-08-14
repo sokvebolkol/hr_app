@@ -535,7 +535,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
                 CompactFollowUpButton(
                   onTap: () => _showFollowUpDialog(priority),
                 )
-              else if (priority.apstatuText != leaveCancelled)
+              else
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

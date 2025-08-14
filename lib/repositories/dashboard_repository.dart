@@ -59,7 +59,7 @@ class DashboardRepository {
         if (leavesData != null && leavesData is List) {
           leaves =
               leavesData
-                  .where((e) => e != null) // Filter out null items
+                  .where((e) => e != null)
                   .map((e) {
                     try {
                       return LeaveModel.fromJson(e as Map<String, dynamic>);

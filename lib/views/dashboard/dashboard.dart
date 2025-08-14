@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -15,6 +17,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_clock.dart';
 import '../auth/login-page.dart';
+import '../holidays/holiday_calendar.dart';
 import '../leaves/leave_detail/leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
@@ -211,15 +214,97 @@ class _DashboardHomeContent extends StatefulWidget {
   State<_DashboardHomeContent> createState() => _DashboardHomeContentState();
 }
 
-class _DashboardHomeContentState extends State<_DashboardHomeContent> {
+class _DashboardHomeContentState extends State<_DashboardHomeContent>
+    with TickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late Timer _timer;
+  int _currentScrollIndex = 0;
+
+  // Function buttons data
+  final List<Map<String, dynamic>> _functionButtons = [
+    {
+      'icon': Icons.access_time,
+      'label': 'Clock In | Out',
+      'onPressed':
+          (BuildContext context) => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AttendanceClock()),
+          ),
+    },
+    {
+      'icon': Icons.history,
+      'label': 'Leave History',
+      'onPressed':
+          (BuildContext context) => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LeaveHistoryScreen()),
+          ),
+    },
+    {
+      'icon': Icons.calendar_month,
+      'label': 'Attendance',
+      'onPressed': (BuildContext context) {
+        // Implement navigation to attendance logs
+      },
+    },
+    {
+      'icon': Icons.calendar_month,
+      'label': 'Holidays',
+      'onPressed': (BuildContext context) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HolidayCalendarScreen(),
+          ),
+        );
+      },
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+
+    // Start auto-slide after 3 seconds delay
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _startAutoSlide();
+      }
+    });
+
     // Refresh profile data when dashboard content is first created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = Provider.of<DashboardViewModel>(context, listen: false);
       viewModel.refreshProfile();
     });
+  }
+
+  void _startAutoSlide() {
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (_scrollController.hasClients && _functionButtons.length > 3) {
+        // Calculate the next scroll position
+        _currentScrollIndex =
+            (_currentScrollIndex + 1) % (_functionButtons.length - 2);
+
+        // Each item width (110) + spacing (16)
+        const double itemWidth = 110.0 + 16.0;
+        final double targetOffset = _currentScrollIndex * itemWidth;
+
+        _scrollController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -412,47 +497,35 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent> {
   Widget _buildFunctionButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: FunctionIconCardWidget(
-              iconData: Icons.access_time,
-              label: 'Clock In | Out',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AttendanceClock()),
-                );
-              },
-            ),
+      child: SizedBox(
+        height: 100,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children:
+                _functionButtons.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final button = entry.value;
+
+                  return Row(
+                    children: [
+                      SizedBox(
+                        width: 110,
+                        child: FunctionIconCardWidget(
+                          iconData: button['icon'] as IconData,
+                          label: button['label'] as String,
+                          onPressed: () => button['onPressed'](context),
+                        ),
+                      ),
+                      // Add spacing between items except for the last one
+                      if (index < _functionButtons.length - 1)
+                        const SizedBox(width: 16),
+                    ],
+                  );
+                }).toList(),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: FunctionIconCardWidget(
-              iconData: Icons.history,
-              label: 'Leave History',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LeaveHistoryScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: FunctionIconCardWidget(
-              iconData: Icons.calendar_month,
-              label: 'Attendance Logs',
-              onPressed: () {
-                // Implement navigation to attendance logs
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
