@@ -1,636 +1,700 @@
-import 'dart:async';
-import 'dart:io';
-import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:platform/platform.dart';
+import 'package:intl/intl.dart';
+import '../../constants/constant.dart';
+import '../../viewmodels/attendance_clock_viewmodel.dart';
 import '../../models/attendance_model.dart';
-import '../../widgets/attendance_clock_widget.dart';
-import '../../widgets/emptyAttendance.dart';
 
 class AttendanceClock extends StatefulWidget {
   const AttendanceClock({super.key});
 
   @override
-  _AttendanceClockState createState() => _AttendanceClockState();
+  State<AttendanceClock> createState() => _AttendanceClockState();
 }
 
-class _AttendanceClockState extends State<AttendanceClock>
-    with SingleTickerProviderStateMixin {
-  late Future<AttendanceResponse> futureAttendanceResponse;
-
-  String lastStatus = '';
-  bool isEmptyAttendanceClock = true;
-
-  dynamic late;
-  dynamic long;
-
-  LatLng currentLatLng = const LatLng(
-    11.5342,
-    104.8817,
-  ); // default late long branch HQ
-  bool _isMatchLocation = false;
-  bool isRequestPermission = true;
-  dynamic listTimeClock = {};
-  bool isLoading = true;
-  late int pageSizeParam = 20;
-  late int pageNumberParam = 1;
-  late String sDateParam = "";
-  late String eDateParam = "";
-  String onClock = "";
-  String onClockLocation = "";
-  bool typeClock = false;
-  dynamic listAllBranch;
-  dynamic _onSelectedBranchFilter;
-  bool isClockIn = true;
-
-  // fetchCurrentLocation() async {
-  //   await Provider.of<ZoneByBranchProvider>(context, listen: false)
-  //       .fetchZoneByBranch()
-  //       .then((value) async {
-  //         if (value != null &&
-  //             value['ccfbranch'] != null &&
-  //             value['ccfbranch']['braname'] != null) {
-  //           setState(() {
-  //             _onSelectedBranchFilter = value['ccfbranch']['braname'];
-  //           });
-  //         }
-  //         late = double.parse(value['latitude']);
-  //         long = double.parse(value['longitude']);
-
-  //         await Geolocator.getCurrentPosition().then((currLocation) async {
-  //           setState(() {
-  //             currentLatLng = LatLng(
-  //               currLocation.latitude,
-  //               currLocation.longitude,
-  //             );
-  //           });
-  //           double distanceInMeters = Geolocator.distanceBetween(
-  //             late,
-  //             long,
-  //             currLocation.latitude,
-  //             currLocation.longitude,
-  //           );
-  //           if (distanceInMeters <= 300) {
-  //             setState(() {
-  //               isRequestPermission = false;
-  //               _isMatchLocation = true;
-  //             });
-  //           } else {
-  //             setState(() {
-  //               isRequestPermission = false;
-  //             });
-  //           }
-  //         });
-  //       })
-  //       .catchError((onError) {})
-  //       .onError((error, stackTrace) {});
-  // }
-
-  dropCurrentLocation(latitude, longitude) async {
-    setState(() {
-      isLoading = true;
-    });
-    await Geolocator.getCurrentPosition()
-        .then((currLocation) async {
-          setState(() {
-            currentLatLng = LatLng(
-              currLocation.latitude,
-              currLocation.longitude,
-            );
-          });
-          var lat = double.parse(latitude);
-          var long = double.parse(longitude);
-          double distanceInMeters = Geolocator.distanceBetween(
-            lat,
-            long,
-            currLocation.latitude,
-            currLocation.longitude,
-          );
-          if (distanceInMeters <= 300) {
-            setState(() {
-              isRequestPermission = false;
-              _isMatchLocation = true;
-              isLoading = false;
-            });
-          } else {
-            setState(() {
-              isRequestPermission = false;
-              _isMatchLocation = false;
-              isLoading = false;
-            });
-          }
-        })
-        .catchError((onError) {
-          debugPrint('Error location----> $onError');
-          setState(() {
-            isLoading = false;
-          });
-        });
-  }
-
-  Future requestPermission() async {
-    setState(() {
-      isRequestPermission = true;
-    });
-    try {
-      if (Platform.iOS == "ios") {
-        bool serviceEnabled;
-        LocationPermission permission;
-        serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (!serviceEnabled) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Please allow location',
-                style: TextStyle(fontSize: 18),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-
-        permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-          if (permission == LocationPermission.denied) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Please allow location',
-                  style: TextStyle(fontSize: 18),
-                ),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
-
-        if (permission == LocationPermission.deniedForever) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Please allow location',
-                style: TextStyle(fontSize: 18),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        // await fetchCurrentLocation();
-      } else {
-        bool serviceEnabled;
-        LocationPermission permission;
-
-        serviceEnabled = await Geolocator.isLocationServiceEnabled();
-        if (!serviceEnabled) {
-          print('Location services are disabled!');
-        }
-
-        permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
-          if (permission == LocationPermission.denied) {}
-        }
-        if (permission == LocationPermission.deniedForever) {}
-        // await fetchCurrentLocation();
-      }
-    } catch (error) {}
-  }
-
-  // Future fetchClocked() async {
-  //   setState(() {
-  //     isLoading = true;
-  //   });
-
-  //   try {
-  //     await Provider.of<ClockLogProvider>(context, listen: false)
-  //         .fetchEmployeeClock(
-  //             pageSizeParam, pageNumberParam, sDateParam, eDateParam);
-
-  //     setState(() {
-  //       futureAttendanceResponse = fetchAttendanceLogs();
-  //     });
-
-  //     final response = await futureAttendanceResponse;
-  //     if (response.totalList != 0) {
-  //       setState(() {
-  //         isEmptyAttendanceClock = false;
-  //       });
-  //     }
-  //     if (response.lastStatus == 'Out') {
-  //       setState(() {
-  //         isClockIn = true;
-  //       });
-  //     }
-  //     if (response.lastStatus == 'In') {
-  //       setState(() {
-  //         isClockIn = false;
-  //       });
-  //     }
-  //     setState(() {
-  //       isLoading = false;
-  //     });
-  //   } catch (error) {
-  //     setState(() {
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
-  // getListBranch() async {
-  //   await Provider.of<ZoneByBranchProvider>(context, listen: false)
-  //       .fetchAllZoneLatLong()
-  //       .then((braid) {
-  //         setState(() {
-  //           isLoading = false;
-  //           listAllBranch = braid;
-  //         });
-  //       })
-  //       .onError((error, stackTrace) {
-  //         setState(() {
-  //           isLoading = false;
-  //         });
-  //       })
-  //       .catchError((onError) {
-  //         setState(() {
-  //           isLoading = false;
-  //         });
-  //       });
-  // }
-
-  final bool _departmentColor = false;
-  final GlobalKey<FormState> _departmentKey = GlobalKey<FormState>();
+class _AttendanceClockState extends State<AttendanceClock> {
+  late AttendanceClockViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    // getListBranch();
-    requestPermission();
-    futureAttendanceResponse = fetchAttendanceLogs();
+    _viewModel = AttendanceClockViewModel();
+    _viewModel.initialize();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    DateTime now = DateTime.now();
-    String formatDay = DateFormat('EEEEE | dd MMM yyyy').format(now);
-
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: primary,
-        leading: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: const Icon(Icons.arrow_back_ios, color: Colors.white),
-        ),
-        title: const Column(
-          children: [
-            Text(
-              "Attendance",
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+    return ChangeNotifierProvider<AttendanceClockViewModel>(
+      create: (_) => _viewModel,
+      child: Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          title: const Text('Attendance Clock'),
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          actions: [
+            Consumer<AttendanceClockViewModel>(
+              builder: (context, viewModel, child) {
+                return IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed:
+                      viewModel.isLoading
+                          ? null
+                          : () => viewModel.loadAttendanceData(),
+                );
+              },
             ),
           ],
         ),
-      ),
-      body: Center(
-        child: SizedBox(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Card(
-                elevation: 1,
-                margin: const EdgeInsets.only(left: 10, right: 10, top: 10),
-                color: primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+        body: Consumer<AttendanceClockViewModel>(
+          builder: (context, viewModel, child) {
+            if (viewModel.isLoading) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Loading attendance data...'),
+                  ],
                 ),
-                child: SizedBox(
-                  height: 150,
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          DateFormat.jm().format(DateTime.now()), // 12H not 24H
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Padding(padding: EdgeInsets.only(top: 10)),
-                        Text(
-                          formatDay,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              );
+            }
+
+            if (viewModel.errorMessage != null) {
+              return _buildErrorState(viewModel);
+            }
+
+            return RefreshIndicator(
+              onRefresh: () => viewModel.loadAttendanceData(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildUserInfoCard(viewModel),
+                    const SizedBox(height: 20),
+                    _buildBranchSelectionCard(viewModel),
+                    const SizedBox(height: 20),
+                    _buildClockButton(viewModel),
+                    const SizedBox(height: 20),
+                    if (viewModel.todayAttendance.isNotEmpty)
+                      _buildTodayAttendanceCard(viewModel),
+                  ],
                 ),
               ),
-              isLoading
-                  ? const SizedBox(
-                    height: 250,
-                    child: Center(child: SpinKitFadingCircle(color: secondary)),
-                  )
-                  : Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.only(
-                          left: 80,
-                          right: 80,
-                          top: 20,
-                        ),
-                        child: DropdownButtonFormField<String>(
-                          elevation: 4,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          key: _departmentKey,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.all(14),
-                            filled: true,
-                            fillColor: Colors.white,
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color:
-                                    _departmentColor == true
-                                        ? Colors.red
-                                        : primary,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color:
-                                    _departmentColor == true
-                                        ? Colors.red
-                                        : primary,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            hintText: _onSelectedBranchFilter ?? "Branch",
-                            labelText: _onSelectedBranchFilter ?? "Branch",
-                            hintStyle: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                            ),
-                            labelStyle: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                            ),
-                            prefixIcon: Icon(Icons.apartment, color: primary),
-                          ),
-                          icon: Icon(Icons.arrow_drop_down, color: primary),
-                          onChanged: (value) {
-                            for (var element in listAllBranch) {
-                              if (element['zoneid'] == value) {
-                                setState(() {
-                                  _onSelectedBranchFilter =
-                                      element['ccfbranch']['braname'];
-                                });
-                                dropCurrentLocation(
-                                  element['latitude'],
-                                  element['longitude'],
-                                );
-                              }
-                            }
-                          },
-                          items:
-                              listAllBranch != null && listAllBranch.isNotEmpty
-                                  ? listAllBranch.map<DropdownMenuItem<String>>(
-                                    (item) {
-                                      return DropdownMenuItem<String>(
-                                        value: item['zoneid'],
-                                        child: Container(
-                                          decoration: const BoxDecoration(
-                                            border: Border(
-                                              bottom: BorderSide(
-                                                color: Colors.grey,
-                                                width: 0.2,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                item['ccfbranch']['braname'],
-                                                style: TextStyle(fontSize: 16),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ).toList()
-                                  : null,
-                        ),
-                      ),
-                      const Padding(padding: EdgeInsets.only(top: 20)),
-                      if (_isMatchLocation)
-                        isClockIn
-                            ? ClockButtonWidget(
-                              icon: Icons.login,
-                              color: secondary,
-                              textLabel: 'Clock In',
-                              onPressed: () async {
-                                // await postClocked("In", true);
-                              },
-                            )
-                            : ClockButtonWidget(
-                              icon: Icons.logout,
-                              color: logoPink,
-                              textLabel: 'Clock Out',
-                              onPressed: () async {
-                                // await postClocked("Out", false);
-                              },
-                            ),
-                      if (!_isMatchLocation)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              isRequestPermission ? "Loading" : "Outside Zone",
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                            if (!isRequestPermission)
-                              Icon(
-                                Icons.location_off_outlined,
-                                color: primary,
-                                size: 25,
-                              ),
-                          ],
-                        ),
-                      if (!_isMatchLocation)
-                        Text(
-                          !isRequestPermission
-                              ? 'Please select the right location to clock.'
-                              : '',
-                          style: const TextStyle(
-                            fontSize: 18.0,
-                            color: Colors.grey,
-                          ),
-                        ),
-                    ],
-                  ),
-              const Padding(padding: EdgeInsets.only(top: 20)),
-              Expanded(
-                child: FutureBuilder<AttendanceResponse>(
-                  future: futureAttendanceResponse,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox();
-                    } else if (snapshot.hasError) {
-                      return Text("${snapshot.error}");
-                    } else if (!snapshot.hasData || snapshot.data == null) {
-                      return const Text("No data found");
-                    } else {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.only(
-                              left: 16,
-                              top: 10.0,
-                              bottom: 10.0,
-                            ),
-                            width: MediaQuery.of(context).size.width,
-                            height: 50,
-                            color: secondary,
-                            child: const Text(
-                              "Attendance Clocks",
-                              textAlign: TextAlign.start,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Card(
-                              elevation: 0.5,
-                              child:
-                                  isEmptyAttendanceClock
-                                      ? const Center(child: EmptyAttendance())
-                                      : ListView.builder(
-                                        itemCount:
-                                            snapshot
-                                                .data!
-                                                .attendanceLogs
-                                                .length,
-                                        itemBuilder: (context, index) {
-                                          var log =
-                                              snapshot
-                                                  .data!
-                                                  .attendanceLogs[index];
-                                          return Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Row(
-                                              children: [
-                                                Container(
-                                                  width: 50,
-                                                  height: 50,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color:
-                                                        log.status == 'In'
-                                                            ? secondary
-                                                            : logoPink,
-                                                  ),
-                                                  child: Center(
-                                                    child: Text(
-                                                      log.status,
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 5),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "${convertToAmPm(log.timeClock)} - ${getBranchName(log.branchCode)}",
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 2),
-                                                    Text(
-                                                      "Date: ${getDateTimeYMD(log.timeDate.toString())}",
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Future<AttendanceResponse> fetchAttendanceLogs() {
-    return Future.value(
-      AttendanceResponse(
-        totalList: 2,
-        lastStatus: "Present",
-        attendanceLogs: [
-          AttendanceLog(
-            empId: "2025-07-01",
-            status: "Present",
-            timeClock: "08:30 AM",
-            timeDate: DateTime.parse("2025-07-01T08:30:00"),
-            branchCode: "001",
-            timeId: "1",
-            deviceName: "Mobile",
-            userInfoProfile: null,
-          ),
-          AttendanceLog(
-            empId: "2025-07-01",
-            status: "Present",
-            timeClock: "08:30 AM",
-            timeDate: DateTime.parse("2025-07-01T08:30:00"),
-            branchCode: "001",
-            timeId: "1",
-            deviceName: "Mobile",
-            userInfoProfile: null,
-          ),
-        ],
+  Widget _buildErrorState(AttendanceClockViewModel viewModel) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text(
+              'Error',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              viewModel.errorMessage!,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                viewModel.clearError();
+                viewModel.loadAttendanceData();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildUserInfoCard(AttendanceClockViewModel viewModel) {
+    final user = viewModel.attendanceData?.user;
+    if (user == null) return const SizedBox();
+
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: primary.withOpacity(0.1),
+                  radius: 30,
+                  child: Icon(Icons.person, color: primary, size: 30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.userName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'ID: ${user.uid}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    DateFormat('EEEE, MMMM dd, yyyy').format(DateTime.now()),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    viewModel.currentTime,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBranchSelectionCard(AttendanceClockViewModel viewModel) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select Branch',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+
+            // Show warning if no branches have coordinates
+            if (!viewModel.hasAnyBranchWithCoordinates)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'No branches have coordinate data available',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            DropdownButtonFormField<Branch>(
+              value: viewModel.selectedBranch,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
+              isExpanded: true,
+              items:
+                  viewModel.branches.map((branch) {
+                    final isUserBranch =
+                        branch.branchId ==
+                        viewModel.attendanceData?.user.branchId;
+                    final hasCoordinates = branch.hasValidCoordinates;
+
+                    return DropdownMenuItem(
+                      value: branch,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isUserBranch
+                                      ? primary.withOpacity(0.1)
+                                      : Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              branch.branchShortName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isUserBranch ? primary : Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  branch.branchFullName,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (!hasCoordinates)
+                                  Text(
+                                    'No coordinates',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.orange[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isUserBranch)
+                                Icon(Icons.home, color: primary, size: 16),
+                              const SizedBox(width: 4),
+                              Icon(
+                                hasCoordinates
+                                    ? Icons.location_on
+                                    : Icons.location_off,
+                                color:
+                                    hasCoordinates
+                                        ? Colors.green
+                                        : Colors.orange,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+              onChanged: (branch) => viewModel.selectBranch(branch),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Location status
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  color: viewModel.locationStatusColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    viewModel.locationStatusText,
+                    style: TextStyle(
+                      color: viewModel.locationStatusColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (viewModel.currentPosition != null &&
+                    viewModel.selectedBranch != null &&
+                    viewModel.selectedBranch!.hasValidCoordinates)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          viewModel.isWithinRange
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      viewModel.getFormattedDistance(),
+                      style: TextStyle(
+                        color:
+                            viewModel.isWithinRange
+                                ? Colors.green[700]
+                                : Colors.red[700],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            // Show coordinates info if available
+            if (viewModel.selectedBranch?.hasValidCoordinates == true)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: Colors.blue[700],
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Lat: ${viewModel.selectedBranch!.latitude!.toStringAsFixed(6)}, '
+                          'Lng: ${viewModel.selectedBranch!.longitude!.toStringAsFixed(6)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            if (viewModel.currentPosition == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: TextButton.icon(
+                  onPressed: () => viewModel.refreshLocation(),
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Refresh Location'),
+                  style: TextButton.styleFrom(foregroundColor: primary),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClockButton(AttendanceClockViewModel viewModel) {
+    final nextClockType = viewModel.nextClockType;
+    final canClock = viewModel.canClock;
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: nextClockType == 'In' ? Colors.green : Colors.orange,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 3,
+        ),
+        icon:
+            viewModel.isClockingInOut
+                ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                : Icon(
+                  nextClockType == 'In' ? Icons.login : Icons.logout,
+                  size: 24,
+                ),
+        label: Text(
+          viewModel.isClockingInOut ? 'Processing...' : 'Clock $nextClockType',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        onPressed: !canClock ? null : () => _performClockInOut(viewModel),
+      ),
+    );
+  }
+
+  Widget _buildTodayAttendanceCard(AttendanceClockViewModel viewModel) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Today's Attendance",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ...viewModel.todayAttendance.map((record) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color:
+                      record.isClockIn
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color:
+                        record.isClockIn
+                            ? Colors.green.withOpacity(0.3)
+                            : Colors.orange.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: record.isClockIn ? Colors.green : Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        record.isClockIn ? Icons.login : Icons.logout,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Clock ${record.clockType}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Time: ${record.timeClock}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _performClockInOut(AttendanceClockViewModel viewModel) async {
+    try {
+      final response = await viewModel.performClockInOut();
+
+      if (mounted) {
+        if (response.success) {
+          _showSuccessDialog(response.message);
+        } else {
+          _showErrorDialog(response.message);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog(e.toString());
+      }
+    }
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 50,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Success!',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 50,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Error',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'OK',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
     );
   }
 }
