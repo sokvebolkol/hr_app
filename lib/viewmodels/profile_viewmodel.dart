@@ -36,6 +36,8 @@ class ProfileViewModel extends ChangeNotifier {
   String get fullName => _userProfile?.fullName ?? "";
   String get department => _userProfile?.departmentName ?? "";
   String get branch => _userProfile?.branchFullName ?? "";
+  String get monthlySalary => _userProfile?.monthlySalary?.toString() ?? "00";
+  String get contract => _userProfile?.contract ?? "";
   String get joinedDate => _userProfile?.formattedJoinedDate ?? "";
   String get employmentType => _userProfile?.employmentType ?? "";
   String get gender => _userProfile?.gender ?? "";
@@ -55,6 +57,8 @@ class ProfileViewModel extends ChangeNotifier {
       label: "Employment Type",
       value: employmentType,
     ),
+    ProfileItem(icon: Icons.type_specimen, label: "Contract Type", value: contract),
+    ProfileItem(icon: Icons.money, label: "Salary", value: monthlySalary),
     ProfileItem(
       icon: Icons.calendar_today,
       label: "Joined Date",

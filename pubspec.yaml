@@ -108,7 +108,6 @@ flutter:
     - assets/images/wedding-document-support.png
     - assets/images/empty-box.png
     - assets/images/profile.jpg
-    - assets/images/my-profile.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -328,11 +328,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.warning_rounded,
-                        color: secondary,
-                        size: 24,
-                      ),
+                      Icon(Icons.warning_rounded, color: secondary, size: 24),
                       const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
@@ -463,10 +459,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                                     hasCoordinates
                                         ? Icons.location_on_rounded
                                         : Icons.location_off_rounded,
-                                    color:
-                                        hasCoordinates
-                                            ? primary
-                                            : secondary,
+                                    color: hasCoordinates ? primary : secondary,
                                     size: 18,
                                   ),
                                 ],
@@ -533,10 +526,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                           gradient: LinearGradient(
                             colors:
                                 viewModel.isWithinRange
-                                    ? [
-                                      primary,
-                                      primary.withOpacity(0.8),
-                                    ]
+                                    ? [primary, primary.withOpacity(0.8)]
                                     : [Colors.red, Colors.red.withOpacity(0.8)],
                           ),
                           borderRadius: BorderRadius.circular(20),
@@ -591,9 +581,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                   canClock
                       ? [
                         BoxShadow(
-                          color: (nextClockType == 'In'
-                                  ? primary
-                                  : secondary)
+                          color: (nextClockType == 'In' ? primary : secondary)
                               .withOpacity(0.4),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
@@ -608,9 +596,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
                       canClock
-                          ? (nextClockType == 'In'
-                              ? primary
-                              : secondary)
+                          ? (nextClockType == 'In' ? primary : secondary)
                           : Colors.grey[400],
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
@@ -723,21 +709,13 @@ class _AttendanceClockState extends State<AttendanceClock>
                             gradient: LinearGradient(
                               colors:
                                   record.isClockIn
-                                      ? [
-                                        primary,
-                                        primary.withOpacity(0.8),
-                                      ]
-                                      : [
-                                        secondary,
-                                        secondary.withOpacity(0.8),
-                                      ],
+                                      ? [primary, primary.withOpacity(0.8)]
+                                      : [secondary, secondary.withOpacity(0.8)],
                             ),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: (record.isClockIn
-                                        ? primary
-                                        : secondary)
+                                color: (record.isClockIn ? primary : secondary)
                                     .withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
@@ -971,7 +949,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                       ),
                     ),
                     child: const Text(
-                      'Continue',
+                      'OK',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

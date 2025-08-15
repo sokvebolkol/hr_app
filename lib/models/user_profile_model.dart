@@ -9,7 +9,7 @@ class UserProfile {
   final String gender;
   final String joinedDate;
   final String employmentType;
-  final double monthlySalary;
+  final double? monthlySalary;
   final String? previousMonthSalary;
   final String contract;
   final String salaryType;
