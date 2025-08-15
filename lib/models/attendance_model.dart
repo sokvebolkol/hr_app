@@ -140,12 +140,14 @@ class UserInfo {
 
 class AttendanceRecord {
   final String branchId;
+  final String branchName;
   final String timeClock;
   final String clockType;
   final DateTime clockDate;
 
   AttendanceRecord({
     required this.branchId,
+    required this.branchName,
     required this.timeClock,
     required this.clockType,
     required this.clockDate,
@@ -154,6 +156,7 @@ class AttendanceRecord {
   factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
     return AttendanceRecord(
       branchId: json['branch_id'] ?? '',
+      branchName: json['branch_full_name'] ?? '',
       timeClock: json['time_clock'] ?? '',
       clockType: json['clock_type'] ?? '',
       clockDate: DateTime.parse(json['clock_date']),
