@@ -1,5 +1,6 @@
 import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
@@ -63,7 +64,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         body: Consumer<LeaveHistoryViewModel>(
           builder: (context, viewModel, child) {
             if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child:  Center(child: SpinKitFadingCircle(color: primary)));
             }
 
             if (viewModel.errorMessage != null) {
@@ -410,52 +411,6 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                     ],
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriorityIndicator(PriorityModel priority) {
-    Color color;
-    IconData icon;
-
-    if (priority.isApproved) {
-      color = Colors.green;
-      icon = Icons.check_circle;
-    } else if (priority.isRejected) {
-      color = Colors.red;
-      icon = Icons.cancel;
-    } else {
-      color = Colors.orange;
-      icon = Icons.schedule;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Tooltip(
-        message: '${priority.prioText}: ${priority.apstatuText}',
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.3)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Text(
-                priority.prioText.split(' ').first, // Show first word only
-                style: TextStyle(
-                  fontSize: 10,
-                  color: color,
-                  fontWeight: FontWeight.w500,
-                ),
               ),
             ],
           ),

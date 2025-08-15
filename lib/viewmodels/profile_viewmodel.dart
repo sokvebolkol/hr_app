@@ -58,7 +58,7 @@ class ProfileViewModel extends ChangeNotifier {
       value: employmentType,
     ),
     ProfileItem(icon: Icons.type_specimen, label: "Contract Type", value: contract),
-    ProfileItem(icon: Icons.money, label: "Salary", value: monthlySalary),
+    // ProfileItem(icon: Icons.money, label: "Salary", value: monthlySalary),
     ProfileItem(
       icon: Icons.calendar_today,
       label: "Joined Date",

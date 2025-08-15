@@ -283,6 +283,30 @@ class _AttendanceClockState extends State<AttendanceClock>
     );
   }
 
+  Widget _buildNotifyUserAlreadyScanInFingerprint(
+    AttendanceClockViewModel viewModel,
+  ) {
+    final isFingerprinted =
+        viewModel.attendanceData?.isAlreadyScanInFingerprint ?? false;
+    final nextClockType = viewModel.nextClockType;
+
+    if (isFingerprinted && nextClockType == 'Out') {
+      return Container(
+        child: Text(
+          'You have already scanned your fingerprint on the machine',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Colors.black.withOpacity(0.8),
+          ),
+        ),
+      );
+    }
+
+    // Fallback: return empty container if condition not met
+    return SizedBox.shrink();
+  }
+
   Widget _buildBranchSelectionCard(AttendanceClockViewModel viewModel) {
     return Card(
       elevation: 8,
@@ -543,6 +567,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+              _buildNotifyUserAlreadyScanInFingerprint(viewModel),
               // Refresh location button
               if (viewModel.currentPosition == null)
                 Container(
@@ -620,15 +646,20 @@ class _AttendanceClockState extends State<AttendanceClock>
                               : Icons.logout_rounded,
                           size: 28,
                         ),
-                label: Text(
-                  viewModel.isClockingInOut
-                      ? 'Processing...'
-                      : 'Clock $nextClockType',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+                label: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      viewModel.isClockingInOut
+                          ? 'Processing...'
+                          : 'Clock $nextClockType',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
                 onPressed:
                     !canClock ? null : () => _performClockInOut(viewModel),

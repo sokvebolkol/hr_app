@@ -68,6 +68,9 @@ class AttendanceClockViewModel extends ChangeNotifier {
   String get nextClockType {
     if (_attendanceData == null) return 'In';
 
+    // If already scanned in with fingerprint, force Clock Out
+    if (_attendanceData!.isAlreadyScanInFingerprint) return 'Out';
+
     if (todayAttendance.isEmpty) return 'In';
 
     final lastRecord = todayAttendance.last;

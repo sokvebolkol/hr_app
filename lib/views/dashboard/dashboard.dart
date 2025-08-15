@@ -542,7 +542,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           ),
         ),
         SizedBox(
-          height: 200,
+          height: 270,
           child: ListView.builder(
             itemCount: viewModel.sortedLeaves.length,
             itemBuilder: (context, index) {

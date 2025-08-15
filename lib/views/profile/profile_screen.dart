@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -33,7 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
           if (viewModel.isLoading) {
             return Scaffold(
               backgroundColor: Colors.grey[100],
-              body: const Center(child: CircularProgressIndicator()),
+              body: const Center(child:  Center(child: SpinKitFadingCircle(color: primary))),
             );
           }
 
