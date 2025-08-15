@@ -15,6 +15,7 @@ import '../../viewmodels/leave_balance_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
+import '../attendance/attendance_calendar_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../auth/login-page.dart';
 import '../holidays/holiday_calendar_screen.dart';
@@ -233,7 +234,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     },
     {
       'icon': Icons.history,
-      'label': 'Leave History',
+      'label': 'Leaves History',
       'onPressed':
           (BuildContext context) => Navigator.push(
             context,
@@ -241,10 +242,13 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           ),
     },
     {
-      'icon': Icons.calendar_month,
-      'label': 'Attendance',
+      'icon': Icons.event_available,
+      'label': 'Attendances',
       'onPressed': (BuildContext context) {
-        // Implement navigation to attendance logs
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AttendanceCalendarScreen()),
+        );
       },
     },
     {
