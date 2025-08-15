@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/attendance_model.dart';
 import '../repositories/attendance_repository.dart';
 import '../services/location_service.dart';
+import '../services/device_info_service.dart';
 
 class AttendanceClockViewModel extends ChangeNotifier {
   final AttendanceRepository _repository = AttendanceRepository();
@@ -18,6 +19,7 @@ class AttendanceClockViewModel extends ChangeNotifier {
   String? _errorMessage;
   Timer? _timer;
   String _currentTime = '';
+  String? _deviceName;
 
   // Getters
   AttendanceClockData? get attendanceData => _attendanceData;
@@ -27,6 +29,7 @@ class AttendanceClockViewModel extends ChangeNotifier {
   bool get isClockingInOut => _isClockingInOut;
   String? get errorMessage => _errorMessage;
   String get currentTime => _currentTime;
+  String get deviceName => _deviceName ?? 'Unknown Device';
 
   List<Branch> get branches => _attendanceData?.branches ?? [];
 
@@ -99,6 +102,7 @@ class AttendanceClockViewModel extends ChangeNotifier {
   // Initialize
   void initialize() {
     _startTimer();
+    _getDeviceInfo();
     loadAttendanceData();
   }
 
@@ -106,6 +110,17 @@ class AttendanceClockViewModel extends ChangeNotifier {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  // Get device information
+  Future<void> _getDeviceInfo() async {
+    try {
+      _deviceName = await DeviceInfoService.getDeviceName();
+      notifyListeners();
+    } catch (e) {
+      _deviceName = 'Unknown Device';
+      print('Error getting device info: $e');
+    }
   }
 
   // Timer for current time
@@ -191,10 +206,13 @@ class AttendanceClockViewModel extends ChangeNotifier {
     try {
       _setClockingInOut(true);
 
+      // Get current time in HH:mm format
+      final currentTime = DateFormat('HH:mm').format(DateTime.now());
+
       final request = ClockInOutRequest(
         branchId: _selectedBranch!.branchId,
-        latitude: _currentPosition!.latitude,
-        longitude: _currentPosition!.longitude,
+        clockTime: currentTime,
+        deviceName: deviceName,
         clockType: nextClockType,
       );
 

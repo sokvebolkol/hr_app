@@ -209,22 +209,22 @@ class Branch {
 
 class ClockInOutRequest {
   final String branchId;
-  final double latitude;
-  final double longitude;
+  final String clockTime;
+  final String deviceName;
   final String clockType;
 
   ClockInOutRequest({
     required this.branchId,
-    required this.latitude,
-    required this.longitude,
+    required this.clockTime,
+    required this.deviceName,
     required this.clockType,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'branch_id': branchId,
-      'latitude': latitude,
-      'longitude': longitude,
+      'clock_time': clockTime,
+      'device_name': deviceName,
       'clock_type': clockType,
     };
   }

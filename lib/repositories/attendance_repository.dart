@@ -55,7 +55,7 @@ class AttendanceRepository {
       print('Clock In/Out Request: ${request.toJson()}');
 
       final response = await http.post(
-        Uri.parse('${_serverService.baseUrl}clock-in-out'),
+        Uri.parse('${_serverService.baseUrl}attendance/clock'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -70,8 +70,12 @@ class AttendanceRepository {
         final data = json.decode(response.body);
         return ClockInOutResponse.fromJson(data);
       } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['message'] ?? 'Clock in/out failed');
+        try {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['message'] ?? 'Clock in/out failed');
+        } catch (_) {
+          throw Exception('Server error: ${response.statusCode}');
+        }
       }
     } catch (e) {
       print('Error in clockInOut: $e');
