@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
+import '../dashboard/approver_dashboard_screen.dart';
+import '../dashboard/ceo_dashboard_screen.dart';
 import '../dashboard/dashboard.dart';
 import 'login-page.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -54,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
           debugPrint(
             'Permission $permission is permanently denied. Please enable it in Settings.',
           );
-          _showPermissionDialog(); // show settings prompt
+          _showPermissionDialog();
         }
       }
 
@@ -87,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 TextButton(
                   onPressed: () async {
                     Navigator.pop(context);
-                    await openAppSettings(); // open device settings
+                    await openAppSettings();
                   },
                   child: const Text('Open Settings'),
                 ),
@@ -101,12 +103,28 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 1));
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    debugPrint("Token: $token");
+
     if (!mounted) return;
+
     if (token != null && token.isNotEmpty) {
+      // Get user role flags
+      final isApprover = prefs.getBool('isApprover') ?? false;
+      final isCeoUser = prefs.getBool('ceoUser') ?? false;
+
+      // Navigate based on user role with proper error handling
+      Widget targetScreen;
+
+      if (isCeoUser) {
+        targetScreen = const CeoDashboardScreen();
+      } else if (isApprover) {
+        targetScreen = const ApproverDashboardScreen();
+      } else {
+        targetScreen = const DashboardScreen();
+      }
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        MaterialPageRoute(builder: (_) => targetScreen),
       );
     } else {
       Navigator.pushReplacement(
@@ -124,19 +142,51 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.verified_user, color: Colors.white, size: 80),
-            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.verified_user_rounded,
+                color: Colors.white,
+                size: 80,
+              ),
+            ),
+            const SizedBox(height: 32),
             Text(
               "Chokchey HR",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 28,
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
+                letterSpacing: 2.0,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              "Human Resource Management",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 40),
+            const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3,
+            ),
             const SizedBox(height: 16),
-            const CircularProgressIndicator(color: Colors.white),
+            Text(
+              "Loading...",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
       ),

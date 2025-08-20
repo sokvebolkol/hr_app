@@ -79,15 +79,18 @@ class _LoginScreenState extends State<LoginScreen> {
           "device_name": deviceName,
         },
       );
-
       if (response.statusCode == 200) {
-        final data = convert.jsonDecode(response.body);
-        final token = data['token'];
-        final userId = data['userLoginInfo']['uid'];
+        final data       = convert.jsonDecode(response.body);
+        final token      = data['token'];
+        final userId     = data['userLoginInfo']['uid'];
+        final isApprover = data['userProfile']['is_approver'];
+        final ceoUser    = data['userProfile']['is_ceo'];
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('userId', userId);
-
+        await prefs.setBool('isApprover', isApprover);
+        await prefs.setBool('ceoUser', ceoUser);
         // You can also save userLoginInfo/userProfile if needed
 
         Navigator.pushReplacement(

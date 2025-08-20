@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -25,14 +24,16 @@ import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
 import '../profile/profile_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class ApproverDashboardScreen extends StatefulWidget {
+  const ApproverDashboardScreen({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  // ignore: library_private_types_in_public_api
+  _ApproverDashboardScreenState createState() =>
+      _ApproverDashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
+class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
     with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
@@ -247,7 +248,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       'onPressed': (BuildContext context) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AttendanceCalendarScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AttendanceCalendarScreen(),
+          ),
         );
       },
     },
@@ -358,7 +361,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                     // Navigate to profile page by changing the current index
                     final scaffoldState =
                         context
-                            .findAncestorStateOfType<_DashboardScreenState>();
+                            .findAncestorStateOfType<
+                              _ApproverDashboardScreenState
+                            >();
                     scaffoldState?.navigateToProfile();
                   },
                   borderRadius: BorderRadius.circular(20),
