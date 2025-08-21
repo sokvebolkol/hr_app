@@ -26,18 +26,6 @@ class DashboardViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Computed properties
-  String get greeting {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return "Good morning!";
-    } else if (hour < 18) {
-      return "Good afternoon!";
-    } else {
-      return "Good evening!";
-    }
-  }
-
   String get username => _userProfile?.fullName ?? _user?.uname ?? "User";
   String? get profileImageUrl =>
       _userProfile?.profileImageUrl ?? _userProfile?.profileImage;

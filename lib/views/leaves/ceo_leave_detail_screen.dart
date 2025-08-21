@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
 import '../../models/ceo_dashboard_model.dart';
@@ -535,7 +536,9 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                       if (loadingProgress == null) return child;
                       return Container(
                         color: Colors.grey[100],
-                        child: const Center(child: CircularProgressIndicator()),
+                        child: const Center(
+                          child: SpinKitFadingCircle(color: primary),
+                        ),
                       );
                     },
                     errorBuilder: (context, error, stackTrace) {

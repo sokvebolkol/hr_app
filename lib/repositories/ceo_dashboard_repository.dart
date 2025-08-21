@@ -7,7 +7,7 @@ import '../services/global_service.dart';
 class CeoDashboardRepository {
   final ServerService _serverService = ServerService();
 
-  Future<CeoDashboardResponse> getAttendanceSummary() async {
+  Future<CeoDashboardResponse> getAttendanceSummary({String? month}) async {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");
@@ -17,9 +17,18 @@ class CeoDashboardRepository {
       }
 
       print('CEO Dashboard - Getting attendance summary');
+      if (month != null) {
+        print('Filtering by month: $month');
+      }
+
+      // Build URL with month parameter if provided
+      String url = '${_serverService.baseUrl}manager/attendance-summary';
+      if (month != null) {
+        url += '?month=$month';
+      }
 
       final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}manager/attendance-summary'),
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

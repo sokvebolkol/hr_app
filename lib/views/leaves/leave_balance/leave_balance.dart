@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/constant.dart';
 import '../../../widgets/leave_balance_item.dart';
@@ -192,7 +193,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
+          SpinKitFadingCircle(color: primary),
           SizedBox(height: 16),
           Text('Loading leave balance...'),
         ],

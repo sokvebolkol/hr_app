@@ -3,18 +3,17 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../constants/responsive.dart';
+import '../../utils/file_helper.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
-import '../attendance/attendance_calendar_screen.dart';
 import '../auth/login-page.dart';
-import '../holidays/holiday_calendar_screen.dart';
-import '../leaves/leave_history/leave_history_screen.dart';
 import '../leaves/ceo_leave_detail_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -93,7 +92,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           child: Consumer2<DashboardViewModel, CeoDashboardViewModel>(
             builder: (context, dashboardViewModel, ceoViewModel, child) {
               if (dashboardViewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: SpinKitFadingCircle(color: primary));
               }
 
               // Check if user is inactive and force logout
@@ -114,7 +113,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(),
+                      SpinKitFadingCircle(color: primary),
                       SizedBox(height: 16),
                       Text("Your account is inactive. Logging out..."),
                     ],
@@ -149,10 +148,10 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           backgroundColor: primary,
           style: TabStyle.react,
           items: const [
-            TabItem(icon: Icons.dashboard_rounded, title: 'Dashboard'),
+            TabItem(icon: Icons.home, title: 'Home'),
             TabItem(icon: Icons.calendar_month, title: 'Holiday'),
-            TabItem(icon: Icons.assignment_rounded, title: 'Reports'),
-            TabItem(icon: Icons.person_rounded, title: 'Profile'),
+            TabItem(icon: Icons.campaign, title: 'Memo'),
+            TabItem(icon: Icons.more_horiz_sharp, title: 'More'),
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
@@ -300,8 +299,8 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'CEO Dashboard',
+                            Text(
+                              FileHelper().greeting,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
@@ -702,6 +701,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                     : null,
                           ),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Flexible(
                                 child: Text(
@@ -784,6 +784,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                     : null,
                           ),
                           child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Flexible(
                                 child: Text(
@@ -842,6 +843,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             ),
           ),
 
+          // Month Filter Section
+          _buildMonthFilter(viewModel),
+
           // Tab Content
           SizedBox(
             height: 400, // Fixed height for the tab content
@@ -856,6 +860,151 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         ],
       ),
     );
+  }
+
+  Widget _buildMonthFilter(CeoDashboardViewModel viewModel) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border(
+          top: BorderSide(color: Colors.grey[200]!),
+          bottom: BorderSide(color: Colors.grey[200]!),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_month, size: 20, color: Colors.grey[600]),
+          const SizedBox(width: 8),
+          Text(
+            'Filter by Month:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _showMonthPicker(viewModel),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      viewModel.selectedMonthDisplay,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Icon(Icons.keyboard_arrow_down, color: primary, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMonthPicker(CeoDashboardViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Month - ${DateTime.now().year}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _getCurrentYearMonths().length,
+                    itemBuilder: (context, index) {
+                      final month = _getCurrentYearMonths()[index];
+                      final isSelected =
+                          viewModel.selectedMonth == month['value'];
+
+                      return ListTile(
+                        title: Text(
+                          month['display']!,
+                          style: TextStyle(
+                            fontWeight:
+                                isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                            color: isSelected ? primary : Colors.black87,
+                          ),
+                        ),
+                        trailing:
+                            isSelected
+                                ? Icon(Icons.check_circle, color: primary)
+                                : null,
+                        onTap: () {
+                          viewModel.setSelectedMonth(month['value']);
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  List<Map<String, String>> _getCurrentYearMonths() {
+    List<Map<String, String>> months = [];
+    DateTime now = DateTime.now();
+    int currentYear = now.year;
+    int currentMonth = now.month;
+
+    // Generate months from January to current month of current year
+    for (int month = 1; month <= currentMonth; month++) {
+      DateTime monthDate = DateTime(currentYear, month, 1);
+      months.add({
+        'value': DateFormat('yyyy-MM').format(monthDate), // "2025-01"
+        'display': DateFormat('MMMM yyyy').format(monthDate), // "January 2025"
+      });
+    }
+
+    // Reverse the list to show most recent months first
+    return months.reversed.toList();
   }
 
   Widget _buildPendingLeavesTab(List<LeaveRequest> leaves) {

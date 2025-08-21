@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
+import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
@@ -92,7 +94,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           child: Consumer<DashboardViewModel>(
             builder: (context, viewModel, child) {
               if (viewModel.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: SpinKitFadingCircle(color: primary));
               }
 
               // Check if user is inactive and force logout
@@ -113,7 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      CircularProgressIndicator(),
+                      SpinKitFadingCircle(color: primary),
                       SizedBox(height: 16),
                       Text("Your account is inactive. Logging out..."),
                     ],
@@ -247,7 +249,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       'onPressed': (BuildContext context) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AttendanceCalendarScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AttendanceCalendarScreen(),
+          ),
         );
       },
     },
@@ -373,7 +377,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              viewModel.greeting,
+                              FileHelper().greeting,
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,

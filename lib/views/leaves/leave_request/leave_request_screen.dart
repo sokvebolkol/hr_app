@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../constants/constant.dart';
@@ -478,7 +479,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(),
+                    SpinKitFadingCircle(color: primary),
                     SizedBox(height: 16),
                     Text('Loading leave request data...'),
                   ],
