@@ -148,6 +148,6 @@ class UserProfile {
     if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
       return profileImageUrl!;
     }
-    return 'assets/images/profile.jpg';
+    return 'assets/images/profile.png';
   }
 }

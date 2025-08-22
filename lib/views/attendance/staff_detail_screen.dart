@@ -55,8 +55,9 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
           elevation: 0,
           backgroundColor: primary,
           foregroundColor: Colors.white,
+          centerTitle: false,
           title: const Text(
-            'Staff Attendance Details',
+            'Staff Attendance ',
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
           actions: [
@@ -290,7 +291,12 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
         labelColor: primary,
         unselectedLabelColor: Colors.grey[600],
         indicatorColor: primary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 11,
+        ),
+        isScrollable: false,
         tabs: [
           Tab(child: _buildTabWithBadge('Present', viewModel.presentCount)),
           Tab(child: _buildTabWithBadge('Leave', viewModel.leaveCount)),
@@ -302,32 +308,41 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
   }
 
   Widget _buildTabWithBadge(String title, int count) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(title),
-        if (count > 0) ...[
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
             child: Text(
-              count > 99 ? '99+' : count.toString(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
+              title,
+              style: const TextStyle(fontSize: 10),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (count > 0) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              child: Text(
+                count > 99 ? '99+' : count.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 

@@ -17,6 +17,8 @@ import '../attendance/staff_detail_screen.dart';
 import '../auth/login-page.dart';
 import '../leaves/ceo_leave_detail_screen.dart';
 import '../profile/profile_screen.dart';
+import '../memo/memo_screen.dart';
+import '../holidays/holiday_calendar_screen.dart';
 
 class CeoDashboardScreen extends StatefulWidget {
   const CeoDashboardScreen({super.key});
@@ -156,7 +158,25 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
-            if (i == 1 || i == 2) return; // Disable holiday and reports for now
+            // Handle Holiday navigation
+            if (i == 1) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HolidayCalendarScreen(),
+                ),
+              );
+              return;
+            }
+
+            // Handle Memo navigation
+            if (i == 2) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MemoScreen()),
+              );
+              return;
+            }
 
             final newIndex = i == 3 ? 1 : 0; // Map profile to index 1
 
@@ -554,12 +574,13 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   ),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const StaffDetailScreen(),
-                    ),
-                  ),
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const StaffDetailScreen(),
+                        ),
+                      ),
                   child: const Text(
                     'View Details >',
                     style: TextStyle(color: Colors.white70, fontSize: 13),
@@ -965,25 +986,168 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       final isSelected =
                           viewModel.selectedMonth == month['value'];
 
-                      return ListTile(
-                        title: Text(
-                          month['display']!,
-                          style: TextStyle(
-                            fontWeight:
-                                isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                            color: isSelected ? primary : Colors.black87,
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              viewModel.setSelectedMonth(month['value']);
+                              Navigator.pop(context);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient:
+                                    isSelected
+                                        ? LinearGradient(
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                          colors: [
+                                            primary.withOpacity(0.1),
+                                            primary.withOpacity(0.05),
+                                          ],
+                                        )
+                                        : null,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? primary.withOpacity(0.3)
+                                          : Colors.grey[200]!,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                                boxShadow:
+                                    isSelected
+                                        ? [
+                                          BoxShadow(
+                                            color: primary.withOpacity(0.1),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                        : null,
+                              ),
+                              child: Row(
+                                children: [
+                                  // Month icon with animation
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isSelected
+                                              ? primary.withOpacity(0.1)
+                                              : Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      Icons.calendar_month,
+                                      color:
+                                          isSelected
+                                              ? primary
+                                              : Colors.grey[600],
+                                      size: 20,
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 16),
+
+                                  // Month text with improved typography
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          month['display']!,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight:
+                                                isSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w500,
+                                            color:
+                                                isSelected
+                                                    ? primary
+                                                    : Colors.black87,
+                                            letterSpacing: 0.2,
+                                          ),
+                                        ),
+                                        if (isSelected) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Selected month',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: primary.withOpacity(0.7),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Animated check icon
+                                  AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    transitionBuilder: (
+                                      Widget child,
+                                      Animation<double> animation,
+                                    ) {
+                                      return ScaleTransition(
+                                        scale: animation,
+                                        child: child,
+                                      );
+                                    },
+                                    child:
+                                        isSelected
+                                            ? Container(
+                                              key: const ValueKey('selected'),
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: primary,
+                                                shape: BoxShape.circle,
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: primary.withOpacity(
+                                                      0.3,
+                                                    ),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                            )
+                                            : Container(
+                                              key: const ValueKey('unselected'),
+                                              width: 28,
+                                              height: 28,
+                                              decoration: BoxDecoration(
+                                                border: Border.all(
+                                                  color: Colors.grey[300]!,
+                                                  width: 1.5,
+                                                ),
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        trailing:
-                            isSelected
-                                ? Icon(Icons.check_circle, color: primary)
-                                : null,
-                        onTap: () {
-                          viewModel.setSelectedMonth(month['value']);
-                          Navigator.pop(context);
-                        },
                       );
                     },
                   ),

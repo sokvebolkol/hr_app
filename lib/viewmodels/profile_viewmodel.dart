@@ -27,7 +27,7 @@ class ProfileViewModel extends ChangeNotifier {
 
   // Computed properties
   String get profileImagePath =>
-      _userProfile?.currentProfileImagePath ?? 'assets/images/profile.jpg';
+      _userProfile?.currentProfileImagePath ?? 'assets/images/profile.png';
   String get username => _userProfile?.username ?? "Unknown User";
   String get position => _userProfile?.positionName ?? "Unknown Position";
   String get email => _userProfile?.email ?? "";
@@ -57,7 +57,11 @@ class ProfileViewModel extends ChangeNotifier {
       label: "Employment Type",
       value: employmentType,
     ),
-    ProfileItem(icon: Icons.type_specimen, label: "Contract Type", value: contract),
+    ProfileItem(
+      icon: Icons.type_specimen,
+      label: "Contract Type",
+      value: contract,
+    ),
     // ProfileItem(icon: Icons.money, label: "Salary", value: monthlySalary),
     ProfileItem(
       icon: Icons.calendar_today,

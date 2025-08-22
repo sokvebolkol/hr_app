@@ -12,6 +12,8 @@ import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
 import '../dashboard/dashboard.dart';
+import '../dashboard/approver_dashboard_screen.dart';
+import '../dashboard/ceo_dashboard_screen.dart';
 import 'forgot-password.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -79,23 +81,36 @@ class _LoginScreenState extends State<LoginScreen> {
           "device_name": deviceName,
         },
       );
+
       if (response.statusCode == 200) {
-        final data       = convert.jsonDecode(response.body);
-        final token      = data['token'];
-        final userId     = data['userLoginInfo']['uid'];
+        final data = convert.jsonDecode(response.body);
+        final token = data['token'];
+        final userId = data['userLoginInfo']['uid'];
         final isApprover = data['userProfile']['is_approver'];
-        final ceoUser    = data['userProfile']['is_ceo'];
+        final ceoUser = data['userProfile']['is_ceo'];
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('userId', userId);
         await prefs.setBool('isApprover', isApprover);
         await prefs.setBool('ceoUser', ceoUser);
-        // You can also save userLoginInfo/userProfile if needed
+
+        // Navigate based on user role - same logic as splash screen
+        Widget targetScreen;
+
+        if (ceoUser) {
+          targetScreen = const CeoDashboardScreen();
+        } else if (isApprover) {
+          targetScreen = const ApproverDashboardScreen();
+        } else {
+          targetScreen = const DashboardScreen();
+        }
+
+        if (!mounted) return;
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => targetScreen),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(content: Text("Network error. Please try again.")),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -275,12 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 elevation: 2,
                               ),
-                              onPressed:
-                                  _isLoading
-                                      ? null
-                                      : () {
-                                        _login();
-                                      },
+                              onPressed: _isLoading ? null : _login,
                             ),
                           ),
                         ],
