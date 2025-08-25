@@ -18,7 +18,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_calendar_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
-import '../auth/login-page.dart';
+import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
 import '../leaves/leave_detail/leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
@@ -149,8 +149,10 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
           style: TabStyle.react,
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.home, title: 'Request Leave'),
-            TabItem(icon: Icons.person, title: 'Profile'),
+            TabItem(icon: Icons.calendar_month, title: 'Holiday'),
+            TabItem(icon: Icons.home, title: 'Leave'),
+            TabItem(icon: Icons.campaign, title: 'Memo'),
+            TabItem(icon: Icons.more_horiz_sharp, title: 'More'),
           ],
           initialActiveIndex: _currentIndex == 0 ? 0 : 2,
           onTap: (int i) {

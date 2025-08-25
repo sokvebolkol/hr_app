@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import '../auth/login-page.dart';
+import '../auth/login-screen.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

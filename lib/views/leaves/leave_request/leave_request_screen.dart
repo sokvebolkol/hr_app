@@ -62,6 +62,16 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         userId = data.userId;
         isLoading = false;
       });
+
+      // Debug: Print approvers data
+      print('=== DEBUG: APPROVERS DATA ===');
+      print('Number of approvers received: ${approvers.length}');
+      for (var approver in approvers) {
+        print(
+          'Approver: ${approver.dname} - ID: ${approver.approverId} - Level: ${approver.approvalLevel}',
+        );
+      }
+      print('=== END APPROVERS DEBUG ===');
     } catch (e) {
       setState(() {
         errorMessage = e.toString();
@@ -116,15 +126,33 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     return start == end ? start : '$start to $end';
   }
 
-  // Add helper function to format approvers
+  // FIXED: Updated helper function to format approvers correctly
   List<Map<String, dynamic>> get formattedApprovers {
-    return sortedApprovers.map((approver) {
-      return {
-        "eid": approver.approverId.toString(),
-        "applev": approver.approvalLevel,
-        "prio": approver.approvalLevel,
-      };
-    }).toList();
+    final uniqueApprovers = <String, ApproverModel>{};
+
+    // Remove duplicates based on approverId
+    for (var approver in sortedApprovers) {
+      uniqueApprovers[approver.approverId.toString()] = approver;
+    }
+
+    final result =
+        uniqueApprovers.values.map((approver) {
+          return {
+            "eid": approver.approverId.toString(),
+            "applev": approver.approvalLevel,
+            "prio": approver.approvalLevel,
+          };
+        }).toList();
+
+    // Debug: Print formatted approvers
+    print('=== DEBUG: FORMATTED APPROVERS ===');
+    print('Number of formatted approvers: ${result.length}');
+    for (var approver in result) {
+      print('Formatted: ${approver}');
+    }
+    print('=== END FORMATTED DEBUG ===');
+
+    return result;
   }
 
   // Add helper function to convert leave_for to integer
@@ -132,7 +160,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     return leaveFor == 'Full Day' ? 1 : 0; // 1 for Full Day, 0 for Half Day
   }
 
-  // Updated submit function - simplified success handling
+  // Updated submit function with better debugging
   Future<void> _submitLeaveRequest() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -204,6 +232,18 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       if (documentPhoto != null) {
         fileToUpload = File(documentPhoto!.path);
       }
+
+      // Debug: Print submission data
+      print('=== DEBUG: SUBMISSION DATA ===');
+      print('Leave Type: ${selectedLeaveType!.leaid}');
+      print('From Date: $fromDate');
+      print('To Date: $toDate');
+      print('Reason: ${reason.trim()}');
+      print('Leave For: $leaveForValue');
+      print('Total Leave: $totalLeaveDays');
+      print('Approvers: ${formattedApprovers}');
+      print('File: ${fileToUpload?.path ?? 'No file'}');
+      print('=== END SUBMISSION DEBUG ===');
 
       // Submit leave request with file
       final response = await _repository.submitLeaveRequest(
@@ -566,7 +606,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                     ),
                                     SizedBox(height: isWide ? 32 : 24),
 
-                                    // Leave Type - Updated to use backend data
+                                    // UPDATED: Leave Type - Simplified approach without custom styling
                                     Row(
                                       children: [
                                         Icon(Icons.category, color: primary),
@@ -588,45 +628,31 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade400,
+                                          ),
                                         ),
                                         filled: true,
                                         fillColor: Colors.grey[50],
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: isWide ? 16 : 10,
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 10,
+                                            ),
+                                        hintText: 'Select leave type',
                                       ),
-                                      isExpanded: true, // Add this line
+                                      isExpanded: true,
                                       items:
                                           leaveTypes.map((leaveType) {
                                             return DropdownMenuItem(
                                               value: leaveType.leaid,
-                                              child: SizedBox(
-                                                // Wrap with SizedBox
-                                                width: double.infinity,
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Flexible(
-                                                      // Use Flexible instead of Expanded
-                                                      child: Text(
-                                                        leaveType.ltyp,
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      '(${leaveType.num} days)',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey[600],
-                                                      ),
-                                                    ),
-                                                  ],
+                                              child: Text(
+                                                leaveType.ltyp,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
                                                 ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             );
                                           }).toList(),
@@ -1058,7 +1084,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    "Approvers",
+                                                    "Approvers (${approvers.length})",
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.w700,
@@ -1082,9 +1108,17 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                             .withOpacity(0.15),
                                                         radius:
                                                             isWide ? 22 : 18,
-                                                        child: const Icon(
-                                                          Icons.verified_user,
-                                                          color: secondary,
+                                                        child: Text(
+                                                          (entry.key + 1)
+                                                              .toString(),
+                                                          style:
+                                                              const TextStyle(
+                                                                color:
+                                                                    secondary,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
                                                         ),
                                                       ),
                                                       const SizedBox(width: 12),

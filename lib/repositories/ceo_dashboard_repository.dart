@@ -22,7 +22,7 @@ class CeoDashboardRepository {
       }
 
       // Build URL with month parameter if provided
-      String url = '${_serverService.baseUrl}manager/attendance-summary';
+      String url = '${_serverService.baseUrl}ceo/attendance-summary';
       if (month != null) {
         url += '?month=$month';
       }

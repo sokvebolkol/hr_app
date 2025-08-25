@@ -14,7 +14,7 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
 import '../attendance/staff_detail_screen.dart';
-import '../auth/login-page.dart';
+import '../auth/login-screen.dart';
 import '../leaves/ceo_leave_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import '../memo/memo_screen.dart';

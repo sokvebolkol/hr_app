@@ -19,7 +19,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_calendar_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
-import '../auth/login-page.dart';
+import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
 import '../leaves/leave_detail/leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
