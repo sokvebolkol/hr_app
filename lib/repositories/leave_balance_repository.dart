@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/leave_balance_response.dart';
+import '../models/leave_balance_detail_model.dart';
 import '../services/global_service.dart';
 
 class LeaveBalanceRepository {

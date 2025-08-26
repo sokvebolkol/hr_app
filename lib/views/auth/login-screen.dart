@@ -11,7 +11,7 @@ import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
-import '../dashboard/dashboard.dart';
+import '../dashboard/requester_dashboard.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import 'forgot-password.dart';
@@ -86,8 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
         final data = convert.jsonDecode(response.body);
         final token = data['token'];
         final userId = data['userLoginInfo']['uid'];
-        final isApprover = data['userProfile']['is_approver'];
-        final ceoUser = data['userProfile']['is_ceo'];
+        final isApprover = data['userProfile']['is_approver'] ?? false;
+        final ceoUser = data['userProfile']['is_ceo'] ?? false;
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);

@@ -48,8 +48,8 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
 
     screenWidth = MediaQuery.of(context).size.width;
     widget.prioList?.length == 2
-        ? lineWidth = screenWidth * 0.65
-        : lineWidth = screenWidth / 2 * 0.65;
+        ? lineWidth = screenWidth * 0.62
+        : lineWidth = screenWidth / 2 * 0.58;
     final name = widget.requesterName ?? 'Employee';
     final days = widget.totalDays ?? '';
     // Sort prioList by prio ascending
@@ -225,13 +225,15 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
           ),
         ),
       );
-    } else if (isCurrentUser) {
-      // Current user but no profile image - show default asset image
-      return const CircleAvatar(
-        backgroundImage: AssetImage('assets/images/profile.png'),
-        backgroundColor: Colors.blueAccent,
-      );
-    } else {
+    }
+    // else if (isCurrentUser) {
+    //   // Current user but no profile image - show default asset image
+    //   return const CircleAvatar(
+    //     backgroundImage: AssetImage('assets/images/profile.png'),
+    //     backgroundColor: Colors.blueAccent,
+    //   );
+    // }
+    else {
       // Show initials avatar for other employees
       return _buildInitialsAvatar(employeeName);
     }

@@ -13,6 +13,7 @@ import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
+import '../../widgets/date_section.dart';
 import '../attendance/staff_detail_screen.dart';
 import '../auth/login-screen.dart';
 import '../leaves/ceo_leave_detail_screen.dart';
@@ -24,6 +25,7 @@ class CeoDashboardScreen extends StatefulWidget {
   const CeoDashboardScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _CeoDashboardScreenState createState() => _CeoDashboardScreenState();
 }
 
@@ -274,7 +276,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
-                _buildDateSection(),
+                const DateSection(),
                 _buildTodayAttendanceCard(ceoViewModel),
                 _buildLeaveManagementTabs(ceoViewModel),
               ],
@@ -290,7 +292,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       color: primary,
       child: Padding(
         padding: const EdgeInsets.only(
-          top: 60,
+          top: 50,
           left: 16,
           right: 16,
           bottom: 16,
@@ -426,24 +428,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         backgroundColor: Colors.blueAccent,
       );
     }
-  }
-
-  Widget _buildDateSection() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
-      child: Row(
-        children: [
-          Text(
-            DateFormat('EEEE, MMMM dd, yyyy').format(DateTime.now()),
-            style: const TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildTodayAttendanceCard(CeoDashboardViewModel viewModel) {

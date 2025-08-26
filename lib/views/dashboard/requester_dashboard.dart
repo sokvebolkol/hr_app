@@ -15,6 +15,7 @@ import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/leave_balance_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
+import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_calendar_screen.dart';
@@ -161,7 +162,6 @@ class _DashboardScreenState extends State<DashboardScreen>
             if (_currentIndex != 0 && newIndex == 0) {
               _dashboardViewModel.refreshProfile();
             }
-
             setState(() {
               _currentIndex = newIndex;
             });
@@ -329,7 +329,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(viewModel),
-                _buildDateSection(),
+                const DateSection(),
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),
                 _buildFunctionButtons(context),
@@ -347,7 +347,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       color: primary,
       child: Padding(
         padding: const EdgeInsets.only(
-          top: 60,
+          top: 50,
           left: 16,
           right: 16,
           bottom: 16,
@@ -435,7 +435,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   Widget _buildProfileAvatar(DashboardViewModel viewModel) {
     final imageUrl = viewModel.profileImageUrl;
-
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Container(
         width: 40,
@@ -464,20 +463,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         backgroundColor: Colors.blueAccent,
       );
     }
-  }
-
-  Widget _buildDateSection() {
-    return Padding(
-      padding: const EdgeInsetsDirectional.all(16),
-      child: Text(
-        DateFormat('EEEE dd MMMM, yyyy').format(DateTime.now()),
-        style: const TextStyle(
-          fontSize: 16.0,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
-        ),
-      ),
-    );
   }
 
   Widget _buildLeaveBalanceSection(DashboardViewModel viewModel) {

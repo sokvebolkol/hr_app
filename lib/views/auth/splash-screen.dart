@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
-import '../dashboard/dashboard.dart';
+import '../dashboard/requester_dashboard.dart';
 import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -113,8 +113,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // Navigate based on user role with proper error handling
       Widget targetScreen;
-
-      if (isCeoUser) {
+    if (isCeoUser) {
         targetScreen = const CeoDashboardScreen();
       } else if (isApprover) {
         targetScreen = const ApproverDashboardScreen();
