@@ -45,8 +45,7 @@ class LeaveActionRepository {
       } else {
         return {
           'success': false,
-          'message':
-              responseData['message'] ?? 'Failed to approve leave request',
+          'message': responseData['error'] ?? 'Failed to approve leave request',
           'error': responseData['error'],
         };
       }
@@ -70,10 +69,10 @@ class LeaveActionRepository {
       if (token == null) {
         throw Exception('Token not found in local storage');
       }
-
+      print(remark);
       final body = json.encode({
-        'remark': remark ?? '',
-        'rejected_at': DateTime.now().toIso8601String(),
+        'reason': remark ?? '',
+        // 'rejected_at': DateTime.now().toIso8601String(),
       });
 
       final response = await http.post(

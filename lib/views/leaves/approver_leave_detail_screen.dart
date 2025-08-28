@@ -62,12 +62,12 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   fromDate: widget.leave.fromDate,
                   toDate: widget.leave.toDate,
                   onAction: _handleLeaveAction,
-                  viewModel: viewModel, 
+                  viewModel: viewModel,
                 );
               },
             ),
             floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerFloat,
+                FloatingActionButtonLocation.centerDocked,
           );
         },
       ),
@@ -76,14 +76,13 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
 
   void _handleLeaveAction(bool isApprove, String remark, bool success) {
     if (success) {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.pop(context, {
-            'action': isApprove ? 'approve' : 'reject',
-            'remark': remark,
-            'success': true,
-          });
-        }
+      // Navigate back immediately with refresh instruction
+      Navigator.pop(context, {
+        'action': isApprove ? 'approve' : 'reject',
+        'remark': remark,
+        'success': true,
+        'refresh': true,
+        'leaveId': widget.leave.lreid,
       });
     }
   }
@@ -395,7 +394,35 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               ).format(widget.leave.requestDate),
               Icons.access_time,
             ),
-
+            if (widget.leave.reason.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Text(
+                'Reason',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Text(
+                  widget.leave.reason,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
             // Pending/Processed notice
             Consumer<LeaveActionViewModel>(
               builder: (context, viewModel, child) {
@@ -509,36 +536,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                 }
               },
             ),
-
-            if (widget.leave.reason.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              const Text(
-                'Reason',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  widget.leave.reason,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

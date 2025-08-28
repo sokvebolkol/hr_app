@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../repositories/leave_repository.dart';
 
-class LeaveActionViewModel extends ChangeNotifier {
+class CeoLeaveActionViewModel extends ChangeNotifier {
   final LeaveActionRepository _repository = LeaveActionRepository();
 
   // State
@@ -44,7 +44,7 @@ class LeaveActionViewModel extends ChangeNotifier {
         _setApproving(false);
         return true;
       } else {
-        _setError(result['error'] ?? 'Failed to approve leave request');
+        _setError(result['message'] ?? 'Failed to approve leave request');
         return false;
       }
     } catch (e) {
@@ -79,42 +79,9 @@ class LeaveActionViewModel extends ChangeNotifier {
     }
   }
 
-  // Get leave details
-  Future<Map<String, dynamic>?> getLeaveDetails(String leaveId) async {
-    _setLoading(true);
-    _clearMessages();
-
-    try {
-      final result = await _repository.getLeaveDetails(leaveId);
-
-      if (result['success']) {
-        _setLoading(false);
-        return result['data'];
-      } else {
-        _setError(result['message'] ?? 'Failed to get leave details');
-        return null;
-      }
-    } catch (e) {
-      _setError('Network error: ${e.toString()}');
-      return null;
-    }
-  }
-
   // Clear all messages
   void clearMessages() {
     _clearMessages();
-  }
-
-  // Clear error
-  void clearError() {
-    _errorMessage = null;
-    notifyListeners();
-  }
-
-  // Clear success
-  void clearSuccess() {
-    _successMessage = null;
-    notifyListeners();
   }
 
   // Reset action state
@@ -126,11 +93,6 @@ class LeaveActionViewModel extends ChangeNotifier {
   }
 
   // Private methods
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
   void _setApproving(bool approving) {
     _isApproving = approving;
     notifyListeners();

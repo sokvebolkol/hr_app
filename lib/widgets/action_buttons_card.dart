@@ -30,9 +30,9 @@ class ActionButtonsCard extends StatelessWidget {
   final double? spacing;
   final EdgeInsetsGeometry? buttonPadding;
   final double? buttonBorderRadius;
-  final ButtonLayout layout; // Add layout option
-  final MainAxisAlignment? mainAxisAlignment; // Add alignment option
-  final CrossAxisAlignment? crossAxisAlignment; // Add cross alignment option
+  final ButtonLayout layout;
+  final MainAxisAlignment? mainAxisAlignment;
+  final CrossAxisAlignment? crossAxisAlignment;
 
   const ActionButtonsCard({
     super.key,
@@ -45,7 +45,7 @@ class ActionButtonsCard extends StatelessWidget {
     this.spacing,
     this.buttonPadding,
     this.buttonBorderRadius,
-    this.layout = ButtonLayout.column, // Default to column
+    this.layout = ButtonLayout.column,
     this.mainAxisAlignment,
     this.crossAxisAlignment,
   });

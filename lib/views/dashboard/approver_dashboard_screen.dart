@@ -755,7 +755,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
           // Tab Content
           SizedBox(
-            height: 400, // Fixed height for the tab content
+            height: 400, 
             child: TabBarView(
               controller: _tabController,
               children: [
@@ -1114,20 +1114,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   Widget _buildCompactPendingLeaveItem(PendingLeaveRequest leave) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ApproverLeaveDetailScreen(leave: leave),
-          ),
-        ).then((result) {
-          // Refresh data if action was taken
-          if (result == true) {
-            Provider.of<ApproverDashboardViewModel>(
-              context,
-              listen: false,
-            ).refresh();
-          }
-        });
+        _navigateToLeaveDetail(leave);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -1286,63 +1273,46 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     );
   }
 
-  void _showLeaveActionDialog(PendingLeaveRequest leave, bool isApprove) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(isApprove ? 'Approve Leave' : 'Reject Leave'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Employee: ${leave.requesterName}'),
-                Text('Leave Type: ${leave.ltyp}'),
-                Text('Duration: ${leave.numLeaveDays} day(s)'),
-                Text(
-                  'Dates: ${DateFormat('MMM dd - dd, yyyy').format(leave.fromDate)}',
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  isApprove
-                      ? 'Are you sure you want to approve this leave request?'
-                      : 'Are you sure you want to reject this leave request?',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isApprove
-                            ? 'Leave request approved successfully'
-                            : 'Leave request rejected successfully',
-                      ),
-                      backgroundColor: isApprove ? Colors.green : Colors.red,
-                    ),
-                  );
-                  // Refresh data
-                  Provider.of<ApproverDashboardViewModel>(
-                    context,
-                    listen: false,
-                  ).refresh();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isApprove ? Colors.green : Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(isApprove ? 'Approve' : 'Reject'),
-              ),
-            ],
-          ),
+  void _navigateToLeaveDetail(PendingLeaveRequest leave) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ApproverLeaveDetailScreen(leave: leave),
+      ),
     );
+
+    // Handle the result and refresh if needed
+    if (result != null &&
+        result['success'] == true &&
+        result['refresh'] == true) {
+      // Show loading indicator while refreshing
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Row(
+      //       children: [
+      //         SizedBox(
+      //           width: 16,
+      //           height: 16,
+      //           child: CircularProgressIndicator(
+      //             strokeWidth: 2,
+      //             color: Colors.white,
+      //           ),
+      //         ),
+      //         SizedBox(width: 12),
+      //         Text('Refreshing data...'),
+      //       ],
+      //     ),
+      //     duration: Duration(seconds: 1),
+      //     backgroundColor: Colors.blue,
+      //   ),
+      // );
+      // Refresh the dashboard data
+      if (mounted) {
+        Provider.of<ApproverDashboardViewModel>(
+          context,
+          listen: false,
+        ).refresh();
+      }
+    }
   }
 }

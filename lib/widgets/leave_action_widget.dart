@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../viewmodels/leave_action_viewmodel.dart';
 
 class LeaveActionButtons extends StatelessWidget {
@@ -26,75 +27,119 @@ class LeaveActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: FloatingActionButton.extended(
-              heroTag: "reject_${leaveId}",
-              onPressed:
-                  viewModel.isLoading
-                      ? null
-                      : () => _showActionDialog(context, false),
-              backgroundColor: Colors.red,
-              icon:
-                  viewModel.isLoading
-                      ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                      : const Icon(Icons.close, color: Colors.white),
-              label: Text(
-                viewModel.isLoading ? 'Processing...' : 'Reject',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+    return Consumer<LeaveActionViewModel>(
+      builder: (context, viewModel, child) {
+        if (viewModel.hasActionTaken) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle, color: Colors.green[700], size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Action completed successfully',
+                  style: TextStyle(
+                    color: Colors.green[700],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Color(0xFFECECEC),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: FloatingActionButton.extended(
+                  heroTag: "reject_${leaveId}",
+                  onPressed:
+                      viewModel.isProcessing
+                          ? null
+                          : () => _showActionDialog(context, false),
+                  backgroundColor:
+                      viewModel.isProcessing ? Colors.grey : Colors.red,
+                  icon:
+                      viewModel.isRejecting
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Icon(Icons.close, color: Colors.white),
+                  label: Text(
+                    viewModel.isRejecting ? 'Rejecting...' : 'Reject',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: FloatingActionButton.extended(
-              heroTag: "approve_${leaveId}",
-              onPressed:
-                  viewModel.isLoading
-                      ? null
-                      : () => _showActionDialog(context, true),
-              backgroundColor: Colors.green,
-              icon:
-                  viewModel.isLoading
-                      ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                      : const Icon(Icons.check, color: Colors.white),
-              label: Text(
-                viewModel.isLoading ? 'Processing...' : 'Approve',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 16),
+              Expanded(
+                child: FloatingActionButton.extended(
+                  heroTag: "approve_${leaveId}",
+                  onPressed:
+                      viewModel.isProcessing
+                          ? null
+                          : () => _showActionDialog(context, true),
+                  backgroundColor:
+                      viewModel.isProcessing ? Colors.grey : Colors.green,
+                  icon:
+                      viewModel.isApproving
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Icon(Icons.check, color: Colors.white),
+                  label: Text(
+                    viewModel.isApproving ? 'Approving...' : 'Approve',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   void _showActionDialog(BuildContext context, bool isApprove) {
     final TextEditingController remarkController = TextEditingController();
-
     showDialog(
       context: context,
       barrierDismissible: false,
