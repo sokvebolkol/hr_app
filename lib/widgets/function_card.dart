@@ -6,7 +6,7 @@ class FunctionIconCardWidget extends StatelessWidget {
   final String label;
   final Color iconColor;
   final Color backgroundColor;
-  final VoidCallback? onPressed; 
+  final VoidCallback? onPressed;
 
   const FunctionIconCardWidget({
     super.key,
@@ -14,14 +14,14 @@ class FunctionIconCardWidget extends StatelessWidget {
     required this.label,
     this.iconColor = primary,
     this.backgroundColor = Colors.white,
-    this.onPressed, 
+    this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: onPressed, 
+      onTap: onPressed,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

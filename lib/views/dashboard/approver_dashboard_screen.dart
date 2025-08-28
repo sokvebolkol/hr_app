@@ -570,7 +570,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       ),
       child: Column(
         children: [
-          // Custom Tab Bar with Full Background (matching CEO dashboard)
+          // Custom Tab Bar with Full Background
           Container(
             padding: const EdgeInsets.only(top: 4, bottom: 4),
             decoration: BoxDecoration(
@@ -627,7 +627,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                   ),
                                 ),
                               ),
-                              if (viewModel.pendingLeavesCount > 0) ...[
+                              if (viewModel.filteredPendingLeavesCount > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.all(4),
@@ -643,9 +643,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                     minHeight: 20,
                                   ),
                                   child: Text(
-                                    viewModel.pendingLeavesCount > 99
+                                    viewModel.filteredPendingLeavesCount > 99
                                         ? '99+'
-                                        : viewModel.pendingLeavesCount
+                                        : viewModel.filteredPendingLeavesCount
                                             .toString(),
                                     style: TextStyle(
                                       color:
@@ -710,7 +710,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                   ),
                                 ),
                               ),
-                              if (viewModel.ownLeavesCount > 0) ...[
+                              if (viewModel.filteredOwnLeavesCount > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.all(4),
@@ -726,9 +726,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                     minHeight: 20,
                                   ),
                                   child: Text(
-                                    viewModel.ownLeavesCount > 99
+                                    viewModel.filteredOwnLeavesCount > 99
                                         ? '99+'
-                                        : viewModel.ownLeavesCount.toString(),
+                                        : viewModel.filteredOwnLeavesCount
+                                            .toString(),
                                     style: TextStyle(
                                       color:
                                           isSelected ? primary : Colors.white,
@@ -750,12 +751,12 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
           ),
 
-          // Month Filter Section (like CEO dashboard)
+          // Month Filter Section
           _buildMonthFilter(viewModel),
 
           // Tab Content
           SizedBox(
-            height: 400, 
+            height: 400,
             child: TabBarView(
               controller: _tabController,
               children: [
@@ -828,7 +829,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   }
 
   String _getSelectedMonthDisplay() {
-    return DateFormat('MMMM yyyy').format(DateTime.now());
+    final viewModel = Provider.of<ApproverDashboardViewModel>(
+      context,
+      listen: false,
+    );
+    return DateFormat('MMMM yyyy').format(viewModel.selectedMonth);
   }
 
   void _showMonthPicker(ApproverDashboardViewModel viewModel) {
@@ -867,9 +872,12 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                     itemCount: _getCurrentYearMonths().length,
                     itemBuilder: (context, index) {
                       final month = _getCurrentYearMonths()[index];
+                      final monthDate = DateFormat(
+                        'yyyy-MM',
+                      ).parse(month['value']!);
                       final isSelected =
-                          month['value'] ==
-                          DateFormat('yyyy-MM').format(DateTime.now());
+                          viewModel.selectedMonth.year == monthDate.year &&
+                          viewModel.selectedMonth.month == monthDate.month;
 
                       return Container(
                         margin: const EdgeInsets.symmetric(vertical: 2),
@@ -878,7 +886,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                           child: InkWell(
                             borderRadius: BorderRadius.circular(12),
                             onTap: () {
-                              // Handle month selection
+                              viewModel.setSelectedMonth(monthDate);
                               Navigator.pop(context);
                             },
                             child: Container(
@@ -988,7 +996,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   }
 
   Widget _buildPendingApprovalsTab(ApproverDashboardViewModel viewModel) {
-    if (viewModel.pendingLeaveRequests.isEmpty) {
+    if (viewModel.filteredPendingLeaveRequests.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         child: Column(
@@ -1010,7 +1018,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 8),
             Text(
-              'All leave requests are up to date',
+              'No leave requests found for ${DateFormat('MMMM yyyy').format(viewModel.selectedMonth)}',
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -1021,16 +1029,18 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: viewModel.pendingLeaveRequests.length,
+      itemCount: viewModel.filteredPendingLeaveRequests.length,
       itemBuilder:
           (context, index) => _buildCompactPendingLeaveItem(
-            viewModel.pendingLeaveRequests[index],
+            viewModel.filteredPendingLeaveRequests[index],
           ),
     );
   }
 
   Widget _buildMyLeaveRequestsTab(ApproverDashboardViewModel viewModel) {
-    if (viewModel.sortedLeaves.isEmpty) {
+    final filteredLeaves = viewModel.filteredOwnLeaves;
+
+    if (filteredLeaves.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         child: Column(
@@ -1048,7 +1058,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 8),
             Text(
-              'Recently submitted leaves will appear here',
+              'No leave requests found for ${DateFormat('MMMM yyyy').format(viewModel.selectedMonth)}',
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -1059,10 +1069,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
-      itemCount: viewModel.sortedLeaves.length,
+      itemCount: filteredLeaves.length,
       itemBuilder: (context, index) {
-        final leave = viewModel.sortedLeaves[index];
-        // Sort prioList by prio ascending
+        final leave = filteredLeaves[index];
         final sortedPrioList = [...leave.prioList]
           ..sort((a, b) => a.prio.compareTo(b.prio));
 

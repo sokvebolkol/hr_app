@@ -17,7 +17,6 @@ class ApproverDashboardRepository {
       if (token == null || userId == null) {
         throw Exception('Authentication data not found');
       }
-
       final response = await http.get(
         Uri.parse('${_serverService.baseUrl}manager/home/$userId'),
         headers: {
@@ -29,7 +28,6 @@ class ApproverDashboardRepository {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
         if (data['success'] == true) {
           return ApproverDashboardData.fromJson(data['data']);
         } else {
