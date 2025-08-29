@@ -214,34 +214,6 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                     ),
 
                     const SizedBox(height: 30),
-
-                    // Back Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          elevation: 4,
-                          shadowColor: primary.withOpacity(0.3),
-                        ),
-                        icon: const Icon(Icons.arrow_back, size: 20),
-                        label: const Text(
-                          'Back to Dashboard',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),

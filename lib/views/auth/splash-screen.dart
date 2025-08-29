@@ -113,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // Navigate based on user role with proper error handling
       Widget targetScreen;
-    if (isCeoUser) {
+      if (isCeoUser) {
         targetScreen = const CeoDashboardScreen();
       } else if (isApprover) {
         targetScreen = const ApproverDashboardScreen();
@@ -171,19 +171,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.w300,
                 letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 40),
-            const CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 3,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              "Loading...",
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 14,
               ),
             ),
           ],

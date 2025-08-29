@@ -46,6 +46,14 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
   double screenHeight = 0.0;
   late ApproverDashboardViewModel _dashboardViewModel;
 
+  final List<Widget> _screens = [
+    const _DashboardHomeContent(),
+    const HolidayCalendarScreen(),
+    const _DashboardHomeContent(),
+    const MemoScreen(),
+    const ProfilePage(),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -139,9 +147,7 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
                 });
               }
 
-              return _currentIndex == 0
-                  ? const _DashboardHomeContent()
-                  : const ProfilePage();
+              return _screens[_currentIndex];
             },
           ),
         ),
@@ -160,51 +166,14 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
             TabItem(icon: Icons.campaign, title: 'Memo'),
             TabItem(icon: Icons.more_horiz_sharp, title: 'More'),
           ],
-          initialActiveIndex:
-              _currentIndex == 0
-                  ? 0
-                  : (_currentIndex == 1 ? 4 : 0), // Map correctly
+          initialActiveIndex: _currentIndex,
           onTap: (int i) {
-            // Skip the center tab (index 2) since it's handled by FAB
-            if (i == 2) {
-              return; // Do nothing for center tab
-            }
-
-            // Handle Holiday navigation (index 1)
-            if (i == 1) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HolidayCalendarScreen(),
-                ),
-              );
-              return;
-            }
-
-            // Handle Memo navigation (index 3)
-            if (i == 3) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MemoScreen()),
-              );
-              return;
-            }
-
-            // Handle Home (index 0) and Profile (index 4)
-            if (i == 0) {
-              // Home tab
-              if (_currentIndex != 0) {
+            setState(() {
+              _currentIndex = i;
+              if (_currentIndex == 0) {
                 _dashboardViewModel.refreshProfile();
               }
-              setState(() {
-                _currentIndex = 0;
-              });
-            } else if (i == 4) {
-              // More/Profile tab
-              setState(() {
-                _currentIndex = 1;
-              });
-            }
+            });
           },
         ),
         // Add floating action button
@@ -244,7 +213,7 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
 
   void navigateToProfile() {
     setState(() {
-      _currentIndex = 1;
+      _currentIndex = 4;
     });
   }
 }
@@ -520,6 +489,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   }
 
   Widget _buildFunctionButtons(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(
@@ -532,11 +502,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                 _functionButtons.asMap().entries.map((entry) {
                   final index = entry.key;
                   final button = entry.value;
-
                   return Row(
                     children: [
                       SizedBox(
-                        width: 110,
+                        width: screenWidth / 3.6,
                         child: FunctionIconCardWidget(
                           iconData: button['icon'] as IconData,
                           label: button['label'] as String,
@@ -1289,33 +1258,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         builder: (context) => ApproverLeaveDetailScreen(leave: leave),
       ),
     );
-
     // Handle the result and refresh if needed
     if (result != null &&
         result['success'] == true &&
         result['refresh'] == true) {
-      // Show loading indicator while refreshing
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(
-      //     content: Row(
-      //       children: [
-      //         SizedBox(
-      //           width: 16,
-      //           height: 16,
-      //           child: CircularProgressIndicator(
-      //             strokeWidth: 2,
-      //             color: Colors.white,
-      //           ),
-      //         ),
-      //         SizedBox(width: 12),
-      //         Text('Refreshing data...'),
-      //       ],
-      //     ),
-      //     duration: Duration(seconds: 1),
-      //     backgroundColor: Colors.blue,
-      //   ),
-      // );
-      // Refresh the dashboard data
       if (mounted) {
         Provider.of<ApproverDashboardViewModel>(
           context,

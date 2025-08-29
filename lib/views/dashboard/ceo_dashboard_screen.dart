@@ -33,6 +33,14 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
     with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
+
+  final List<Widget> _screens = [
+    const CeoDashboardScreen(),
+    const HolidayCalendarScreen(),
+    const MemoScreen(),
+    const ProfilePage(),
+  ];
+
   double screenWidth = 0.0;
   double screenHeight = 0.0;
   late DashboardViewModel _dashboardViewModel;
@@ -83,6 +91,12 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
+
+    // Set the home content dynamically
+    _screens[0] = _CeoDashboardHomeContent(
+      dashboardViewModel: _dashboardViewModel,
+      ceoViewModel: _ceoDashboardViewModel,
+    );
 
     return WillPopScope(
       onWillPop: _onBackPressed,
@@ -138,12 +152,8 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                 });
               }
 
-              return _currentIndex == 0
-                  ? _CeoDashboardHomeContent(
-                    dashboardViewModel: dashboardViewModel,
-                    ceoViewModel: ceoViewModel,
-                  )
-                  : const ProfilePage();
+              // Show the selected screen
+              return _screens[_currentIndex];
             },
           ),
         ),
@@ -160,35 +170,13 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
-            // Handle Holiday navigation
-            if (i == 1) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HolidayCalendarScreen(),
-                ),
-              );
-              return;
-            }
-
-            // Handle Memo navigation
-            if (i == 2) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MemoScreen()),
-              );
-              return;
-            }
-
-            final newIndex = i == 3 ? 1 : 0; // Map profile to index 1
-
-            // If switching back to home (dashboard), refresh the data
-            if (_currentIndex != 0 && newIndex == 0) {
-              _dashboardViewModel.refreshProfile();
-              _ceoDashboardViewModel.refresh();
-            }
             setState(() {
-              _currentIndex = newIndex;
+              _currentIndex = i;
+              // Optionally refresh data when switching to Home or Profile
+              if (_currentIndex == 0) {
+                _dashboardViewModel.refreshProfile();
+                _ceoDashboardViewModel.refresh();
+              }
             });
           },
         ),
@@ -217,7 +205,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
 
   void navigateToProfile() {
     setState(() {
-      _currentIndex = 1;
+      _currentIndex = 3;
     });
   }
 }

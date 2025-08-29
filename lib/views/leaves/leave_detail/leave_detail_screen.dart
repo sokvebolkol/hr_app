@@ -561,20 +561,18 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
       ],
     );
   }
-
-  // Updated to use global widget
   Widget _buildActionButtons() {
     return ActionButtonsCard(
       layout: ButtonLayout.row,
       spacing: 16,
       buttons: [
-        ActionButtonData(
-          label: 'Update',
-          icon: Icons.edit,
-          onPressed: _navigateToUpdateScreen,
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-        ),
+        // ActionButtonData(
+        //   label: 'Update',
+        //   icon: Icons.edit,
+        //   onPressed: _navigateToUpdateScreen,
+        //   backgroundColor: primary,
+        //   foregroundColor: Colors.white,
+        // ),
         ActionButtonData(
           label: 'Cancel',
           icon: Icons.cancel_outlined,

@@ -170,13 +170,17 @@ class _DashboardScreenState extends State<DashboardScreen>
         floatingActionButton: FloatingActionButton(
           backgroundColor: primary,
           child: const Icon(Icons.add, color: Colors.white),
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const LeaveRequestScreen(),
               ),
             );
+            // If a leave was requested, refresh the dashboard
+            if (result == true && mounted) {
+              _dashboardViewModel.refresh();
+            }
           },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -205,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Method to navigate to profile page
   void navigateToProfile() {
     setState(() {
-      _currentIndex = 1; // Profile page index
+      _currentIndex = 1;
     });
   }
 }
@@ -535,7 +539,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           ),
         ),
         SizedBox(
-          height: 270,
+          height: 330,
           child: ListView.builder(
             itemCount: viewModel.sortedLeaves.length,
             itemBuilder: (context, index) {
@@ -543,18 +547,14 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               // Sort prioList by prio ascending
               final sortedPrioList = [...leave.prioList]
                 ..sort((a, b) => a.prio.compareTo(b.prio));
-
               return GestureDetector(
                 onTap: () {
-                  // Navigate to leave detail screen
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder:
                           (context) => LeaveDetailScreen(
-                            leaveRequest:
-                                leave
-                                    .toLeaveHistoryModel(), // Convert to LeaveHistoryModel
+                            leaveRequest: leave.toLeaveHistoryModel(),
                           ),
                     ),
                   ).then((result) {
