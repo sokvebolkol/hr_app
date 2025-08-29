@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
-import '../../constants/constant.dart';
-import '../../repositories/approver_dashboard_repository.dart';
-import '../../widgets/leave_action_widget.dart';
-import '../../viewmodels/leave_action_viewmodel.dart';
+import '../../../constants/constant.dart';
+import '../../../repositories/approver_dashboard_repository.dart';
+import '../../../widgets/leave_action_widget.dart';
+import '../../../viewmodels/leave_action_viewmodel.dart';
 
 class ApproverLeaveDetailScreen extends StatefulWidget {
   final PendingLeaveRequest leave;
@@ -63,6 +63,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   toDate: widget.leave.toDate,
                   onAction: _handleLeaveAction,
                   viewModel: viewModel,
+                  showApproveRemark: true,
                 );
               },
             ),

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
-import '../../constants/constant.dart';
-import '../../models/ceo_dashboard_model.dart';
-import '../../widgets/leave_action_widget.dart'; // Same widget as approver
-import '../../viewmodels/leave_action_viewmodel.dart'; // Same viewmodel as approver
+import '../../../constants/constant.dart';
+import '../../../models/ceo_dashboard_model.dart';
+import '../../../widgets/leave_action_widget.dart'; // Same widget as approver
+import '../../../viewmodels/leave_action_viewmodel.dart'; // Same viewmodel as approver
 
 class CeoLeaveDetailScreen extends StatefulWidget {
   final LeaveRequest leave;
@@ -61,7 +61,6 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                     ? Consumer<LeaveActionViewModel>(
                       builder: (context, vm, child) {
                         return LeaveActionButtons(
-                          // Same widget as approver
                           leaveId: widget.leave.lreid.toString(),
                           employeeName: widget.leave.requesterName,
                           leaveType: widget.leave.ltyp,
@@ -69,7 +68,9 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                           fromDate: widget.leave.fromDate,
                           toDate: widget.leave.toDate,
                           onAction: _handleLeaveAction,
-                          viewModel: vm, // Pass the same viewModel
+                          viewModel: vm,
+                          showApproveRemark:
+                              false, // CEO does not need remark on approve
                         );
                       },
                     )

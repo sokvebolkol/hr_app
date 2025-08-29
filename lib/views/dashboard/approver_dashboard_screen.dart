@@ -28,7 +28,7 @@ import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
 import '../memo/memo_screen.dart';
 import '../profile/profile_screen.dart';
-import '../leaves/approver_leave_detail_screen.dart';
+import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 
 class ApproverDashboardScreen extends StatefulWidget {
   const ApproverDashboardScreen({super.key});

@@ -16,7 +16,7 @@ import '../../models/ceo_dashboard_model.dart';
 import '../../widgets/date_section.dart';
 import '../attendance/staff_detail_screen.dart';
 import '../auth/login-screen.dart';
-import '../leaves/ceo_leave_detail_screen.dart';
+import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import '../memo/memo_screen.dart';
 import '../holidays/holiday_calendar_screen.dart';

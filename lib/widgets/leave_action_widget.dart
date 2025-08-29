@@ -12,6 +12,7 @@ class LeaveActionButtons extends StatelessWidget {
   final DateTime toDate;
   final Function(bool isApprove, String remark, bool success) onAction;
   final LeaveActionViewModel viewModel;
+  final bool showApproveRemark;
 
   const LeaveActionButtons({
     super.key,
@@ -23,6 +24,7 @@ class LeaveActionButtons extends StatelessWidget {
     required this.toDate,
     required this.onAction,
     required this.viewModel,
+    this.showApproveRemark = true,
   });
 
   @override
@@ -59,7 +61,7 @@ class LeaveActionButtons extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Color(0xFFECECEC),
+            color: const Color(0xFFECECEC),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -171,25 +173,31 @@ class LeaveActionButtons extends StatelessWidget {
                   'Dates: ${DateFormat('MMM dd - dd, yyyy').format(fromDate)}',
                 ),
                 const SizedBox(height: 16),
-                if (!isApprove) ...[
-                  const Text(
-                    'Rejection Reason (Optional):',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                // Show remark field for both approve and reject, but only if allowed for approve
+                if (!isApprove || showApproveRemark) ...[
+                  Text(
+                    isApprove
+                        ? 'Approval Remark (Optional):'
+                        : 'Rejection Remark (Optional):',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: remarkController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: 'Enter reason for rejection...',
+                      hintText:
+                          isApprove
+                              ? 'Enter remark for approval...'
+                              : 'Enter remark for rejection...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                       contentPadding: const EdgeInsets.all(12),
                     ),
                   ),
-                  const SizedBox(height: 12),
                 ],
+                const SizedBox(height: 12),
                 Text(
                   isApprove
                       ? 'Are you sure you want to approve this leave request?'

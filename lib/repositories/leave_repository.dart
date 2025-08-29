@@ -13,15 +13,11 @@ class LeaveActionRepository {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");
-
       if (token == null) {
         throw Exception('Token not found in local storage');
       }
 
-      final body = json.encode({
-        'remark': remark ?? '',
-        'approved_at': DateTime.now().toIso8601String(),
-      });
+      final body = json.encode({'remark': remark ?? ''});
 
       final response = await http.post(
         Uri.parse('${_serverService.baseUrl}leave/$leaveId/approve'),
@@ -69,12 +65,7 @@ class LeaveActionRepository {
       if (token == null) {
         throw Exception('Token not found in local storage');
       }
-      print(remark);
-      final body = json.encode({
-        'reason': remark ?? '',
-        // 'rejected_at': DateTime.now().toIso8601String(),
-      });
-
+      final body = json.encode({'remark': remark ?? ''});
       final response = await http.post(
         Uri.parse('${_serverService.baseUrl}leave/$leaveId/reject'),
         headers: {
