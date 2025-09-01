@@ -5,7 +5,7 @@ import '../../../models/leave_history_model.dart';
 import '../../../widgets/compact_detail_row.dart';
 import '../../../widgets/compact_follow_up_button.dart';
 import '../../../widgets/compact_status_card.dart';
-import '../../../widgets/action_buttons_card.dart'; // Add this import
+import '../../../widgets/action_buttons_card.dart';
 import '../../../repositories/leave_detail_repository.dart';
 import '../update_leave/update_leave_screen.dart';
 
@@ -71,19 +71,14 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
               // Compact Status Header - UPDATED TO USE GLOBAL WIDGET
               _buildCompactStatusCard(),
               const SizedBox(height: 16),
-
               // Combined Details and Approval Flow
               _buildMainContentCard(),
-
               const SizedBox(height: 16),
-
               // Document Support Section (if available)
               if (_hasDocumentSupport()) _buildDocumentSupportCard(),
-
               const SizedBox(height: 16),
-
               // Action Buttons (if pending)
-              if (widget.leaveRequest.isPending) _buildActionButtons(),
+              if (widget.leaveRequest.isLeaveCanCancel) _buildActionButtons(),
             ],
           ),
         ),
@@ -99,7 +94,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
       id: widget.leaveRequest.lreid,
       duration:
           '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
-      durationType: widget.leaveRequest.isFullDay ? 'Full Day' : 'Half Day',
+      durationType: widget.leaveRequest.leaveNote,
       hasDocument: _hasDocumentSupport(),
     );
   }

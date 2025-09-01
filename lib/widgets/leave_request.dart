@@ -47,7 +47,7 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
 
     screenWidth = MediaQuery.of(context).size.width;
     widget.prioList?.length == 2
-        ? lineWidth = screenWidth * 0.62
+        ? lineWidth = screenWidth * 0.65
         : lineWidth = screenWidth / 2 * 0.58;
     final name = widget.requesterName ?? 'Employee';
     final days = widget.totalDays ?? '';

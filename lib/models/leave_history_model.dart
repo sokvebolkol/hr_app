@@ -8,6 +8,8 @@ class LeaveHistoryModel {
   final String ltyp;
   final String numleav;
   final String lfor;
+  final String leaveNote;
+  final bool isLeaveCanCancel;
   final String statu;
   final String reason;
   final String createdate;
@@ -27,6 +29,8 @@ class LeaveHistoryModel {
     required this.ltyp,
     required this.numleav,
     required this.lfor,
+    required this.leaveNote,
+    required this.isLeaveCanCancel,
     required this.statu,
     required this.reason,
     required this.createdate,
@@ -48,6 +52,8 @@ class LeaveHistoryModel {
       ltyp: json['ltyp'],
       numleav: json['numleav'],
       lfor: json['lfor'],
+      leaveNote: json['leave_note'],
+      isLeaveCanCancel: json['isLeaveCanCancel'] ?? false,
       statu: json['statu'],
       reason: json['reason'],
       createdate: json['createdate'],

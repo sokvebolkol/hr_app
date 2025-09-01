@@ -1,3 +1,5 @@
+import 'package:chokchey_hr_app/constants/constant.dart';
+
 import 'leave_history_model.dart';
 
 class LeaveModel {
@@ -10,6 +12,8 @@ class LeaveModel {
   final String ltyp;
   final String numleav;
   final String lfor;
+  final String leaveNote;
+  final bool isLeaveCanCancel;
   final String statu;
   final String reason;
   final String createdate;
@@ -26,6 +30,8 @@ class LeaveModel {
     required this.ltyp,
     required this.numleav,
     required this.lfor,
+    required this.leaveNote,
+    required this.isLeaveCanCancel,
     required this.statu,
     required this.reason,
     required this.createdate,
@@ -43,6 +49,8 @@ class LeaveModel {
     ltyp: json['ltyp'],
     numleav: json['numleav'].toString(),
     lfor: json['lfor'].toString(),
+    leaveNote: json['leave_note'],
+    isLeaveCanCancel: json['isLeaveCanCancel'] ?? false,
     statu: json['statu'].toString(),
     reason: json['reason'],
     createdate: json['createdate'],
@@ -56,8 +64,8 @@ class LeaveModel {
 }
 
 class PrioModel {
-  final String? approverName; // Add this field if it exists in your JSON
-  final String? userApproverToken; // Add this field if it exists in your JSON
+  final String? approverName;
+  final String? userApproverToken;
   final int prio;
   final int apstatu;
   final String apstatuText;
@@ -98,6 +106,8 @@ extension LeaveModelExtension on LeaveModel {
       ltyp: ltyp,
       numleav: numleav,
       lfor: lfor,
+      leaveNote: leaveNote,
+      isLeaveCanCancel: isLeaveCanCancel,
       statu: statu,
       reason: reason,
       createdate: createdate,
