@@ -62,6 +62,7 @@ class PrioModel {
   final int apstatu;
   final String apstatuText;
   final String priText;
+  final String? remark;
 
   PrioModel({
     this.approverName,
@@ -70,6 +71,7 @@ class PrioModel {
     required this.apstatu,
     required this.apstatuText,
     required this.priText,
+    this.remark,
   });
 
   factory PrioModel.fromJson(Map<String, dynamic> json) => PrioModel(
@@ -79,6 +81,7 @@ class PrioModel {
     apstatu: json['apstatu'],
     apstatuText: json['apstatu_text'],
     priText: json['prio_text'] ?? '',
+    remark: json['remark'],
   );
 }
 
@@ -110,6 +113,7 @@ extension LeaveModelExtension on LeaveModel {
                   apstatu: prioModel.apstatu,
                   apstatuText: prioModel.apstatuText,
                   prioText: prioModel.priText,
+                  remark: prioModel.remark,
                 ),
               )
               .toList(),

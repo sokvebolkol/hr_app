@@ -7,7 +7,6 @@ import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../constants/responsive.dart';
@@ -581,6 +580,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                               'apstatu': p.apstatu,
                               'apstatu_text': p.apstatuText,
                               'prio_text': p.priText,
+                              'remark': p.remark,
                             },
                           )
                           .toList(),

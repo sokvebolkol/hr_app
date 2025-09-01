@@ -44,7 +44,6 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // print(widget.prioList?.length);
 
     screenWidth = MediaQuery.of(context).size.width;
     widget.prioList?.length == 2

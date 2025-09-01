@@ -465,95 +465,127 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: statusColor.withOpacity(0.2)),
           ),
-          child: Row(
+          child: Column(
             children: [
-              // Step indicator
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor, width: 2),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
+              Row(
+                children: [
+                  // Step indicator
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: statusColor, width: 2),
+                    ),
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Text(
+                            '${stepIndex + 1}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              statusIcon,
+                              color: statusColor,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Approver info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          priority.prioText,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          priority.approverName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Status and Follow-up
+                  if (priority.isPending && widget.leaveRequest.isPending)
+                    CompactFollowUpButton(
+                      onTap: () => _showFollowUpDialog(priority),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: Text(
-                        '${stepIndex + 1}',
+                        priority.apstatuText,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                           color: statusColor,
                         ),
                       ),
                     ),
-                    Positioned(
-                      right: -2,
-                      bottom: -2,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(statusIcon, color: statusColor, size: 12),
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
-              const SizedBox(width: 12),
-              // Approver info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      priority.prioText,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      priority.approverName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Status and Follow-up
-              if (priority.isPending && widget.leaveRequest.isPending)
-                CompactFollowUpButton(
-                  onTap: () => _showFollowUpDialog(priority),
-                )
-              else
+              if ((priority.isApproved || priority.isRejected) &&
+                  priority.remark != null &&
+                  priority.remark!.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    priority.apstatuText,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.comment, size: 14, color: statusColor),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          priority.remark!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
             ],
           ),
         ),
@@ -561,6 +593,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
       ],
     );
   }
+
   Widget _buildActionButtons() {
     return ActionButtonsCard(
       layout: ButtonLayout.row,

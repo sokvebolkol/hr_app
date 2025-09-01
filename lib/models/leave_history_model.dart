@@ -83,6 +83,7 @@ class PriorityModel {
   final int apstatu;
   final String apstatuText;
   final String prioText;
+  final String? remark;
 
   PriorityModel({
     required this.approverName,
@@ -91,6 +92,7 @@ class PriorityModel {
     required this.apstatu,
     required this.apstatuText,
     required this.prioText,
+    this.remark,
   });
 
   factory PriorityModel.fromJson(Map<String, dynamic> json) {
@@ -101,6 +103,7 @@ class PriorityModel {
       apstatu: json['apstatu'],
       apstatuText: json['apstatu_text'],
       prioText: json['prio_text'],
+      remark: json['remark'],
     );
   }
 

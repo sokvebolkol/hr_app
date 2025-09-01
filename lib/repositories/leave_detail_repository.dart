@@ -155,47 +155,6 @@ class LeaveDetailRepository {
     }
   }
 
-  // Get leave details for editing
-  Future<Map<String, dynamic>> getLeaveDetails(String leaveId) async {
-    try {
-      SharedPreferences pref = await SharedPreferences.getInstance();
-      final token = pref.getString("token");
-
-      if (token == null) {
-        throw Exception('Token not found in local storage');
-      }
-
-      final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}leave/$leaveId/edit'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'data': data['data'],
-          'message': 'Leave details retrieved successfully',
-        };
-      } else {
-        return {
-          'success': false,
-          'data': null,
-          'message': 'Failed to get leave details: ${response.statusCode}',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'data': null,
-        'message': 'Error getting leave details: $e',
-      };
-    }
-  }
-
   // Validate leave dates before updating
   Future<Map<String, dynamic>> validateLeaveDates({
     required String fromDate,

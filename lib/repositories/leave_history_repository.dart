@@ -18,9 +18,7 @@ class LeaveHistoryRepository {
       }
 
       final response = await http.get(
-        Uri.parse(
-          '${_serverService.baseUrl}get-leaves',
-        ), // Update with your actual endpoint
+        Uri.parse('${_serverService.baseUrl}get-leaves'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
