@@ -2,7 +2,6 @@ import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../viewmodels/leave_history_viewmodel.dart';
 import '../../../models/leave_history_model.dart';
@@ -64,7 +63,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         body: Consumer<LeaveHistoryViewModel>(
           builder: (context, viewModel, child) {
             if (viewModel.isLoading) {
-              return const Center(child:  Center(child: SpinKitFadingCircle(color: primary)));
+              return const Center(
+                child: Center(child: SpinKitFadingCircle(color: primary)),
+              );
             }
 
             if (viewModel.errorMessage != null) {

@@ -23,9 +23,9 @@ import '../attendance/attendance_clock_screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
 import '../leaves/leave_detail/leave_detail_screen.dart';
+import '../leaves/leave_history/manager_leave_history_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
-import '../leaves/leave_history/leave_history_screen.dart';
 import '../memo/memo_screen.dart';
 import '../profile/profile_screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
@@ -248,7 +248,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       'onPressed':
           (BuildContext context) => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const LeaveHistoryScreen()),
+            MaterialPageRoute(builder: (context) => const ManagerLeaveHistoryScreen()),
           ),
     },
     {
@@ -263,7 +263,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         );
       },
     },
-    // Removed the 'New Request' card from function buttons
   ];
 
   @override

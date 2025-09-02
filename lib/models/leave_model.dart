@@ -1,5 +1,3 @@
-import 'package:chokchey_hr_app/constants/constant.dart';
-
 import 'leave_history_model.dart';
 
 class LeaveModel {

@@ -1,3 +1,4 @@
+import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -34,6 +35,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               elevation: 0,
               backgroundColor: primary,
               foregroundColor: Colors.white,
+              centerTitle: false,
               title: const Text(
                 'Leave Detail',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -142,7 +144,9 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                             color:
                                 viewModel.hasActionTaken
                                     ? Colors.green
-                                    : widget.leave.statusColor,
+                                    : FileHelper.getStatusColor(
+                                      widget.leave.statusText,
+                                    ),
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                           ),
@@ -212,7 +216,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                     decoration: BoxDecoration(
                       color: (viewModel.hasActionTaken
                               ? Colors.green
-                              : widget.leave.statusColor)
+                              : FileHelper.getStatusColor(widget.leave.statu))
                           .withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white.withOpacity(0.3)),
@@ -401,6 +405,11 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               'Duration',
               '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
               Icons.schedule,
+            ),
+            _buildDetailRow(
+              'Leave Note',
+              widget.leave.leaveNote,
+              Icons.note_outlined,
             ),
             _buildDetailRow(
               'From Date',

@@ -68,7 +68,6 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen>
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Compact Status Header - UPDATED TO USE GLOBAL WIDGET
               _buildCompactStatusCard(),
               const SizedBox(height: 16),
               // Combined Details and Approval Flow

@@ -104,6 +104,7 @@ class LeaveRequest {
   final String numleav;
   final String lfor;
   final String lnot;
+  final String leaveNote;
   final String reason;
   final String remark;
   final String? file;
@@ -135,6 +136,7 @@ class LeaveRequest {
     required this.numleav,
     required this.lfor,
     required this.lnot,
+    required this.leaveNote,
     required this.reason,
     required this.remark,
     this.file,
@@ -168,6 +170,7 @@ class LeaveRequest {
       numleav: json['numleav']?.toString() ?? '0',
       lfor: json['lfor']?.toString() ?? '0',
       lnot: json['lnot']?.toString() ?? '0',
+      leaveNote: json['leave_note'] ?? '',
       reason: json['reason']?.toString() ?? '',
       remark: json['remark']?.toString() ?? '',
       file: json['file']?.toString(),
@@ -204,19 +207,6 @@ class LeaveRequest {
         return 'Cancelled';
       default:
         return 'Unknown';
-    }
-  }
-
-  Color get statusColor {
-    switch (statu) {
-      case '1':
-        return Colors.green;
-      case '2':
-        return Colors.orange;
-      case '3':
-        return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 }
