@@ -1,11 +1,11 @@
-import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/constant.dart';
+import '../../../utils/file_helper.dart';
 import '../../../viewmodels/leave_history_viewmodel.dart';
 import '../../../models/leave_history_model.dart';
-import '../leave_detail/leave_detail_screen.dart';
+import '../leave_detail/my_leave_detail_screen.dart';
 
 class LeaveHistoryScreen extends StatefulWidget {
   const LeaveHistoryScreen({super.key});
@@ -280,7 +280,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => LeaveDetailScreen(leaveRequest: leave),
+            builder: (context) => MyLeaveDetailScreen(leaveRequest: leave),
           ),
         ).then((result) {
           // Refresh the list if the leave was updated/cancelled

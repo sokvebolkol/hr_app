@@ -21,7 +21,7 @@ import '../attendance/attendance_calendar_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
-import '../leaves/leave_detail/leave_detail_screen.dart';
+import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
@@ -552,7 +552,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                     context,
                     MaterialPageRoute(
                       builder:
-                          (context) => LeaveDetailScreen(
+                          (context) => MyLeaveDetailScreen(
                             leaveRequest: leave.toLeaveHistoryModel(),
                           ),
                     ),

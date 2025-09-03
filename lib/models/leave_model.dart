@@ -97,6 +97,11 @@ extension LeaveModelExtension on LeaveModel {
     return LeaveHistoryModel(
       eid: eid,
       dname: dname,
+      eCard: null,
+      position: null,
+      department: null,
+      email: null,
+      branchName: null,
       lreid: lreid,
       frdat: frdat,
       todat: todat,

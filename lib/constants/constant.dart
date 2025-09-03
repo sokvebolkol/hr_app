@@ -113,3 +113,82 @@ getDateTimeYMD(time) {
   String dateTime = DateFormat("yyyy-MM-dd").format(dateTimeApproved);
   return dateTime;
 }
+
+/**
+ * Avatar colors - Light background and darker text variants
+ */
+
+// Primary avatar colors
+final primaryAvatarBackground = primary.withOpacity(0.2);
+final primaryAvatarText = primary;
+
+// Secondary avatar colors
+final secondaryAvatarBackground = secondary.withOpacity(0.1);
+final secondaryAvatarText = secondary;
+
+// Logo pink avatar colors
+final pinkAvatarBackground = logoPink.withOpacity(0.15);
+final pinkAvatarText = logoPink;
+
+// Additional avatar color variants
+final orangeAvatarBackground = Colors.orange.withOpacity(0.15);
+final orangeAvatarText = Colors.orange[700]!;
+
+final blueAvatarBackground = Colors.blue.withOpacity(0.15);
+final blueAvatarText = Colors.blue[700]!;
+
+final greenAvatarBackground = Colors.green.withOpacity(0.15);
+final greenAvatarText = Colors.green[700]!;
+
+final redAvatarBackground = Colors.red.withOpacity(0.15);
+final redAvatarText = Colors.red[700]!;
+
+final purpleAvatarBackground = Colors.purple.withOpacity(0.15);
+final purpleAvatarText = Colors.purple[700]!;
+
+/**
+ * Avatar Color Generator - Returns different colors based on name or index
+ */
+class AvatarColorGenerator {
+  static const List<Map<String, Color>> _colorPalette = [
+    {'background': Color(0x330fbab5), 'text': Color(0xFF0fbab5)}, // Primary
+    {'background': Color(0x1A052744), 'text': Color(0xFF052744)}, // Secondary
+    {'background': Color(0x26DE6EA0), 'text': Color(0xFFDE6EA0)}, // Logo pink
+    {'background': Color(0x26FF9800), 'text': Color(0xFFE65100)}, // Orange
+    {'background': Color(0x262196F3), 'text': Color(0xFF1976D2)}, // Blue
+    {'background': Color(0x264CAF50), 'text': Color(0xFF388E3C)}, // Green
+    {'background': Color(0x26F44336), 'text': Color(0xFFD32F2F)}, // Red
+    {'background': Color(0x269C27B0), 'text': Color(0xFF7B1FA2)}, // Purple
+  ];
+
+  /// Generate colors based on name (for consistent colors per user)
+  static Map<String, Color> getColorsFromName(String name) {
+    if (name.isEmpty) return _colorPalette[0];
+
+    // Use name hash to get consistent color
+    int hash = name.hashCode.abs();
+    int index = hash % _colorPalette.length;
+    return _colorPalette[index];
+  }
+
+  /// Generate colors based on index (for lists)
+  static Map<String, Color> getColorsFromIndex(int index) {
+    int colorIndex = index % _colorPalette.length;
+    return _colorPalette[colorIndex];
+  }
+
+  /// Get primary colors
+  static Map<String, Color> getPrimaryColors() {
+    return _colorPalette[0];
+  }
+
+  /// Get secondary colors
+  static Map<String, Color> getSecondaryColors() {
+    return _colorPalette[1];
+  }
+
+  /// Get logo pink colors
+  static Map<String, Color> getPinkColors() {
+    return _colorPalette[2];
+  }
+}

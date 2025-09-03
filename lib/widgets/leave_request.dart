@@ -9,6 +9,7 @@ class LeaveRequestWidget extends StatefulWidget {
   final String toDate;
   final String? requesterName;
   final String? totalDays;
+  final double? lineWidth;
   final List<Map<String, dynamic>>? prioList;
   final String? currentUserName;
   final String? currentUserProfileImageUrl;
@@ -21,6 +22,7 @@ class LeaveRequestWidget extends StatefulWidget {
     required this.toDate,
     this.requesterName,
     this.totalDays,
+    this.lineWidth,
     this.prioList,
     this.currentUserName,
     this.currentUserProfileImageUrl,
@@ -32,7 +34,6 @@ class LeaveRequestWidget extends StatefulWidget {
 
 class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
   double screenWidth = 0;
-  double lineWidth = 0;
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
@@ -42,13 +43,16 @@ class _LeaveRequestWidgetState extends State<LeaveRequestWidget> {
     }
   }
 
+  double lineWidth = 0;
+
   @override
   Widget build(BuildContext context) {
-
     screenWidth = MediaQuery.of(context).size.width;
-    widget.prioList?.length == 2
-        ? lineWidth = screenWidth * 0.65
-        : lineWidth = screenWidth / 2 * 0.58;
+    lineWidth =
+        widget.lineWidth ??
+        (widget.prioList?.length == 2
+            ? screenWidth * 0.65
+            : (screenWidth / 2) * 0.67);
     final name = widget.requesterName ?? 'Employee';
     final days = widget.totalDays ?? '';
     // Sort prioList by prio ascending

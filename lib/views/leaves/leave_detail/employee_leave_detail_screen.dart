@@ -1,94 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
-import '../../../repositories/approver_dashboard_repository.dart';
-import '../../../widgets/leave_action_widget.dart';
-import '../../../viewmodels/leave_action_viewmodel.dart';
+import '../../../models/leave_history_model.dart';
 
-class ApproverLeaveDetailScreen extends StatefulWidget {
-  final PendingLeaveRequest leave;
+class EmployeeLeaveDetailScreen extends StatefulWidget {
+  final LeaveHistoryModel leaveRequest;
 
-  const ApproverLeaveDetailScreen({super.key, required this.leave});
+  const EmployeeLeaveDetailScreen({super.key, required this.leaveRequest});
 
   @override
-  State<ApproverLeaveDetailScreen> createState() =>
-      _ApproverLeaveDetailScreenState();
+  State<EmployeeLeaveDetailScreen> createState() =>
+      _EmployeeLeaveDetailScreenState();
 }
 
-class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
+class _EmployeeLeaveDetailScreenState extends State<EmployeeLeaveDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => LeaveActionViewModel(),
-      child: Consumer<LeaveActionViewModel>(
-        builder: (context, viewModel, child) {
-          return Scaffold(
-            backgroundColor: Colors.grey[50],
-            appBar: AppBar(
-              elevation: 0,
-              backgroundColor: primary,
-              foregroundColor: Colors.white,
-              title: const Text(
-                'Leave Details',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildEmployeeCard(viewModel),
-                  const SizedBox(height: 16),
-                  _buildLeaveDetailsCard(),
-                  if (widget.leave.file != null &&
-                      widget.leave.file!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildSupportingDocumentCard(),
-                  ],
-                  const SizedBox(height: 100), 
-                ],
-              ),
-            ),
-            floatingActionButton: Consumer<LeaveActionViewModel>(
-              builder: (context, viewModel, child) {
-                return LeaveActionButtons(
-                  leaveId: widget.leave.lreid,
-                  employeeName: widget.leave.requesterName,
-                  leaveType: widget.leave.ltyp,
-                  numLeaveDays: widget.leave.numLeaveDays.toInt(),
-                  fromDate: widget.leave.fromDate,
-                  toDate: widget.leave.toDate,
-                  onAction: _handleLeaveAction,
-                  viewModel: viewModel,
-                  showApproveRemark: true,
-                );
-              },
-            ),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
-          );
-        },
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        centerTitle: false,
+        title: const Text(
+          'Leave Details',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildEmployeeCard(),
+            const SizedBox(height: 16),
+            _buildLeaveDetailsCard(),
+            if (widget.leaveRequest.prioList.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildApprovalFlowCard(),
+            ],
+            if (widget.leaveRequest.hasDocument != null &&
+                widget.leaveRequest.hasDocument!) ...[
+              const SizedBox(height: 16),
+              _buildSupportingDocumentCard(),
+            ],
+            const SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }
 
-  void _handleLeaveAction(bool isApprove, String remark, bool success) {
-    if (success) {
-      // Navigate back immediately with refresh instruction
-      Navigator.pop(context, {
-        'action': isApprove ? 'approve' : 'reject',
-        'remark': remark,
-        'success': true,
-        'refresh': true,
-        'leaveId': widget.leave.lreid,
-      });
-    }
-  }
-
-  Widget _buildEmployeeCard(LeaveActionViewModel viewModel) {
+  Widget _buildEmployeeCard() {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -103,7 +68,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
         ),
         child: Column(
           children: [
-            // Header Section with Avatar and Status
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -111,11 +75,11 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   Stack(
                     children: [
                       CircleAvatar(
-                        radius: 35,
+                        radius: 28,
                         backgroundColor: Colors.white,
                         child: Text(
-                          widget.leave.requesterName.isNotEmpty
-                              ? widget.leave.requesterName[0].toUpperCase()
+                          widget.leaveRequest.dname.isNotEmpty
+                              ? widget.leaveRequest.dname[0].toUpperCase()
                               : 'U',
                           style: TextStyle(
                             fontSize: 28,
@@ -130,19 +94,18 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color:
-                                viewModel.hasActionTaken
-                                    ? Colors.green
-                                    : Colors.orange, // Status color
+                            color: primary,
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                           ),
                           child: Icon(
-                            viewModel.hasActionTaken
+                            widget.leaveRequest.isPending
+                                ? Icons.access_time
+                                : widget.leaveRequest.isApproved
                                 ? Icons.check
-                                : Icons.access_time,
+                                : Icons.close,
                             color: Colors.white,
-                            size: 16,
+                            size: 12,
                           ),
                         ),
                       ),
@@ -154,20 +117,19 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.leave.requesterName,
+                          widget.leaveRequest.dname,
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 8),
                         Text(
-                          'Staff ID: ${widget.leave.staffId}',
+                          'Staff ID: ${widget.leaveRequest.eid}',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -184,7 +146,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                             ),
                           ),
                           child: Text(
-                            widget.leave.ltyp,
+                            widget.leaveRequest.ltyp,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -201,25 +163,24 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: (viewModel.hasActionTaken
-                              ? Colors.green
-                              : Colors.orange)
-                          .withOpacity(0.2),
+                      color: primary,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
                     child: Column(
                       children: [
                         Icon(
-                          viewModel.hasActionTaken
+                          widget.leaveRequest.isPending
+                              ? Icons.access_time
+                              : widget.leaveRequest.isApproved
                               ? Icons.check_circle
-                              : Icons.access_time,
+                              : Icons.cancel,
                           color: Colors.white,
                           size: 16,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          viewModel.hasActionTaken ? 'PROCESSED' : 'PENDING',
+                          widget.leaveRequest.statusText.toUpperCase(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -232,8 +193,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                 ],
               ),
             ),
-
-            // Employee Details Section
+            // Employee Information Section
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -262,7 +222,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.work_outline,
                           'Position',
-                          widget.leave.positionName,
+                          widget.leaveRequest.position ?? 'N/A',
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -270,7 +230,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.business_outlined,
                           'Department',
-                          widget.leave.departmentName,
+                          widget.leaveRequest.department ?? 'N/A',
                         ),
                       ),
                     ],
@@ -282,7 +242,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.location_on_outlined,
                           'Branch',
-                          widget.leave.branchShortName,
+                          widget.leaveRequest.branchName ?? 'N/A',
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -290,7 +250,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.email_outlined,
                           'Email',
-                          widget.leave.email,
+                          widget.leaveRequest.email ?? 'N/A',
                         ),
                       ),
                     ],
@@ -372,30 +332,44 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
             ),
             const SizedBox(height: 20),
 
-            _buildDetailRow('Leave Type', widget.leave.ltyp, Icons.category),
+            _buildDetailRow(
+              'Leave Type',
+              widget.leaveRequest.ltyp,
+              Icons.category,
+            ),
             _buildDetailRow(
               'Duration',
-              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
+              '${widget.leaveRequest.numleav} ${widget.leaveRequest.numberOfDays == 1 ? 'day' : 'days'}',
               Icons.schedule,
             ),
             _buildDetailRow(
               'From Date',
-              DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.fromDate),
+              DateFormat(
+                'EEEE, MMMM dd, yyyy',
+              ).format(widget.leaveRequest.fromDate),
               Icons.date_range,
             ),
             _buildDetailRow(
               'To Date',
-              DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.toDate),
+              DateFormat(
+                'EEEE, MMMM dd, yyyy',
+              ).format(widget.leaveRequest.toDate),
               Icons.date_range,
+            ),
+            _buildDetailRow(
+              'Leave Note',
+              widget.leaveRequest.leaveNote,
+              Icons.note,
             ),
             _buildDetailRow(
               'Applied On',
               DateFormat(
                 'MMMM dd, yyyy at hh:mm a',
-              ).format(widget.leave.requestDate),
+              ).format(widget.leaveRequest.createdDate),
               Icons.access_time,
             ),
-            if (widget.leave.reason.isNotEmpty) ...[
+
+            if (widget.leaveRequest.reason.isNotEmpty) ...[
               const SizedBox(height: 20),
               const Text(
                 'Reason',
@@ -415,7 +389,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   border: Border.all(color: Colors.grey[300]!),
                 ),
                 child: Text(
-                  widget.leave.reason,
+                  widget.leaveRequest.reason,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[700],
@@ -424,133 +398,22 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                 ),
               ),
             ],
-            // Pending/Processed notice
-            Consumer<LeaveActionViewModel>(
-              builder: (context, viewModel, child) {
-                if (viewModel.hasActionTaken) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green[200]!, width: 1.5),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.check_circle_outline,
-                            color: Colors.green[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Action Completed',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request has been ${viewModel.lastAction ?? "processed"} successfully.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.orange[200]!,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.orange[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.info_outline,
-                            color: Colors.orange[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Approval Required',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request requires your approval. Please review the details and take appropriate action.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon) {
+  Widget _buildDetailRow(String label, String value, [IconData? icon]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
+          if (icon != null) ...[
+            Icon(icon, size: 20, color: Colors.grey[600]),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -580,6 +443,222 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
     );
   }
 
+  Widget _buildApprovalFlowCard() {
+    final sortedPrioList = List<PriorityModel>.from(
+      widget.leaveRequest.prioList,
+    )..sort((a, b) => a.prio.compareTo(b.prio));
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.approval, color: primary, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Approval Flow',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            ...sortedPrioList.asMap().entries.map((entry) {
+              final index = entry.key;
+              final priority = entry.value;
+              final isLast = index == sortedPrioList.length - 1;
+
+              return _buildApprovalStep(priority, isLast, index);
+            }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildApprovalStep(
+    PriorityModel priority,
+    bool isLast,
+    int stepIndex,
+  ) {
+    Color statusColor;
+    IconData statusIcon;
+
+    if (priority.isApproved) {
+      statusColor = Colors.green;
+      statusIcon = Icons.check_circle;
+    } else if (priority.isRejected) {
+      statusColor = Colors.red;
+      statusIcon = Icons.cancel;
+    } else {
+      statusColor = Colors.orange;
+      statusIcon = Icons.schedule;
+    }
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: statusColor.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: statusColor.withOpacity(0.2)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Step indicator
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: statusColor, width: 2),
+                    ),
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: Text(
+                            '${stepIndex + 1}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              statusIcon,
+                              color: statusColor,
+                              size: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Approver info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          priority.prioText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          priority.approverName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      priority.apstatuText,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Show remark if exists and step is approved or rejected
+              if ((priority.isApproved || priority.isRejected) &&
+                  priority.remark != null &&
+                  priority.remark!.trim().isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: statusColor.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.comment, size: 16, color: statusColor),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Remark:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              priority.remark!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (!isLast) const SizedBox(height: 12),
+      ],
+    );
+  }
+
   Widget _buildSupportingDocumentCard() {
     return Card(
       elevation: 2,
@@ -606,7 +685,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
             const SizedBox(height: 16),
 
             // Check if the file is an image
-            if (_isImageFile(widget.leave.file!)) ...[
+            if (_isImageFile(widget.leaveRequest.documentUrl!)) ...[
               Container(
                 width: double.infinity,
                 height: 200,
@@ -617,7 +696,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    widget.leave.file!,
+                    widget.leaveRequest.documentUrl!,
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
@@ -656,14 +735,13 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                _getFileName(widget.leave.file!),
+                _getFileName(widget.leaveRequest.documentUrl!),
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
               ),
             ] else ...[
-              // For non-image files, show file icon and details
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -680,7 +758,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        _getFileIcon(widget.leave.file!),
+                        _getFileIcon(widget.leaveRequest.documentUrl!),
                         color: primary,
                         size: 24,
                       ),
@@ -691,7 +769,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _getFileName(widget.leave.file!),
+                            _getFileName(widget.leaveRequest.documentUrl!),
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
@@ -699,7 +777,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _getFileType(widget.leave.file!),
+                            _getFileType(widget.leaveRequest.documentUrl!),
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 12,

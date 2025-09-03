@@ -1,6 +1,11 @@
 class LeaveHistoryModel {
-  final String eid;
+  final String? eid;
   final String dname;
+  final String? eCard;
+  final String? position;
+  final String? department;
+  final String? email;
+  final String? branchName;
   final String lreid;
   final String frdat;
   final String todat;
@@ -22,6 +27,11 @@ class LeaveHistoryModel {
   LeaveHistoryModel({
     required this.eid,
     required this.dname,
+    required this.eCard,
+    required this.position,
+    required this.department,
+    required this.email,
+    required this.branchName,
     required this.lreid,
     required this.frdat,
     required this.todat,
@@ -45,6 +55,11 @@ class LeaveHistoryModel {
     return LeaveHistoryModel(
       eid: json['eid'],
       dname: json['dname'],
+      eCard: json['eCard'],
+      position: json['position'],
+      department: json['department'],
+      email: json['email'],
+      branchName: json['branchName'],
       lreid: json['lreid'],
       frdat: json['frdat'],
       todat: json['todat'],

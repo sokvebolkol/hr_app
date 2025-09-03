@@ -1,7 +1,7 @@
-import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/constant.dart';
 import '../../../models/leave_history_model.dart';
+import '../../../utils/file_helper.dart';
 import '../../../widgets/compact_detail_row.dart';
 import '../../../widgets/compact_follow_up_button.dart';
 import '../../../widgets/compact_status_card.dart';
@@ -9,16 +9,16 @@ import '../../../widgets/action_buttons_card.dart';
 import '../../../repositories/leave_detail_repository.dart';
 import '../update_leave/update_leave_screen.dart';
 
-class LeaveDetailScreen extends StatefulWidget {
+class MyLeaveDetailScreen extends StatefulWidget {
   final LeaveHistoryModel leaveRequest;
 
-  const LeaveDetailScreen({super.key, required this.leaveRequest});
+  const MyLeaveDetailScreen({super.key, required this.leaveRequest});
 
   @override
-  State<LeaveDetailScreen> createState() => _LeaveDetailScreenState();
+  State<MyLeaveDetailScreen> createState() => _MyLeaveDetailScreenState();
 }
 
-class _LeaveDetailScreenState extends State<LeaveDetailScreen>
+class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;

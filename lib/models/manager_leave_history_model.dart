@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'leave_history_model.dart';
 
 class ManagerLeaveHistoryResponse {
@@ -165,6 +164,11 @@ class StaffLeaveModel {
       lreid: lreid,
       eid: eid,
       dname: requesterName,
+      eCard: staffId,
+      position: positionName,
+      department: departmentName,
+      email: email,
+      branchName: branchFullName,
       frdat: frdat,
       todat: todat,
       leaid: leaid,

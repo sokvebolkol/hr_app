@@ -81,7 +81,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
       },
       btnCancelText: "No",
       btnCancelOnPress: () {},
-      btnOkColor: primary,
+      btnOkColor: secondary,
       btnOkText: 'Yes',
     ).show();
     return false;
@@ -111,7 +111,9 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           child: Consumer2<DashboardViewModel, CeoDashboardViewModel>(
             builder: (context, dashboardViewModel, ceoViewModel, child) {
               if (dashboardViewModel.isLoading) {
-                return const Center(child: SpinKitFadingCircle(color: primary));
+                return const Center(
+                  child: SpinKitFadingCircle(color: secondary),
+                );
               }
 
               // Check if user is inactive and force logout
@@ -132,7 +134,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SpinKitFadingCircle(color: primary),
+                      SpinKitFadingCircle(color: secondary),
                       SizedBox(height: 16),
                       Text("Your account is inactive. Logging out..."),
                     ],
@@ -160,7 +162,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
         bottomNavigationBar: ConvexAppBar(
           key: ValueKey(_currentIndex),
           color: Colors.white,
-          backgroundColor: primary,
+          backgroundColor: secondary,
           style: TabStyle.react,
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),
@@ -257,7 +259,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               ceoViewModel.refresh(),
             ]);
           },
-          color: primary,
+          color: secondary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -277,7 +279,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
 
   Widget _buildHeader() {
     return Container(
-      color: primary,
+      color: secondary,
       child: Padding(
         padding: const EdgeInsets.only(
           top: 50,
@@ -427,12 +429,12 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [primary, primary.withOpacity(0.8)],
+            colors: [secondary, secondary.withOpacity(0.8)],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primary.withOpacity(0.3),
+              color: secondary.withOpacity(0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -504,12 +506,12 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [primary, primary.withOpacity(0.8)],
+          colors: [secondary, secondary.withOpacity(0.8)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primary.withOpacity(0.3),
+            color: secondary.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -686,13 +688,13 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: isSelected ? primary : Colors.transparent,
+                            color: isSelected ? secondary : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow:
                                 isSelected
                                     ? [
                                       BoxShadow(
-                                        color: primary.withOpacity(0.3),
+                                        color: secondary.withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -740,7 +742,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                             .toString(),
                                     style: TextStyle(
                                       color:
-                                          isSelected ? primary : Colors.white,
+                                          isSelected ? secondary : Colors.white,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -769,13 +771,13 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             vertical: 12,
                           ),
                           decoration: BoxDecoration(
-                            color: isSelected ? primary : Colors.transparent,
+                            color: isSelected ? secondary : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow:
                                 isSelected
                                     ? [
                                       BoxShadow(
-                                        color: primary.withOpacity(0.3),
+                                        color: secondary.withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -823,7 +825,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                             .toString(),
                                     style: TextStyle(
                                       color:
-                                          isSelected ? primary : Colors.white,
+                                          isSelected ? secondary : Colors.white,
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -904,11 +906,11 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       viewModel.selectedMonthDisplay,
                       style: TextStyle(
                         fontSize: 14,
-                        color: primary,
+                        color: secondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Icon(Icons.keyboard_arrow_down, color: primary, size: 20),
+                    Icon(Icons.keyboard_arrow_down, color: secondary, size: 20),
                   ],
                 ),
               ),
@@ -981,8 +983,8 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                           begin: Alignment.centerLeft,
                                           end: Alignment.centerRight,
                                           colors: [
-                                            primary.withOpacity(0.1),
-                                            primary.withOpacity(0.05),
+                                            secondary.withOpacity(0.1),
+                                            secondary.withOpacity(0.05),
                                           ],
                                         )
                                         : null,
@@ -990,7 +992,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                 border: Border.all(
                                   color:
                                       isSelected
-                                          ? primary.withOpacity(0.3)
+                                          ? secondary.withOpacity(0.3)
                                           : Colors.grey[200]!,
                                   width: isSelected ? 2 : 1,
                                 ),
@@ -998,7 +1000,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                     isSelected
                                         ? [
                                           BoxShadow(
-                                            color: primary.withOpacity(0.1),
+                                            color: secondary.withOpacity(0.1),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -1014,7 +1016,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                     decoration: BoxDecoration(
                                       color:
                                           isSelected
-                                              ? primary.withOpacity(0.1)
+                                              ? secondary.withOpacity(0.1)
                                               : Colors.grey[100],
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -1022,7 +1024,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                       Icons.calendar_month,
                                       color:
                                           isSelected
-                                              ? primary
+                                              ? secondary
                                               : Colors.grey[600],
                                       size: 20,
                                     ),
@@ -1046,7 +1048,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                                     : FontWeight.w500,
                                             color:
                                                 isSelected
-                                                    ? primary
+                                                    ? secondary
                                                     : Colors.black87,
                                             letterSpacing: 0.2,
                                           ),
@@ -1057,7 +1059,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                             'Selected month',
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: primary.withOpacity(0.7),
+                                              color: secondary.withOpacity(0.7),
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -1084,13 +1086,12 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                               key: const ValueKey('selected'),
                                               padding: const EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color: primary,
+                                                color: secondary,
                                                 shape: BoxShape.circle,
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: primary.withOpacity(
-                                                      0.3,
-                                                    ),
+                                                    color: secondary
+                                                        .withOpacity(0.3),
                                                     blurRadius: 6,
                                                     offset: const Offset(0, 2),
                                                   ),

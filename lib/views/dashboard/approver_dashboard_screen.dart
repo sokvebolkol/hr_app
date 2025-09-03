@@ -18,11 +18,12 @@ import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
+import '../../widgets/request_leave_card_widget.dart';
 import '../attendance/attendance_calendar_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
-import '../leaves/leave_detail/leave_detail_screen.dart';
+import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../leaves/leave_history/manager_leave_history_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
@@ -248,7 +249,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       'onPressed':
           (BuildContext context) => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ManagerLeaveHistoryScreen()),
+            MaterialPageRoute(
+              builder: (context) => const ManagerLeaveHistoryScreen(),
+            ),
           ),
     },
     {
@@ -1007,7 +1010,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   Widget _buildMyLeaveRequestsTab(ApproverDashboardViewModel viewModel) {
     final filteredLeaves = viewModel.filteredOwnLeaves;
-
+    final screenWidth = MediaQuery.of(context).size.width;
     if (filteredLeaves.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
@@ -1049,7 +1052,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               context,
               MaterialPageRoute(
                 builder:
-                    (context) => LeaveDetailScreen(
+                    (context) => MyLeaveDetailScreen(
                       leaveRequest: leave.toLeaveHistoryModel(),
                     ),
               ),
@@ -1070,6 +1073,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               totalDays: leave.numleav,
               currentUserName: viewModel.username,
               currentUserProfileImageUrl: viewModel.profileImageUrl,
+              lineWidth: screenWidth / 2 * 0.58,
               prioList:
                   sortedPrioList
                       .map(
@@ -1093,159 +1097,19 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       onTap: () {
         _navigateToLeaveDetail(leave);
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.orange[100],
-                    radius: 20,
-                    child: Text(
-                      leave.requesterName.isNotEmpty
-                          ? leave.requesterName[0].toUpperCase()
-                          : 'U',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[700],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          leave.requesterName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          leave.positionName,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey[400],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.category_rounded,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          leave.ltyp,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.schedule_rounded,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${leave.numLeaveDays} day(s)',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.date_range_rounded,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${DateFormat('MMM dd').format(leave.fromDate)} - ${DateFormat('MMM dd, yyyy').format(leave.toDate)}',
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (leave.reason.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  leave.reason,
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Requested: ${DateFormat('MMM dd, yyyy').format(leave.requestDate)}',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 10),
-                  ),
-                  Text(
-                    'Tap to review',
-                    style: TextStyle(
-                      color: primary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+      child: RequesterLeaveCardWidget(
+        requesterName: leave.requesterName,
+        positionName: leave.positionName,
+        leaveType: leave.ltyp,
+        numLeaveDays: leave.numLeaveDays,
+        fromDate: leave.fromDate,
+        toDate: leave.toDate,
+        reason: leave.reason,
+        requestDate: leave.requestDate,
+        onTap: () => _navigateToLeaveDetail(leave),
+        actionText: 'Tap to review',
+        avatarBackgroundColor: Colors.orange[100],
+        avatarTextColor: Colors.orange[700],
       ),
     );
   }
