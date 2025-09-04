@@ -6,14 +6,21 @@ import '../../constants/constant.dart';
 import '../../models/staff_listing_model.dart';
 import '../../viewmodels/staff_listing_viewmodel.dart';
 
-class StaffDetailScreen extends StatefulWidget {
-  const StaffDetailScreen({super.key});
+class StaffAttendanceDetailScreen extends StatefulWidget {
+  final bool isGettingTodayAttendance;
+
+  const StaffAttendanceDetailScreen({
+    super.key,
+    this.isGettingTodayAttendance = false,
+  });
 
   @override
-  State<StaffDetailScreen> createState() => _StaffDetailScreenState();
+  State<StaffAttendanceDetailScreen> createState() =>
+      _StaffAttendanceDetailScreenState();
 }
 
-class _StaffDetailScreenState extends State<StaffDetailScreen>
+class _StaffAttendanceDetailScreenState
+    extends State<StaffAttendanceDetailScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late StaffListingViewModel _viewModel;
@@ -50,27 +57,31 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Colors.grey[200],
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: primary,
+          backgroundColor: secondary,
           foregroundColor: Colors.white,
           centerTitle: false,
-          title: const Text(
-            'Staff Attendance ',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          title: Text(
+            widget.isGettingTodayAttendance
+                ? 'Today\'s Attendance'
+                : 'Staff Attendance',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           actions: [
-            IconButton(
-              onPressed: _showFilters,
-              icon: const Icon(Icons.filter_list),
-            ),
+            // Only show filter button if not getting today's attendance
+            if (!widget.isGettingTodayAttendance)
+              IconButton(
+                onPressed: _showFilters,
+                icon: const Icon(Icons.filter_list),
+              ),
           ],
         ),
         body: Consumer<StaffListingViewModel>(
           builder: (context, viewModel, child) {
             if (viewModel.isLoading && viewModel.staffData == null) {
-              return const Center(child: SpinKitFadingCircle(color: primary));
+              return const Center(child: SpinKitFadingCircle(color: secondary));
             }
 
             if (viewModel.errorMessage != null && viewModel.staffData == null) {
@@ -79,7 +90,9 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
 
             return Column(
               children: [
-                _buildHeader(viewModel),
+                if (!widget.isGettingTodayAttendance) ...[
+                  _buildHeader(viewModel),
+                ],
                 _buildTabBar(viewModel),
                 Expanded(
                   child: TabBarView(
@@ -87,8 +100,8 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
                     children: [
                       _buildStaffList(viewModel.presentStaff, 'present'),
                       _buildStaffList(viewModel.leaveStaff, 'leave'),
-                      _buildStaffList(viewModel.absentStaff, 'absent'),
                       _buildStaffList(viewModel.lateStaff, 'late'),
+                      _buildStaffList(viewModel.absentStaff, 'absent'),
                     ],
                   ),
                 ),
@@ -127,7 +140,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
             ElevatedButton(
               onPressed: () => viewModel.refresh(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primary,
+                backgroundColor: secondary,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Retry'),
@@ -138,19 +151,79 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
     );
   }
 
-  Widget _buildHeader(StaffListingViewModel viewModel) {
+  Widget _buildTabBar(StaffListingViewModel viewModel) {
     return Container(
       color: Colors.white,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(4),
+        child: TabBar(
+          controller: _tabController,
+          indicator: BoxDecoration(
+            color: secondary,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.black87,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+          tabs: [
+            Tab(
+              height: 40,
+              child: _buildTabWithBadge('Present', viewModel.presentCount),
+            ),
+            Tab(
+              height: 40,
+              child: _buildTabWithBadge('Leave', viewModel.leaveCount),
+            ),
+            Tab(
+              height: 40,
+              child: _buildTabWithBadge('Late', viewModel.lateCount),
+            ),
+            Tab(
+              height: 40,
+              child: _buildTabWithBadge('Absent', viewModel.absentCount),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(StaffListingViewModel viewModel) {
+    return Container(
+      color: Colors.grey[200],
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today, color: primary, size: 20),
+              Icon(Icons.calendar_month_sharp, color: secondary, size: 20),
               const SizedBox(width: 8),
               Text(
-                '${viewModel.formattedDate} - ${viewModel.dayOfWeek}',
+                widget.isGettingTodayAttendance
+                    ? 'Today - ${viewModel.dayOfWeek}'
+                    : '${viewModel.formattedDate} - ${viewModel.dayOfWeek}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -210,17 +283,8 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
             ),
           ],
           const SizedBox(height: 16),
-          // Summary stats
           Row(
             children: [
-              // Expanded(
-              //   child: _buildStatCard(
-              //     'Total',
-              //     viewModel.totalStaff,
-              //     Colors.blue,
-              //   ),
-              // ),
-              // const SizedBox(width: 8),
               Expanded(
                 child: _buildStatCard(
                   'Present',
@@ -239,6 +303,14 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: _buildStatCard(
+                  'Late',
+                  viewModel.lateCount,
+                  Colors.blueGrey,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildStatCard(
                   'Absent',
                   viewModel.absentCount,
                   Colors.red,
@@ -251,96 +323,20 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
     );
   }
 
-  Widget _buildStatCard(String label, int count, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            count.toString(),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabBar(StaffListingViewModel viewModel) {
-    return Container(
-      color: Colors.white,
-      child: TabBar(
-        controller: _tabController,
-        labelColor: primary,
-        unselectedLabelColor: Colors.grey[600],
-        indicatorColor: primary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 11,
-        ),
-        isScrollable: false,
-        tabs: [
-          Tab(child: _buildTabWithBadge('Present', viewModel.presentCount)),
-          Tab(child: _buildTabWithBadge('Leave', viewModel.leaveCount)),
-          Tab(child: _buildTabWithBadge('Absent', viewModel.absentCount)),
-          Tab(child: _buildTabWithBadge('Late', viewModel.lateCount)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTabWithBadge(String title, int count) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Row(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Flexible(
             child: Text(
               title,
-              style: const TextStyle(fontSize: 10),
+              style: const TextStyle(fontSize: 13),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (count > 0) ...[
-            const SizedBox(width: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                count > 99 ? '99+' : count.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -362,7 +358,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(color: primary),
+                child: CircularProgressIndicator(color: secondary),
               ),
             );
           }
@@ -377,26 +373,38 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
       'present': {
         'icon': Icons.check_circle_outline,
         'title': 'No Present Staff',
-        'subtitle': 'No staff members are marked as present for this date',
+        'subtitle':
+            widget.isGettingTodayAttendance
+                ? 'No staff members are marked as present today'
+                : 'No staff members are marked as present for this date',
         'color': Colors.green,
       },
       'leave': {
         'icon': Icons.beach_access_outlined,
         'title': 'No Staff on Leave',
-        'subtitle': 'No staff members are on leave for this date',
+        'subtitle':
+            widget.isGettingTodayAttendance
+                ? 'No staff members are on leave today'
+                : 'No staff members are on leave for this date',
         'color': Colors.orange,
-      },
-      'absent': {
-        'icon': Icons.cancel_outlined,
-        'title': 'No Absent Staff',
-        'subtitle': 'No staff members are marked as absent for this date',
-        'color': Colors.red,
       },
       'late': {
         'icon': Icons.access_time_outlined,
         'title': 'No Late Staff',
-        'subtitle': 'No staff members were late for this date',
-        'color': Colors.amber,
+        'subtitle':
+            widget.isGettingTodayAttendance
+                ? 'No staff members were late today'
+                : 'No staff members were late for this date',
+        'color': const Color.fromRGBO(255, 193, 7, 1),
+      },
+      'absent': {
+        'icon': Icons.cancel_outlined,
+        'title': 'No Absent Staff',
+        'subtitle':
+            widget.isGettingTodayAttendance
+                ? 'No staff members are marked as absent today'
+                : 'No staff members are marked as absent for this date',
+        'color': Colors.red,
       },
     };
 
@@ -706,6 +714,38 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
     );
   }
 
+  Widget _buildStatCard(String label, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            count.toString(),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLeaveDetails(LeaveDetails leave) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -932,7 +972,7 @@ class _StaffDetailScreenState extends State<StaffDetailScreen>
                             child: ElevatedButton(
                               onPressed: () => Navigator.pop(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primary,
+                                backgroundColor: secondary,
                                 foregroundColor: Colors.white,
                               ),
                               child: const Text('Apply'),

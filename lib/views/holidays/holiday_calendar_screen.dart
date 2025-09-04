@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../constants/constant.dart';
 import '../../models/holiday_model.dart';
@@ -21,10 +22,14 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
 
   List<HolidayModel> _currentMonthHolidays = [];
 
+  bool isCeoUser = false;
+  Color get themeColor => isCeoUser ? secondary : primary;
+
   @override
   void initState() {
     super.initState();
     _loadHolidays();
+    _checkUserRole();
   }
 
   Future<void> _loadHolidays() async {
@@ -83,11 +88,19 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
     return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
   }
 
+  Future<void> _checkUserRole() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final ceoUserValue = pref.getBool("ceoUser") ?? false;
+    setState(() {
+      isCeoUser = ceoUserValue;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: primary,
+        backgroundColor: themeColor,
         leading: InkWell(
           onTap: () {
             Navigator.pop(context);
@@ -109,7 +122,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
       ),
       body:
           _isLoading
-              ? const Center(child: SpinKitFadingCircle(color: primary))
+              ?  Center(child: SpinKitFadingCircle(color: themeColor))
               : Column(
                 children: [
                   TableCalendar(
@@ -203,7 +216,8 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color:
-                                    day.weekday == DateTime.sunday || day.weekday == DateTime.saturday
+                                    day.weekday == DateTime.sunday ||
+                                            day.weekday == DateTime.saturday
                                         ? Colors.redAccent
                                         : Colors.black,
                               ),
@@ -223,7 +237,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                             padding: const EdgeInsets.all(16.0),
                             width: MediaQuery.of(context).size.width,
                             height: 56,
-                            color: primary,
+                            color: themeColor,
                             child: const Text(
                               "Holidays",
                               textAlign: TextAlign.start,

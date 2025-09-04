@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import '../../constants/constant.dart';
 
-class MemoScreen extends StatefulWidget {
-  const MemoScreen({super.key});
+class ChockcheyTeamScreen extends StatefulWidget {
+  const ChockcheyTeamScreen({super.key});
 
   @override
-  State<MemoScreen> createState() => _MemoScreenState();
+  State<ChockcheyTeamScreen> createState() => _ChockcheyTeamScreenState();
 }
 
-class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
+class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  bool isCeoUser = false;
-  Color get themeColor => isCeoUser ? secondary : primary;
-
   @override
   void initState() {
     super.initState();
-    _checkUserRole();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -41,18 +38,43 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
     _animationController.forward();
   }
 
-  Future<void> _checkUserRole() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    final ceoUserValue = pref.getBool("ceoUser") ?? false;
-    setState(() {
-      isCeoUser = ceoUserValue;
-    });
-  }
-
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  Widget _buildFeatureItem(IconData icon, String text, {Color? iconColor}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: secondary.withOpacity(0.13),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.all(7),
+            child: Icon(
+              icon,
+              size: 18,
+              color: iconColor ?? secondary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -60,10 +82,10 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: themeColor,
+        backgroundColor: secondary,
         foregroundColor: Colors.white,
         title: const Text(
-          'Company Memo',
+          'Chokchey Team',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
@@ -72,10 +94,58 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [themeColor, themeColor.withOpacity(0.8)],
+              colors: [secondary, secondary.withOpacity(0.8)],
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => Dialog(
+                  backgroundColor: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(FontAwesomeIcons.users, size: 36, color: secondary),
+                        const SizedBox(height: 14),
+                        Text(
+                          'About Chokchey Team',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            color: secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "This module will help you stay informed about your company's team structure, memos, and announcements. Exciting features are coming soon!",
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey[700],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: secondary,
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -111,26 +181,23 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [
-                                  themeColor,
-                                  themeColor.withOpacity(0.7),
-                                ],
+                                colors: [secondary, secondary.withOpacity(0.7)],
                               ),
                               borderRadius: BorderRadius.circular(50),
                               boxShadow: [
                                 BoxShadow(
-                                  color: themeColor.withOpacity(0.3),
+                                  color: secondary.withOpacity(0.3),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
                               ],
                             ),
-                            child: Icon(
-                              isCeoUser
-                                  ? Icons.person_4_rounded
-                                  : Icons.campaign_rounded,
-                              size: 50,
-                              color: Colors.white,
+                            child: const Center(
+                              child: FaIcon(
+                                FontAwesomeIcons.users, // FontAwesome Team icon
+                                size: 46,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         );
@@ -145,7 +212,7 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: themeColor,
+                        color: secondary,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -154,11 +221,9 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
 
                     // Subtitle
                     Text(
-                      isCeoUser
-                          ? 'Executive Announcements & Memos'
-                          : 'Company Memo & Announcements',
+                      'Chokchey Team & Structure',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 19,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey[700],
                       ),
@@ -184,12 +249,10 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.info_outline, color: themeColor, size: 22),
+                          FaIcon(FontAwesomeIcons.infoCircle, color: secondary, size: 22),
                           const SizedBox(height: 10),
                           Text(
-                            isCeoUser
-                                ? 'Executive memo and announcements feature is being developed specifically for leadership communication.'
-                                : 'We\'re working hard to bring you an amazing memo and announcements feature. Stay tuned for updates!',
+                            "We're working hard to bring you an amazing memo and announcements feature. Stay tuned for updates!",
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -208,9 +271,9 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.1),
+                        color: secondary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: themeColor.withOpacity(0.3)),
+                        border: Border.all(color: secondary.withOpacity(0.23)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,40 +281,17 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                           Text(
                             'Upcoming Features:',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 15.5,
                               fontWeight: FontWeight.bold,
-                              color: themeColor,
+                              color: secondary,
                             ),
                           ),
                           const SizedBox(height: 12),
-                          if (isCeoUser) ...[
-                            _buildFeatureItem('👔', 'Executive announcements'),
-                            _buildFeatureItem('📊', 'Strategic communications'),
-                            _buildFeatureItem('🎯', 'Board meeting minutes'),
-                            _buildFeatureItem(
-                              '📈',
-                              'Company performance updates',
-                            ),
-                            _buildFeatureItem(
-                              '🏢',
-                              'Organization-wide directives',
-                            ),
-                          ] else ...[
-                            _buildFeatureItem(
-                              '📢',
-                              'Company-wide announcements',
-                            ),
-                            _buildFeatureItem(
-                              '📋',
-                              'Internal memos and updates',
-                            ),
-                            _buildFeatureItem('🔔', 'Real-time notifications'),
-                            _buildFeatureItem('📁', 'Document attachments'),
-                            _buildFeatureItem(
-                              '👥',
-                              'Department-specific messages',
-                            ),
-                          ],
+                          _buildFeatureItem(FontAwesomeIcons.bullhorn, 'Company-wide announcements'),
+                          _buildFeatureItem(FontAwesomeIcons.clipboardList, 'Internal memos and updates'),
+                          _buildFeatureItem(FontAwesomeIcons.bell, 'Real-time notifications'),
+                          _buildFeatureItem(FontAwesomeIcons.userGroup, 'Department-specific messages'),
+                          _buildFeatureItem(FontAwesomeIcons.sitemap, 'Team structure overview'),
                         ],
                       ),
                     ),
@@ -263,28 +303,6 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureItem(String emoji, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

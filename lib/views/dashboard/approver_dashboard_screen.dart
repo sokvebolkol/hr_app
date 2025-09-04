@@ -177,7 +177,6 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
             });
           },
         ),
-        // Add floating action button
         floatingActionButton: FloatingActionButton(
           backgroundColor: primary,
           child: const Icon(Icons.add, color: Colors.white),

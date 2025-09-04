@@ -5,12 +5,16 @@ class FunctionIconCardWidget extends StatelessWidget {
   final IconData iconData;
   final String label;
   final Color iconColor;
+  final double? iconSize;
+  final double? textSize;
   final Color backgroundColor;
   final VoidCallback? onPressed;
 
   const FunctionIconCardWidget({
     super.key,
     required this.iconData,
+    this.textSize = 12,
+    this.iconSize = 40,
     required this.label,
     this.iconColor = primary,
     this.backgroundColor = Colors.white,
@@ -40,14 +44,14 @@ class FunctionIconCardWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(child: Icon(iconData, color: iconColor, size: 40)),
+            Container(child: Icon(iconData, color: iconColor, size: iconSize)),
             const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.black54,
-                fontSize: 12,
+                fontSize: textSize,
                 fontWeight: FontWeight.w500,
               ),
             ),

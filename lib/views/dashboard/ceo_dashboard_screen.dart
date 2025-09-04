@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:chokchey_hr_app/widgets/function_card.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
@@ -14,8 +16,9 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
 import '../../widgets/date_section.dart';
-import '../attendance/staff_detail_screen.dart';
+import '../attendance/staff_attendance_detail_screen.dart';
 import '../auth/login-screen.dart';
+import '../chokchey_team/chockchey_team_screen.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import '../memo/memo_screen.dart';
@@ -161,8 +164,10 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
         ),
         bottomNavigationBar: ConvexAppBar(
           key: ValueKey(_currentIndex),
-          color: Colors.white,
-          backgroundColor: secondary,
+          color: Colors.black87,
+          backgroundColor: Colors.white,
+          activeColor: secondary,
+          shadowColor: Colors.grey[200],
           style: TabStyle.react,
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),
@@ -268,6 +273,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 _buildHeader(),
                 const DateSection(),
                 _buildTodayAttendanceCard(ceoViewModel),
+                _buildFunctionButtons(context),
                 _buildLeaveManagementTabs(ceoViewModel),
               ],
             ),
@@ -336,6 +342,57 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 const Spacer(),
                 _buildNotificationIcon(),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFunctionButtons(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        height: 100,
+        child: Row(
+          children: [
+            SizedBox(
+              width: screenWidth / 2 * 0.87,
+              child: FunctionIconCardWidget(
+                iconColor: secondary.withOpacity(0.8),
+                iconData: FontAwesomeIcons.networkWired,
+                iconSize: 30,
+                label: 'CHOKCHEY Team',
+                textSize: 14,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ChockcheyTeamScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: 16.0),
+            SizedBox(
+              width: screenWidth / 2 * 0.87,
+              child: FunctionIconCardWidget(
+                iconColor: secondary.withOpacity(0.8),
+                iconData: FontAwesomeIcons.userClock,
+                iconSize: 30,
+                label: 'Staff Attendances',
+                textSize: 14,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StaffAttendanceDetailScreen(),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -451,7 +508,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     if (viewModel.errorMessage != null) {
       return Container(
         margin: const EdgeInsets.all(16),
-        height: 180,
+        height: 220,
         decoration: BoxDecoration(
           color: Colors.red.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
@@ -518,7 +575,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // Card Header
@@ -552,7 +609,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const StaffDetailScreen(),
+                          builder:
+                              (context) => const StaffAttendanceDetailScreen(
+                                isGettingTodayAttendance: true,
+                              ),
                         ),
                       ),
                   child: const Text(
@@ -596,7 +656,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     child: _buildSimpleAttendanceStatItem(
                       'Absent',
                       viewModel.absentCount.toString(),
-                      Colors.red[100]!,
+                      Colors.red[200]!,
                     ),
                   ),
                 ],

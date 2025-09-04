@@ -4,6 +4,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../auth/login-screen.dart';
@@ -18,11 +19,23 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late ProfileViewModel _viewModel;
 
+  bool isCeoUser = false;
+  Color get themeColor => isCeoUser ? secondary : primary;
+
   @override
   void initState() {
     super.initState();
     _viewModel = ProfileViewModel();
     _viewModel.initialize();
+    _checkUserRole();
+  }
+
+  Future<void> _checkUserRole() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final ceoUserValue = pref.getBool("ceoUser") ?? false;
+    setState(() {
+      isCeoUser = ceoUserValue;
+    });
   }
 
   @override
@@ -34,7 +47,9 @@ class _ProfilePageState extends State<ProfilePage> {
           if (viewModel.isLoading) {
             return Scaffold(
               backgroundColor: Colors.grey[100],
-              body: const Center(child:  Center(child: SpinKitFadingCircle(color: primary))),
+              body:  Center(
+                child: Center(child: SpinKitFadingCircle(color: themeColor)),
+              ),
             );
           }
 
@@ -79,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       padding: const EdgeInsets.only(top: 48, bottom: 24, left: 16, right: 16),
       decoration: BoxDecoration(
-        color: primary,
+        color: themeColor,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),
@@ -134,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         : () => _showImagePickerModal(viewModel),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: primary,
+                    color: themeColor,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
@@ -180,8 +195,8 @@ class _ProfilePageState extends State<ProfilePage> {
               for (int i = 0; i < viewModel.profileItems.length; i++) ...[
                 ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: primary.withOpacity(0.13),
-                    child: Icon(viewModel.profileItems[i].icon, color: primary),
+                    backgroundColor: themeColor.withOpacity(0.13),
+                    child: Icon(viewModel.profileItems[i].icon, color: themeColor),
                   ),
                   title: Text(
                     viewModel.profileItems[i].label,
