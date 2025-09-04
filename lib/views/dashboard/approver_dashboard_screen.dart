@@ -318,6 +318,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               children: [
                 _buildHeader(viewModel),
                 const DateSection(),
+                SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),
                 _buildFunctionButtons(context),
@@ -540,7 +541,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       ),
       child: Column(
         children: [
-          // Custom Tab Bar with Full Background
           Container(
             padding: const EdgeInsets.only(top: 4, bottom: 4),
             decoration: BoxDecoration(
@@ -1000,10 +1000,48 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: viewModel.filteredPendingLeaveRequests.length,
-      itemBuilder:
-          (context, index) => _buildCompactPendingLeaveItem(
-            viewModel.filteredPendingLeaveRequests[index],
+      itemBuilder: (context, index) {
+        final leave = viewModel.filteredPendingLeaveRequests[index];
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        // Sort the approval list by priority
+        final sortedPrioList = [...leave.prioList]
+          ..sort((a, b) => a.prio.compareTo(b.prio));
+
+        return GestureDetector(
+          onTap: () => _navigateToLeaveDetail(leave),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: LeaveRequestWidget(
+              reason: leave.reason,
+              status: leave.statuText,
+              fromDate: leave.fromDate.toString(),
+              toDate: leave.toDate.toString(),
+              requesterName: leave.requesterName,
+              totalDays: leave.numLeaveDays.toString(),
+              currentUserName: viewModel.username,
+              currentUserProfileImageUrl: viewModel.profileImageUrl,
+              lineWidth:
+                  sortedPrioList.length == 3
+                      ? screenWidth / 2 * 0.58
+                      : screenWidth / 2 * 1.2,
+              prioList:
+                  sortedPrioList
+                      .map(
+                        (p) => {
+                          'prio': p.prio,
+                          'apstatu': p.apstatu,
+                          'apstatu_text': p.apstatuText,
+                          'prio_text': p.prioText,
+                          'approver_name': p.approverName,
+                          'remark': p.remark,
+                        },
+                      )
+                      .toList(),
+            ),
           ),
+        );
+      },
     );
   }
 
@@ -1072,7 +1110,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               totalDays: leave.numleav,
               currentUserName: viewModel.username,
               currentUserProfileImageUrl: viewModel.profileImageUrl,
-              lineWidth: screenWidth / 2 * 0.58,
+              lineWidth:
+                  sortedPrioList.length == 3
+                      ? screenWidth / 2 * 0.58
+                      : screenWidth / 2 * 1.2,
               prioList:
                   sortedPrioList
                       .map(
@@ -1088,28 +1129,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildCompactPendingLeaveItem(PendingLeaveRequest leave) {
-    return GestureDetector(
-      onTap: () {
-        _navigateToLeaveDetail(leave);
-      },
-      child: RequesterLeaveCardWidget(
-        requesterName: leave.requesterName,
-        positionName: leave.positionName,
-        leaveType: leave.ltyp,
-        numLeaveDays: leave.numLeaveDays,
-        fromDate: leave.fromDate,
-        toDate: leave.toDate,
-        reason: leave.reason,
-        requestDate: leave.requestDate,
-        onTap: () => _navigateToLeaveDetail(leave),
-        actionText: 'Tap to review',
-        avatarBackgroundColor: Colors.orange[100],
-        avatarTextColor: Colors.orange[700],
-      ),
     );
   }
 

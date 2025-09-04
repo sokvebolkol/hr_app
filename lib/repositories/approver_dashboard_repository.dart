@@ -82,6 +82,35 @@ class ApproverDashboardData {
   }
 }
 
+class ApprovalItem {
+  final String approverName;
+  final int prio;
+  final int apstatu;
+  final String remark;
+  final String apstatuText;
+  final String prioText;
+
+  ApprovalItem({
+    required this.approverName,
+    required this.prio,
+    required this.apstatu,
+    required this.remark,
+    required this.apstatuText,
+    required this.prioText,
+  });
+
+  factory ApprovalItem.fromJson(Map<String, dynamic> json) {
+    return ApprovalItem(
+      approverName: json['approver_name'] as String? ?? '',
+      prio: json['prio'] as int? ?? 0,
+      apstatu: json['apstatu'] as int? ?? 0,
+      remark: json['remark'] as String? ?? '',
+      apstatuText: json['apstatu_text'] as String? ?? '',
+      prioText: json['prio_text'] as String? ?? '',
+    );
+  }
+}
+
 class ApproverUser {
   final String ucode;
   final String uid;
@@ -153,6 +182,9 @@ class PendingLeaveRequest {
   final String departmentName;
   final String branchShortName;
   final String branchFullName;
+  final String leaveNote;
+  final String statuText;
+  final List<ApprovalItem> prioList;
 
   PendingLeaveRequest({
     required this.lreid,
@@ -178,6 +210,9 @@ class PendingLeaveRequest {
     required this.departmentName,
     required this.branchShortName,
     required this.branchFullName,
+    required this.leaveNote,
+    required this.statuText,
+    required this.prioList,
   });
 
   factory PendingLeaveRequest.fromJson(Map<String, dynamic> json) {
@@ -205,6 +240,15 @@ class PendingLeaveRequest {
       departmentName: json['department_name']?.toString() ?? '',
       branchShortName: json['branch_short_name']?.toString() ?? '',
       branchFullName: json['branch_full_name']?.toString() ?? '',
+      leaveNote: json['leave_note']?.toString() ?? '',
+      statuText: json['statu_text']?.toString() ?? '',
+      prioList:
+          (json['prio_list'] as List<dynamic>?)
+              ?.map(
+                (item) => ApprovalItem.fromJson(item as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
     );
   }
 
