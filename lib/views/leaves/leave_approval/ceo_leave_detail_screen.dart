@@ -5,6 +5,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../models/ceo_dashboard_model.dart';
+import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../widgets/leave_action_widget.dart';
 import '../../../viewmodels/leave_action_viewmodel.dart';
 
@@ -49,6 +50,18 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                   _buildEmployeeCard(viewModel),
                   const SizedBox(height: 16),
                   _buildLeaveDetailsCard(viewModel),
+                  const SizedBox(height: 16),
+                  ApprovalWorkflowWidget(
+                    approvalList:
+                        widget.leave.prioList
+                            .map(
+                              (approval) =>
+                                  ApprovalItemData.fromCeoApprovalItem(
+                                    approval,
+                                  ),
+                            )
+                            .toList(),
+                  ),
                   if (widget.leave.file != null &&
                       widget.leave.file!.isNotEmpty) ...[
                     const SizedBox(height: 16),

@@ -3,6 +3,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../models/leave_history_model.dart';
+import '../../../widgets/approvalworkflowwidget.dart';
 
 class EmployeeLeaveDetailScreen extends StatefulWidget {
   final LeaveHistoryModel leaveRequest;
@@ -39,7 +40,15 @@ class _EmployeeLeaveDetailScreenState extends State<EmployeeLeaveDetailScreen> {
             _buildLeaveDetailsCard(),
             if (widget.leaveRequest.prioList.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _buildApprovalFlowCard(),
+              ApprovalWorkflowWidget(
+                approvalList:
+                    widget.leaveRequest.prioList
+                        .map(
+                          (priority) =>
+                              ApprovalItemData.fromPriorityModel(priority),
+                        )
+                        .toList(),
+              ),
             ],
             if (widget.leaveRequest.hasDocument != null &&
                 widget.leaveRequest.hasDocument!) ...[
@@ -126,7 +135,7 @@ class _EmployeeLeaveDetailScreenState extends State<EmployeeLeaveDetailScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Staff ID: ${widget.leaveRequest.eid}',
+                          'Staff ID: ${widget.leaveRequest.eCard}',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
@@ -440,222 +449,6 @@ class _EmployeeLeaveDetailScreenState extends State<EmployeeLeaveDetailScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildApprovalFlowCard() {
-    final sortedPrioList = List<PriorityModel>.from(
-      widget.leaveRequest.prioList,
-    )..sort((a, b) => a.prio.compareTo(b.prio));
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.approval, color: primary, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Approval Flow',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            ...sortedPrioList.asMap().entries.map((entry) {
-              final index = entry.key;
-              final priority = entry.value;
-              final isLast = index == sortedPrioList.length - 1;
-
-              return _buildApprovalStep(priority, isLast, index);
-            }).toList(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildApprovalStep(
-    PriorityModel priority,
-    bool isLast,
-    int stepIndex,
-  ) {
-    Color statusColor;
-    IconData statusIcon;
-
-    if (priority.isApproved) {
-      statusColor = Colors.green;
-      statusIcon = Icons.check_circle;
-    } else if (priority.isRejected) {
-      statusColor = Colors.red;
-      statusIcon = Icons.cancel;
-    } else {
-      statusColor = Colors.orange;
-      statusIcon = Icons.schedule;
-    }
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: statusColor.withOpacity(0.2)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Step indicator
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusColor, width: 2),
-                    ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Text(
-                            '${stepIndex + 1}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: -2,
-                          bottom: -2,
-                          child: Container(
-                            padding: const EdgeInsets.all(1),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              statusIcon,
-                              color: statusColor,
-                              size: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Approver info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          priority.prioText,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          priority.approverName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Status badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      priority.apstatuText,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Show remark if exists and step is approved or rejected
-              if ((priority.isApproved || priority.isRejected) &&
-                  priority.remark != null &&
-                  priority.remark!.trim().isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.comment, size: 16, color: statusColor),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Remark:',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              priority.remark!,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        if (!isLast) const SizedBox(height: 12),
-      ],
     );
   }
 

@@ -31,6 +31,7 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
@@ -333,6 +334,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               children: [
                 _buildHeader(viewModel),
                 const DateSection(),
+                const SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),
                 _buildFunctionButtons(context),

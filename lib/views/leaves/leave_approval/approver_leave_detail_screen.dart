@@ -4,6 +4,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../repositories/approver_dashboard_repository.dart';
+import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../widgets/leave_action_widget.dart';
 import '../../../viewmodels/leave_action_viewmodel.dart';
 
@@ -43,12 +44,23 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   _buildEmployeeCard(viewModel),
                   const SizedBox(height: 16),
                   _buildLeaveDetailsCard(),
+                  const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                  ApprovalWorkflowWidget(
+                    approvalList:
+                        widget.leave.prioList
+                            .map(
+                              (approval) =>
+                                  ApprovalItemData.fromApprovalItem(approval),
+                            )
+                            .toList(),
+                  ),
                   if (widget.leave.file != null &&
                       widget.leave.file!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildSupportingDocumentCard(),
                   ],
-                  const SizedBox(height: 100), 
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -424,119 +436,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                 ),
               ),
             ],
-            // Pending/Processed notice
-            Consumer<LeaveActionViewModel>(
-              builder: (context, viewModel, child) {
-                if (viewModel.hasActionTaken) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green[200]!, width: 1.5),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.check_circle_outline,
-                            color: Colors.green[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Action Completed',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request has been ${viewModel.lastAction ?? "processed"} successfully.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.orange[200]!,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.orange[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.info_outline,
-                            color: Colors.orange[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Approval Required',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request requires your approval. Please review the details and take appropriate action.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-            ),
           ],
         ),
       ),
