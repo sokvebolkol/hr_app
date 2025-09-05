@@ -28,6 +28,42 @@ class ManagerLeaveHistoryResponse {
   }
 }
 
+// Add StaffApprovalItem class for the approval workflow
+class StaffApprovalItem {
+  final String approverName;
+  final int prio;
+  final int apstatu;
+  final String remark;
+  final String apstatuText;
+  final String prioText;
+
+  StaffApprovalItem({
+    required this.approverName,
+    required this.prio,
+    required this.apstatu,
+    required this.remark,
+    required this.apstatuText,
+    required this.prioText,
+  });
+
+  factory StaffApprovalItem.fromJson(Map<String, dynamic> json) {
+    return StaffApprovalItem(
+      approverName: json['approver_name'] as String? ?? '',
+      prio: json['prio'] as int? ?? 0,
+      apstatu: json['apstatu'] as int? ?? 0,
+      remark: json['remark'] as String? ?? '',
+      apstatuText: json['apstatu_text'] as String? ?? '',
+      prioText: json['prio_text'] as String? ?? '',
+    );
+  }
+
+  // Helper getters
+  bool get isApproved => apstatu == 1;
+  bool get isRejected => apstatu == 0;
+  bool get isPending => apstatu == 2;
+  bool get hasRemark => remark.trim().isNotEmpty;
+}
+
 class StaffLeaveModel {
   final String lreid;
   final String orgid;
@@ -60,6 +96,8 @@ class StaffLeaveModel {
   final String departmentName;
   final String branchShortName;
   final String branchFullName;
+  final String statuText;
+  final List<StaffApprovalItem> prioList;
 
   StaffLeaveModel({
     required this.lreid,
@@ -93,6 +131,8 @@ class StaffLeaveModel {
     required this.departmentName,
     required this.branchShortName,
     required this.branchFullName,
+    required this.statuText,
+    required this.prioList,
   });
 
   factory StaffLeaveModel.fromJson(Map<String, dynamic> json) {
@@ -128,6 +168,15 @@ class StaffLeaveModel {
       departmentName: json['department_name']?.toString() ?? '',
       branchShortName: json['branch_short_name']?.toString() ?? '',
       branchFullName: json['branch_full_name']?.toString() ?? '',
+      statuText: json['statu_text']?.toString() ?? '',
+      prioList:
+          (json['prio_list'] as List<dynamic>?)
+              ?.map(
+                (item) =>
+                    StaffApprovalItem.fromJson(item as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
     );
   }
 
@@ -143,6 +192,8 @@ class StaffLeaveModel {
   bool get isRejected => statu == '0';
 
   String get statusText {
+    if (statuText.isNotEmpty) return statuText;
+
     switch (statu) {
       case '1':
         return 'Approved';
@@ -157,6 +208,23 @@ class StaffLeaveModel {
 
   bool get hasDocument => file != null && file!.isNotEmpty;
   String? get documentUrl => hasDocument ? file : null;
+
+  // Approval workflow helpers
+  bool get hasApprovalWorkflow => prioList.isNotEmpty;
+  List<StaffApprovalItem> get sortedApprovals {
+    final sorted = [...prioList];
+    sorted.sort((a, b) => a.prio.compareTo(b.prio));
+    return sorted;
+  }
+
+  int get approvedCount => prioList.where((item) => item.isApproved).length;
+  int get pendingCount => prioList.where((item) => item.isPending).length;
+  int get rejectedCount => prioList.where((item) => item.isRejected).length;
+
+  StaffApprovalItem? get currentPendingApprover =>
+      prioList.where((item) => item.isPending).isNotEmpty
+          ? prioList.where((item) => item.isPending).first
+          : null;
 
   // Convert to LeaveHistoryModel for detail screen
   LeaveHistoryModel toLeaveHistoryModel() {
@@ -180,7 +248,19 @@ class StaffLeaveModel {
       leaveSupportDoc: leaveSupportDoc,
       createdate: createdate,
       leaveNote: leaveNote,
-      prioList: [],
+      prioList:
+          prioList
+              .map(
+                (item) => PriorityModel(
+                  approverName: item.approverName,
+                  prio: item.prio,
+                  apstatu: item.apstatu,
+                  remark: item.remark,
+                  apstatuText: item.apstatuText,
+                  prioText: item.prioText,
+                ),
+              )
+              .toList(),
       isLeaveCanCancel: false,
       statusText: statusText,
       hasDocument: hasDocument,

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import '../models/ceo_dashboard_model.dart';
-import '../models/leave_history_model.dart';
-import '../repositories/approver_dashboard_repository.dart';
 
 class ApprovalWorkflowWidget extends StatelessWidget {
   final List<ApprovalItemData> approvalList;
   final String title;
   final IconData? titleIcon;
   final Color? titleIconColor;
+  final Widget Function(ApprovalItemData approval, bool isLast)?
+  customApprovalBuilder; // Add this parameter
 
   const ApprovalWorkflowWidget({
     super.key,
@@ -15,6 +14,7 @@ class ApprovalWorkflowWidget extends StatelessWidget {
     this.title = 'User Approvers',
     this.titleIcon = Icons.approval,
     this.titleIconColor = Colors.orange,
+    this.customApprovalBuilder, // Add this parameter
   });
 
   @override
@@ -56,7 +56,10 @@ class ApprovalWorkflowWidget extends StatelessWidget {
               final index = entry.key;
               final approval = entry.value;
               final isLast = index == sortedApprovals.length - 1;
-              return _buildVerticalApprovalStep(approval, isLast);
+
+              // Use custom builder if provided, otherwise use default
+              return customApprovalBuilder?.call(approval, isLast) ??
+                  _buildVerticalApprovalStep(approval, isLast);
             }),
           ],
         ),
@@ -252,35 +255,35 @@ class ApprovalItemData {
   });
 
   // Factory constructors for different model types
-  factory ApprovalItemData.fromPriorityModel(PriorityModel model) {
+  factory ApprovalItemData.fromPriorityModel(dynamic model) {
     return ApprovalItemData(
-      approverName: model.approverName,
-      priority: model.prio,
-      status: model.apstatu,
-      statusText: model.apstatuText,
-      roleText: model.prioText,
+      approverName: model.approverName ?? '',
+      priority: model.prio ?? 0,
+      status: model.apstatu ?? 0,
+      statusText: model.apstatuText ?? '',
+      roleText: model.prioText ?? '',
       remark: model.remark,
     );
   }
 
-  factory ApprovalItemData.fromApprovalItem(ApprovalItem model) {
+  factory ApprovalItemData.fromApprovalItem(dynamic model) {
     return ApprovalItemData(
-      approverName: model.approverName,
-      priority: model.prio,
-      status: model.apstatu,
-      statusText: model.apstatuText,
-      roleText: model.prioText,
+      approverName: model.approverName ?? '',
+      priority: model.prio ?? 0,
+      status: model.apstatu ?? 0,
+      statusText: model.apstatuText ?? '',
+      roleText: model.prioText ?? '',
       remark: model.remark,
     );
   }
 
-  factory ApprovalItemData.fromCeoApprovalItem(CeoApprovalItem model) {
+  factory ApprovalItemData.fromCeoApprovalItem(dynamic model) {
     return ApprovalItemData(
-      approverName: model.approverName,
-      priority: model.prio,
-      status: model.apstatu,
-      statusText: model.apstatuText,
-      roleText: model.prioText,
+      approverName: model.approverName ?? '',
+      priority: model.prio ?? 0,
+      status: model.apstatu ?? 0,
+      statusText: model.apstatuText ?? '',
+      roleText: model.prioText ?? '',
       remark: model.remark,
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../constants/constant.dart';
 import '../../../models/leave_history_model.dart';
 import '../../../utils/file_helper.dart';
+import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../widgets/compact_detail_row.dart';
 import '../../../widgets/compact_follow_up_button.dart';
 import '../../../widgets/compact_status_card.dart';
@@ -70,8 +71,11 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
             children: [
               _buildCompactStatusCard(),
               const SizedBox(height: 16),
-              // Combined Details and Approval Flow
-              _buildMainContentCard(),
+              // Details Section
+              _buildDetailsCard(),
+              const SizedBox(height: 16),
+              // Approval Workflow Section using reusable widget
+              _buildApprovalWorkflowSection(),
               const SizedBox(height: 16),
               // Document Support Section (if available)
               if (_hasDocumentSupport()) _buildDocumentSupportCard(),
@@ -96,6 +100,223 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
       durationType: widget.leaveRequest.leaveNote,
       hasDocument: _hasDocumentSupport(),
     );
+  }
+
+  // Separate details card without approval section
+  Widget _buildDetailsCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: _buildDetailsSection(),
+    );
+  }
+
+  // New method for approval workflow using reusable widget
+  Widget _buildApprovalWorkflowSection() {
+    return ApprovalWorkflowWidget(
+      approvalList:
+          widget.leaveRequest.prioList
+              .map((priority) => ApprovalItemData.fromPriorityModel(priority))
+              .toList(),
+      // Override the widget to add follow-up functionality for pending items
+      customApprovalBuilder:
+          (approval, isLast) => _buildCustomApprovalStep(approval, isLast),
+    );
+  }
+
+  // Custom approval step builder to maintain follow-up functionality
+  Widget _buildCustomApprovalStep(ApprovalItemData approval, bool isLast) {
+    // Find the original PriorityModel for follow-up functionality
+    final originalPriority = widget.leaveRequest.prioList.firstWhere(
+      (p) =>
+          p.approverName == approval.approverName &&
+          p.prio == approval.priority,
+    );
+
+    Color statusColor = _getApprovalStatusColor(approval.status);
+    IconData statusIcon = _getApprovalStatusIcon(approval.status);
+
+    return Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Timeline indicator
+            Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: statusColor, width: 2),
+                  ),
+                  child: Icon(statusIcon, color: statusColor, size: 20),
+                ),
+                if (!isLast)
+                  Container(
+                    width: 2,
+                    height: 30,
+                    color: Colors.grey[300],
+                    margin: const EdgeInsets.only(top: 8),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 16),
+
+            // Approval details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Approver info
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              approval.approverName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              approval.roleText,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Status badge or follow-up button
+                      if (originalPriority.isPending &&
+                          widget.leaveRequest.isPending)
+                        CompactFollowUpButton(
+                          onTap: () => _showFollowUpDialog(originalPriority),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            approval.statusText,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  // Approval remark (if available)
+                  if (approval.remark != null &&
+                      approval.remark!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: statusColor.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.comment_outlined,
+                                size: 14,
+                                color: statusColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Remark:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: statusColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            approval.remark!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (!isLast) const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  // Helper methods for status colors and icons
+  Color _getApprovalStatusColor(int status) {
+    switch (status) {
+      case 1: // Approved
+        return Colors.green;
+      case 0: // Rejected
+        return Colors.red;
+      case 2: // Pending
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getApprovalStatusIcon(int status) {
+    switch (status) {
+      case 1: // Approved
+        return Icons.check_circle;
+      case 0: // Rejected
+        return Icons.cancel;
+      case 2: // Pending
+        return Icons.access_time;
+      default:
+        return Icons.help_outline;
+    }
   }
 
   // Check if leave request has document support
@@ -239,39 +460,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  Widget _buildMainContentCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Details Section
-          _buildDetailsSection(),
-
-          // Divider
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            height: 1,
-            color: Colors.grey[200],
-          ),
-
-          // Approval Flow Section
-          _buildApprovalSection(),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDetailsSection() {
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -394,212 +582,11 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  Widget _buildApprovalSection() {
-    final sortedPriorities = [...widget.leaveRequest.prioList];
-    sortedPriorities.sort((a, b) => a.prio.compareTo(b.prio));
-
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.approval, color: Colors.orange, size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                'User Approvers',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Vertical list of approvers
-          ...sortedPriorities.asMap().entries.map((entry) {
-            final index = entry.key;
-            final priority = entry.value;
-            final isLast = index == sortedPriorities.length - 1;
-            return _buildVerticalApprovalStep(priority, isLast, index);
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVerticalApprovalStep(
-    PriorityModel priority,
-    bool isLast,
-    int stepIndex,
-  ) {
-    Color statusColor;
-    IconData statusIcon;
-
-    if (priority.isApproved) {
-      statusColor = Colors.green;
-      statusIcon = Icons.check_circle;
-    } else if (priority.isRejected) {
-      statusColor = Colors.red;
-      statusIcon = Icons.cancel;
-    } else {
-      statusColor = Colors.orange;
-      statusIcon = Icons.schedule;
-    }
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: statusColor.withOpacity(0.2)),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  // Step indicator
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusColor, width: 2),
-                    ),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Text(
-                            '${stepIndex + 1}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: -2,
-                          bottom: -2,
-                          child: Container(
-                            padding: const EdgeInsets.all(1),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              statusIcon,
-                              color: statusColor,
-                              size: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Approver info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          priority.prioText,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          priority.approverName,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Status and Follow-up
-                  if (priority.isPending && widget.leaveRequest.isPending)
-                    CompactFollowUpButton(
-                      onTap: () => _showFollowUpDialog(priority),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        priority.apstatuText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              if ((priority.isApproved || priority.isRejected) &&
-                  priority.remark != null &&
-                  priority.remark!.trim().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.comment, size: 14, color: statusColor),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          priority.remark!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        if (!isLast) const SizedBox(height: 8),
-      ],
-    );
-  }
-
   Widget _buildActionButtons() {
     return ActionButtonsCard(
       layout: ButtonLayout.row,
       spacing: 16,
       buttons: [
-        // ActionButtonData(
-        //   label: 'Update',
-        //   icon: Icons.edit,
-        //   onPressed: _navigateToUpdateScreen,
-        //   backgroundColor: primary,
-        //   foregroundColor: Colors.white,
-        // ),
         ActionButtonData(
           label: 'Cancel',
           icon: Icons.cancel_outlined,

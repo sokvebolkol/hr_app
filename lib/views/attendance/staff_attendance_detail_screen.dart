@@ -772,8 +772,8 @@ class _StaffAttendanceDetailScreenState
   // Helper methods
   String _getClockInTime(StaffMember staff) {
     if (staff.category == 'present' || staff.category == 'late') {
-      if (staff.attendanceDetails.clockIn != null) {
-        return _formatTime(staff.attendanceDetails.clockIn!);
+      if (staff.attendanceDetails.checkIn != null) {
+        return _formatTime(staff.attendanceDetails.checkIn!);
       }
     }
     return '--';
@@ -781,8 +781,8 @@ class _StaffAttendanceDetailScreenState
 
   String _getClockOutTime(StaffMember staff) {
     if (staff.category == 'present' || staff.category == 'late') {
-      if (staff.attendanceDetails.clockOut != null) {
-        return _formatTime(staff.attendanceDetails.clockOut!);
+      if (staff.attendanceDetails.checkOut != null) {
+        return _formatTime(staff.attendanceDetails.checkOut!);
       }
     }
     return '--';

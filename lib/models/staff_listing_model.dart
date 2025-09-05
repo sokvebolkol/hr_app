@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class StaffListingResponse {
   final bool success;
   final StaffListingData data;
@@ -286,6 +284,8 @@ class AttendanceDetails {
   final String? clockOut;
   final String? scanIn;
   final String? scanOut;
+  final String? checkIn;
+  final String? checkOut;
   final String? workingHours;
 
   AttendanceDetails({
@@ -293,6 +293,8 @@ class AttendanceDetails {
     this.clockOut,
     this.scanIn,
     this.scanOut,
+    this.checkIn,
+    this.checkOut,
     this.workingHours,
   });
 
@@ -302,6 +304,8 @@ class AttendanceDetails {
       clockOut: json['clock_out']?.toString(),
       scanIn: json['scan_in']?.toString(),
       scanOut: json['scan_out']?.toString(),
+      checkIn: json['check_in']?.toString(),
+      checkOut: json['check_out']?.toString(),
       workingHours: json['working_hours']?.toString(),
     );
   }
