@@ -16,6 +16,7 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
 import '../../widgets/date_section.dart';
+import '../../widgets/leave_request.dart';
 import '../attendance/staff_attendance_detail_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
@@ -1286,7 +1287,15 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
+  // In _buildCompactLeaveItem method, replace the entire method with:
+
   Widget _buildCompactLeaveItem(LeaveRequest leave, bool isPending) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Sort the approval list by priority
+    final sortedPrioList = [...leave.prioList]
+      ..sort((a, b) => a.prio.compareTo(b.prio));
+
     return GestureDetector(
       onTap: () async {
         final result = await Navigator.push(
@@ -1305,141 +1314,33 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor:
-                        isPending ? Colors.orange[100] : Colors.green[100],
-                    radius: 20,
-                    child: Text(
-                      leave.requesterName.isNotEmpty
-                          ? leave.requesterName[0].toUpperCase()
-                          : 'U',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color:
-                            isPending ? Colors.orange[700] : Colors.green[700],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          leave.requesterName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          'ID: ${leave.eid}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey[400],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.category_rounded,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          leave.ltyp,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.schedule_rounded,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${leave.numLeaveDays} day(s)',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.date_range_rounded,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${DateFormat('MMM dd').format(leave.fromDate)} - ${DateFormat('MMM dd, yyyy').format(leave.toDate)}',
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (leave.reason.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  leave.reason,
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ],
-          ),
+        margin: const EdgeInsets.only(bottom: 16),
+        child: LeaveRequestWidget(
+          reason: leave.reason,
+          status: leave.statuText,
+          fromDate: leave.fromDate.toString(),
+          toDate: leave.toDate.toString(),
+          requesterName: leave.requesterName,
+          totalDays: leave.numLeaveDays.toString(),
+          currentUserName: widget.dashboardViewModel.username,
+          currentUserProfileImageUrl: widget.dashboardViewModel.profileImageUrl,
+          lineWidth:
+              sortedPrioList.length == 3
+                  ? screenWidth / 2 * 0.58
+                  : screenWidth / 2 * 1.2,
+          prioList:
+              sortedPrioList
+                  .map(
+                    (p) => {
+                      'prio': p.prio,
+                      'apstatu': p.apstatu,
+                      'apstatu_text': p.apstatuText,
+                      'prio_text': p.prioText,
+                      'approver_name': p.approverName,
+                      'remark': p.remark,
+                    },
+                  )
+                  .toList(),
         ),
       ),
     );

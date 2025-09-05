@@ -5,8 +5,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../models/ceo_dashboard_model.dart';
-import '../../../widgets/leave_action_widget.dart'; // Same widget as approver
-import '../../../viewmodels/leave_action_viewmodel.dart'; // Same viewmodel as approver
+import '../../../widgets/leave_action_widget.dart';
+import '../../../viewmodels/leave_action_viewmodel.dart';
 
 class CeoLeaveDetailScreen extends StatefulWidget {
   final LeaveRequest leave;
@@ -277,7 +277,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.work_outline,
                           'Position',
-                          widget.leave.position ?? 'N/A',
+                          widget.leave.position,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -285,7 +285,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.business_outlined,
                           'Department',
-                          widget.leave.department ?? 'N/A',
+                          widget.leave.department,
                         ),
                       ),
                     ],
@@ -297,7 +297,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.location_on_outlined,
                           'Branch',
-                          widget.leave.branch ?? 'N/A',
+                          widget.leave.branch,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -305,7 +305,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         child: _buildInfoItem(
                           Icons.email_outlined,
                           'Email',
-                          widget.leave.email ?? 'N/A',
+                          widget.leave.email,
                         ),
                       ),
                     ],
@@ -427,172 +427,6 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                 'MMMM dd, yyyy at hh:mm a',
               ).format(widget.leave.requestDate),
               Icons.access_time,
-            ),
-
-            // Status notice based on action taken
-            Consumer<LeaveActionViewModel>(
-              builder: (context, vm, child) {
-                if (vm.hasActionTaken) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green[200]!, width: 1.5),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.green[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.check_circle_outline,
-                            color: Colors.green[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Action Completed',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request has been ${vm.lastAction ?? "processed"} successfully.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else if (widget.isPending) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.orange[200]!,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.orange[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.info_outline,
-                            color: Colors.orange[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'CEO Approval Required',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.orange[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request requires your approval as CEO. Please review the details and take appropriate action.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue[200]!, width: 1.5),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            Icons.info_outline,
-                            color: Colors.blue[700],
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Information',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue[800],
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'This leave request is pending approval from another approver in the workflow.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue[700],
-                                  height: 1.3,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
             ),
 
             if (widget.leave.reason.isNotEmpty) ...[

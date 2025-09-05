@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class CeoDashboardResponse {
   final bool success;
   final CeoDashboardData data;
@@ -89,6 +87,36 @@ class AttendanceSummary {
       totalStaff > 0 ? ((presentCount + lateCount) / totalStaff) * 100 : 0;
 }
 
+// Add ApprovalItem class for CEO dashboard
+class CeoApprovalItem {
+  final String approverName;
+  final int prio;
+  final int apstatu;
+  final String remark;
+  final String apstatuText;
+  final String prioText;
+
+  CeoApprovalItem({
+    required this.approverName,
+    required this.prio,
+    required this.apstatu,
+    required this.remark,
+    required this.apstatuText,
+    required this.prioText,
+  });
+
+  factory CeoApprovalItem.fromJson(Map<String, dynamic> json) {
+    return CeoApprovalItem(
+      approverName: json['approver_name'] as String? ?? '',
+      prio: json['prio'] as int? ?? 0,
+      apstatu: json['apstatu'] as int? ?? 0,
+      remark: json['remark'] as String? ?? '',
+      apstatuText: json['apstatu_text'] as String? ?? '',
+      prioText: json['prio_text'] as String? ?? '',
+    );
+  }
+}
+
 class LeaveRequest {
   final String lreid;
   final String orgid;
@@ -120,6 +148,8 @@ class LeaveRequest {
   final String? createdAt;
   final String ltyp;
   final String requesterName;
+  final String statuText;
+  final List<CeoApprovalItem> prioList;
 
   LeaveRequest({
     required this.lreid,
@@ -152,6 +182,8 @@ class LeaveRequest {
     this.createdAt,
     required this.ltyp,
     required this.requesterName,
+    required this.statuText,
+    required this.prioList,
   });
 
   factory LeaveRequest.fromJson(Map<String, dynamic> json) {
@@ -186,6 +218,15 @@ class LeaveRequest {
       createdAt: json['created_at']?.toString(),
       ltyp: json['ltyp']?.toString() ?? '',
       requesterName: json['requester_name']?.toString() ?? '',
+      statuText: json['statu_text']?.toString() ?? '',
+      prioList:
+          (json['prio_list'] as List<dynamic>?)
+              ?.map(
+                (item) =>
+                    CeoApprovalItem.fromJson(item as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
     );
   }
 
