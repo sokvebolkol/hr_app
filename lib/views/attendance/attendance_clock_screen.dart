@@ -595,6 +595,59 @@ class _AttendanceClockState extends State<AttendanceClock>
     final nextClockType = viewModel.nextClockType;
     final canClock = viewModel.canClock;
 
+    // Check if user has clocked out today
+    final hasClockOut = viewModel.todayAttendance.any(
+      (record) => record.isClockOut,
+    );
+
+    // If user has clocked out, show Clock In button
+    if (hasClockOut) {
+      return AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: canClock ? _pulseAnimation.value : 1.0,
+            child: SizedBox(
+              width: double.infinity,
+              height: 70,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: canClock ? 8 : 2,
+                ),
+                icon:
+                    viewModel.isClockingInOut
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                        : const Icon(Icons.login_rounded, size: 28),
+                label: Text(
+                  viewModel.isClockingInOut ? 'Processing...' : 'Clock In',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                onPressed:
+                    !canClock ? null : () => _performClockInOut(viewModel),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    // Default: show normal clock button
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
@@ -646,20 +699,15 @@ class _AttendanceClockState extends State<AttendanceClock>
                               : Icons.logout_rounded,
                           size: 28,
                         ),
-                label: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      viewModel.isClockingInOut
-                          ? 'Processing...'
-                          : 'Clock $nextClockType',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
+                label: Text(
+                  viewModel.isClockingInOut
+                      ? 'Processing...'
+                      : 'Clock $nextClockType',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
                 onPressed:
                     !canClock ? null : () => _performClockInOut(viewModel),

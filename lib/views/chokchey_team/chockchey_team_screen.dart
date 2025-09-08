@@ -265,7 +265,6 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
                     ),
 
                     const SizedBox(height: 24),
-
                     // Feature List
                     Container(
                       width: double.infinity,

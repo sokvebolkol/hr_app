@@ -223,7 +223,7 @@ class _StaffAttendanceDetailScreenState
               Text(
                 widget.isGettingTodayAttendance
                     ? 'Today - ${viewModel.dayOfWeek}'
-                    : '${viewModel.formattedDate} - ${viewModel.dayOfWeek}',
+                    : '${viewModel.selectedDate != null ? DateFormat('MMM dd, yyyy').format(DateFormat('yyyy-MM-dd').parse(viewModel.selectedDate!)) : viewModel.formattedDate} - ${viewModel.dayOfWeek}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -857,7 +857,12 @@ class _StaffAttendanceDetailScreenState
                         onTap: () async {
                           final date = await showDatePicker(
                             context: context,
-                            initialDate: DateTime.now(),
+                            initialDate:
+                                viewModel.selectedDate != null
+                                    ? DateFormat(
+                                      'yyyy-MM-dd',
+                                    ).parse(viewModel.selectedDate!)
+                                    : DateTime.now(),
                             firstDate: DateTime(2020),
                             lastDate: DateTime.now(),
                           );
@@ -876,8 +881,16 @@ class _StaffAttendanceDetailScreenState
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(viewModel.selectedDate ?? 'Select Date'),
-                              const Icon(Icons.calendar_today),
+                              Text(
+                                viewModel.selectedDate != null
+                                    ? DateFormat('MMM dd, yyyy').format(
+                                      DateFormat(
+                                        'yyyy-MM-dd',
+                                      ).parse(viewModel.selectedDate!),
+                                    )
+                                    : 'Select Date',
+                              ),
+                              const Icon(Icons.calendar_month_outlined),
                             ],
                           ),
                         ),

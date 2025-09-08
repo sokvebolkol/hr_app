@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 
@@ -184,7 +185,11 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.info_outline, color: themeColor, size: 22),
+                          FaIcon(
+                            FontAwesomeIcons.infoCircle,
+                            color: secondary,
+                            size: 22,
+                          ),
                           const SizedBox(height: 10),
                           Text(
                             isCeoUser
@@ -202,15 +207,13 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                     ),
 
                     const SizedBox(height: 24),
-
-                    // Feature List
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.1),
+                        color: secondary.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: themeColor.withOpacity(0.3)),
+                        border: Border.all(color: secondary.withOpacity(0.23)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,40 +221,32 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
                           Text(
                             'Upcoming Features:',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 15.5,
                               fontWeight: FontWeight.bold,
-                              color: themeColor,
+                              color: secondary,
                             ),
                           ),
                           const SizedBox(height: 12),
-                          if (isCeoUser) ...[
-                            _buildFeatureItem('👔', 'Executive announcements'),
-                            _buildFeatureItem('📊', 'Strategic communications'),
-                            _buildFeatureItem('🎯', 'Board meeting minutes'),
-                            _buildFeatureItem(
-                              '📈',
-                              'Company performance updates',
-                            ),
-                            _buildFeatureItem(
-                              '🏢',
-                              'Organization-wide directives',
-                            ),
-                          ] else ...[
-                            _buildFeatureItem(
-                              '📢',
-                              'Company-wide announcements',
-                            ),
-                            _buildFeatureItem(
-                              '📋',
-                              'Internal memos and updates',
-                            ),
-                            _buildFeatureItem('🔔', 'Real-time notifications'),
-                            _buildFeatureItem('📁', 'Document attachments'),
-                            _buildFeatureItem(
-                              '👥',
-                              'Department-specific messages',
-                            ),
-                          ],
+                          _buildFeatureItem(
+                            FontAwesomeIcons.bullhorn,
+                            'Company-wide announcements',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.clipboardList,
+                            'Internal memos and updates',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.bell,
+                            'Real-time notifications',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.userGroup,
+                            'Department-specific messages',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.sitemap,
+                            'Team structure overview',
+                          ),
                         ],
                       ),
                     ),
@@ -267,12 +262,12 @@ class _MemoScreenState extends State<MemoScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildFeatureItem(String emoji, String text) {
+  Widget _buildFeatureItem(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
+          Icon(icon, size: 14),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
