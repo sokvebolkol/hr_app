@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'localization/language_logic.dart';
 import 'constants/constant.dart';
+import 'viewmodels/nofitication_viewmodel.dart';
 import 'views/auth/splash-screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'services/firebase_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,9 +17,18 @@ void main() async {
 
   await _requestPermissions();
 
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Initialize notification service
+  await FirebaseNotificationService().initialize();
+
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider.value(value: languageLogic)],
+      providers: [
+        ChangeNotifierProvider.value(value: languageLogic),
+        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+      ],
       child: const MyApp(),
     ),
   );
