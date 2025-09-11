@@ -8,30 +8,70 @@ import 'viewmodels/nofitication_viewmodel.dart';
 import 'views/auth/splash-screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
+import 'test_firebase_simple.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final languageLogic = LanguageLogic();
-  await languageLogic.initialize();
-  HttpOverrides.global = MyHttpOverrides();
 
-  await _requestPermissions();
+  try {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    HttpOverrides.global = MyHttpOverrides();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+    await _requestPermissions();
 
-  // Initialize notification service
-  await FirebaseNotificationService().initialize();
+    // Initialize Firebase with options
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase initialized successfully');
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: languageLogic),
-        ChangeNotifierProvider(create: (_) => NotificationViewModel()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+    // Initialize notification service
+    await FirebaseNotificationService().initialize();
+    print('✅ Notification service initialized');
+
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: languageLogic),
+          ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+        ],
+        child: const MyApp(),
+      ),
+    );
+  } catch (e) {
+    print('❌ Error initializing app: $e');
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Failed to initialize app',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text('Error: $e'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    // Restart the app
+                    main();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -41,6 +81,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chokchey HR',
+      routes: {'/firebase-test': (context) => const SimpleFirebaseTest()},
       theme: ThemeData(
         fontFamily: 'times',
         colorScheme: ColorScheme.fromSeed(
@@ -54,7 +95,7 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: primary,
             foregroundColor: Colors.white,
           ),
         ),
@@ -72,46 +113,49 @@ class MyApp extends StatelessWidget {
 }
 
 Future<void> _requestPermissions() async {
-  // For iOS, permissions are requested when actually needed
-  // Here we just check current status and inform user
-  if (Platform.isIOS) {
-    final permissions = <Permission>[
-      Permission.camera,
-      Permission.photos,
-      Permission.locationWhenInUse,
-    ];
+  try {
+    if (Platform.isIOS) {
+      final permissions = <Permission>[
+        Permission.camera,
+        Permission.photos,
+        Permission.locationWhenInUse,
+        Permission.notification,
+      ];
 
-    for (final permission in permissions) {
-      final status = await permission.status;
-      debugPrint('iOS Permission for $permission is $status');
+      for (final permission in permissions) {
+        final status = await permission.status;
+        debugPrint('iOS Permission for $permission is $status');
 
-      if (status.isDenied) {
-        debugPrint(
-          'iOS Permission $permission is denied, will request when needed',
-        );
+        if (status.isDenied) {
+          debugPrint(
+            'iOS Permission $permission is denied, will request when needed',
+          );
+        }
       }
-    }
-  } else {
-    // Android: Request permissions at startup
-    final permissions = <Permission>[
-      Permission.camera,
-      Permission.photos,
-      Permission.locationWhenInUse,
-    ];
+    } else {
+      final permissions = <Permission>[
+        Permission.camera,
+        Permission.photos,
+        Permission.locationWhenInUse,
+        Permission.notification,
+      ];
 
-    for (final permission in permissions) {
-      final status = await permission.request();
-      debugPrint('Android Permission for $permission is $status');
+      for (final permission in permissions) {
+        final status = await permission.request();
+        debugPrint('Android Permission for $permission is $status');
 
-      if (status.isPermanentlyDenied) {
-        debugPrint(
-          'Permission $permission is permanently denied. Please enable it in Settings.',
-        );
+        if (status.isPermanentlyDenied) {
+          debugPrint(
+            'Permission $permission is permanently denied. Please enable it in Settings.',
+          );
+        }
       }
-    }
 
-    final storageStatus = await Permission.storage.request();
-    debugPrint('Permission for storage is $storageStatus');
+      final storageStatus = await Permission.storage.request();
+      debugPrint('Permission for storage is $storageStatus');
+    }
+  } catch (e) {
+    debugPrint('Error requesting permissions: $e');
   }
 }
 
