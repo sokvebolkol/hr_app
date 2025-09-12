@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
@@ -57,6 +58,35 @@ class _LoginScreenState extends State<LoginScreen> {
     return 'Unknown Device';
   }
 
+  // Add function to get FCM token
+  Future<String?> _getFCMToken() async {
+    try {
+      final FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+      // Request notification permissions
+      final NotificationSettings settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        // Get the FCM token
+        final String? token = await messaging.getToken();
+        print(
+          '🔥 FCM Token obtained: ${token?.substring(0, 20)}...',
+        ); // Log first 20 chars for debugging
+        return token;
+      } else {
+        print('❌ Notification permission denied');
+        return null;
+      }
+    } catch (e) {
+      print('❌ Error getting FCM token: $e');
+      return null;
+    }
+  }
+
   Future<void> _login() async {
     final eCard = userNameController.text.trim();
     final password = passwordController.text.trim();
@@ -72,6 +102,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final deviceName = await _getDeviceName();
+      final deviceToken = await _getFCMToken();
+      final deviceType = Platform.isAndroid ? 'android' : 'ios';
+
+      print('🔐 Logging in with device: $deviceName');
+      print('📱 Device type: $deviceType');
+      print('🔥 FCM Token: ${deviceToken != null ? "✅ Obtained" : "❌ Failed"}');
 
       final response = await http.post(
         Uri.parse('${ServerService().baseUrl}login'),
@@ -79,6 +115,8 @@ class _LoginScreenState extends State<LoginScreen> {
           "ecard": eCard,
           "upassword": password,
           "device_name": deviceName,
+          "device_type": deviceType,
+          "device_token": deviceToken ?? '',
         },
       );
 
@@ -94,6 +132,13 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('userId', userId);
         await prefs.setBool('isApprover', isApprover);
         await prefs.setBool('ceoUser', ceoUser);
+
+        // Save FCM token and device info locally for future use
+        if (deviceToken != null) {
+          await prefs.setString('fcm_token', deviceToken);
+          await prefs.setString('device_type', deviceType);
+          print('✅ FCM token and device type saved locally');
+        }
 
         // Navigate based on user role - same logic as splash screen
         Widget targetScreen;
@@ -112,12 +157,25 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(builder: (_) => targetScreen),
         );
+
+        // Show success message with FCM status
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(
+        //       deviceToken != null
+        //           ? "✅ Login successful! Push notifications enabled."
+        //           : "⚠️ Login successful! Push notifications may not work.",
+        //     ),
+        //     backgroundColor: deviceToken != null ? Colors.green : Colors.orange,
+        //   ),
+        // );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Login failed: ${response.body}")),
         );
       }
     } catch (e) {
+      print('❌ Login error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Network error. Please try again.")),
       );

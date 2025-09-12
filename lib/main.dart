@@ -8,7 +8,6 @@ import 'viewmodels/nofitication_viewmodel.dart';
 import 'views/auth/splash-screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
-import 'test_firebase_simple.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -19,17 +18,11 @@ void main() async {
     await languageLogic.initialize();
     HttpOverrides.global = MyHttpOverrides();
 
-    await _requestPermissions();
+    // Initialize Firebase with timeout
+    await _initializeFirebaseWithTimeout();
 
-    // Initialize Firebase with options
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print('✅ Firebase initialized successfully');
-
-    // Initialize notification service
-    await FirebaseNotificationService().initialize();
-    print('✅ Notification service initialized');
+    // Request permissions after Firebase (non-blocking)
+    _requestPermissions(); // Remove await to make it non-blocking
 
     runApp(
       MultiProvider(
@@ -42,35 +35,37 @@ void main() async {
     );
   } catch (e) {
     print('❌ Error initializing app: $e');
+    // Still run the app even if Firebase fails
     runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error, size: 64, color: Colors.red),
-                const SizedBox(height: 16),
-                const Text(
-                  'Failed to initialize app',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text('Error: $e'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // Restart the app
-                    main();
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        ),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => LanguageLogic()),
+          ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+        ],
+        child: const MyApp(),
       ),
     );
+  }
+}
+
+// Add timeout for Firebase initialization
+Future<void> _initializeFirebaseWithTimeout() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10)); // 10 second timeout
+
+    print('✅ Firebase initialized successfully');
+
+    // Initialize notification service with timeout
+    await FirebaseNotificationService().initialize().timeout(
+      const Duration(seconds: 5),
+    );
+    print('✅ Notification service initialized');
+  } catch (e) {
+    print('⚠️ Firebase initialization failed or timed out: $e');
+    print('📱 App will continue without Firebase features');
+    // Don't throw error - let app continue
   }
 }
 
@@ -81,7 +76,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chokchey HR',
-      routes: {'/firebase-test': (context) => const SimpleFirebaseTest()},
       theme: ThemeData(
         fontFamily: 'times',
         colorScheme: ColorScheme.fromSeed(
@@ -112,6 +106,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Make permissions non-blocking
 Future<void> _requestPermissions() async {
   try {
     if (Platform.isIOS) {
@@ -133,6 +128,7 @@ Future<void> _requestPermissions() async {
         }
       }
     } else {
+      // Request permissions in background for Android
       final permissions = <Permission>[
         Permission.camera,
         Permission.photos,
@@ -141,18 +137,30 @@ Future<void> _requestPermissions() async {
       ];
 
       for (final permission in permissions) {
-        final status = await permission.request();
-        debugPrint('Android Permission for $permission is $status');
-
-        if (status.isPermanentlyDenied) {
-          debugPrint(
-            'Permission $permission is permanently denied. Please enable it in Settings.',
+        try {
+          final status = await permission.request().timeout(
+            const Duration(seconds: 3),
           );
+          debugPrint('Android Permission for $permission is $status');
+
+          if (status.isPermanentlyDenied) {
+            debugPrint(
+              'Permission $permission is permanently denied. Please enable it in Settings.',
+            );
+          }
+        } catch (e) {
+          debugPrint('Permission request timeout for $permission: $e');
         }
       }
 
-      final storageStatus = await Permission.storage.request();
-      debugPrint('Permission for storage is $storageStatus');
+      try {
+        final storageStatus = await Permission.storage.request().timeout(
+          const Duration(seconds: 3),
+        );
+        debugPrint('Permission for storage is $storageStatus');
+      } catch (e) {
+        debugPrint('Storage permission timeout: $e');
+      }
     }
   } catch (e) {
     debugPrint('Error requesting permissions: $e');

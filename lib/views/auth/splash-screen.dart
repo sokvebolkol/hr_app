@@ -23,113 +23,154 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _handleStartup() async {
-    await _requestPermissions();
-    await _checkLogin();
+    try {
+      // Add timeout for the entire startup process
+      await Future.wait([
+        _checkLogin(), // Priority: Check login first
+        _requestPermissions(), // Run permissions in parallel
+      ]).timeout(
+        const Duration(seconds: 8), // Maximum 8 seconds for startup
+        onTimeout: () {
+          print('⚠️ Startup timeout - proceeding with login check only');
+          return [null, null]; // Continue anyway
+        },
+      );
+    } catch (e) {
+      print('❌ Startup error: $e');
+      // If anything fails, still proceed to login check
+      await _checkLogin();
+    }
   }
 
   Future<void> _requestPermissions() async {
-    if (Platform.isIOS) {
-      // iOS: Check permissions but don't request at startup
-      final permissions = <Permission>[
-        Permission.camera,
-        Permission.photos,
-        Permission.locationWhenInUse,
-      ];
+    try {
+      if (Platform.isIOS) {
+        // iOS: Check permissions but don't request at startup
+        final permissions = <Permission>[
+          Permission.camera,
+          Permission.photos,
+          Permission.locationWhenInUse,
+          Permission.notification, // Add notification permission
+        ];
 
-      for (final permission in permissions) {
-        final status = await permission.status;
-        debugPrint('iOS Permission for $permission is $status');
+        for (final permission in permissions) {
+          try {
+            final status = await permission.status.timeout(
+              const Duration(seconds: 2),
+            );
+            debugPrint('iOS Permission for $permission is $status');
+          } catch (e) {
+            debugPrint('iOS Permission check timeout for $permission: $e');
+          }
+        }
+      } else {
+        // Android: Request critical permissions only
+        final criticalPermissions = <Permission>[
+          Permission.notification, // Most important for your app
+        ];
+
+        final optionalPermissions = <Permission>[
+          Permission.camera,
+          Permission.photos,
+          Permission.locationWhenInUse,
+          Permission.storage,
+        ];
+
+        // Request critical permissions first (with timeout)
+        for (final permission in criticalPermissions) {
+          try {
+            final status = await permission.request().timeout(
+              const Duration(seconds: 3),
+            );
+            debugPrint('Critical Permission for $permission is $status');
+          } catch (e) {
+            debugPrint('Critical permission timeout for $permission: $e');
+          }
+        }
+
+        // Request optional permissions in background (don't await)
+        _requestOptionalPermissions(optionalPermissions);
       }
-    } else {
-      // Android: Request permissions at startup
-      final permissions = <Permission>[
-        Permission.camera,
-        Permission.photos,
-        Permission.locationWhenInUse,
-      ];
+    } catch (e) {
+      debugPrint('❌ Permission request error: $e');
+      // Don't block startup for permission errors
+    }
+  }
 
-      for (final permission in permissions) {
-        final status = await permission.request();
-        debugPrint('Android Permission for $permission is $status');
+  // Request optional permissions in background
+  void _requestOptionalPermissions(List<Permission> permissions) async {
+    for (final permission in permissions) {
+      try {
+        final status = await permission.request().timeout(
+          const Duration(seconds: 2),
+        );
+        debugPrint('Optional Permission for $permission is $status');
 
         if (status.isPermanentlyDenied) {
           debugPrint(
-            'Permission $permission is permanently denied. Please enable it in Settings.',
+            'Permission $permission is permanently denied. Will show dialog when needed.',
           );
-          _showPermissionDialog();
+          // Don't show dialog immediately - wait for user action
         }
-      }
-
-      final storageStatus = await Permission.storage.request();
-      debugPrint('Permission for storage is $storageStatus');
-      if (storageStatus.isPermanentlyDenied) {
-        _showPermissionDialog();
+      } catch (e) {
+        debugPrint('Optional permission timeout for $permission: $e');
       }
     }
   }
 
-  void _showPermissionDialog() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Permissions Required'),
-              content: const Text(
-                'Some permissions are permanently denied. Please go to settings and enable them manually.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await openAppSettings();
-                  },
-                  child: const Text('Open Settings'),
-                ),
-              ],
-            ),
-      );
-    });
-  }
-
   Future<void> _checkLogin() async {
-    await Future.delayed(const Duration(seconds: 1));
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    try {
+      // Minimum splash time for branding (reduced from 1 second)
+      await Future.delayed(const Duration(milliseconds: 800));
 
-    if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
 
-    if (token != null && token.isNotEmpty) {
-      // Get user role flags
-      final isApprover = prefs.getBool('isApprover') ?? false;
-      final isCeoUser = prefs.getBool('ceoUser') ?? false;
+      if (!mounted) return;
 
-      // Navigate based on user role with proper error handling
-      Widget targetScreen;
-      if (isCeoUser) {
-        targetScreen = const CeoDashboardScreen();
-      } else if (isApprover) {
-        targetScreen = const ApproverDashboardScreen();
+      if (token != null && token.isNotEmpty) {
+        // Get user role flags
+        final isApprover = prefs.getBool('isApprover') ?? false;
+        final isCeoUser = prefs.getBool('ceoUser') ?? false;
+
+        print(
+          '🔐 User logged in - Role: ${isCeoUser
+              ? 'CEO'
+              : isApprover
+              ? 'Approver'
+              : 'Requester'}',
+        );
+
+        // Navigate based on user role with proper error handling
+        Widget targetScreen;
+        if (isCeoUser) {
+          targetScreen = const CeoDashboardScreen();
+        } else if (isApprover) {
+          targetScreen = const ApproverDashboardScreen();
+        } else {
+          targetScreen = const DashboardScreen();
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => targetScreen),
+        );
       } else {
-        targetScreen = const DashboardScreen();
+        print('🔓 No valid token - redirecting to login');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => targetScreen),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+    } catch (e) {
+      print('❌ Login check error: $e');
+      // If anything fails, go to login screen
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     }
   }
 
@@ -141,37 +182,99 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.verified_user_rounded,
-                color: Colors.white,
-                size: 80,
-              ),
+            // Add subtle animation
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: 0.8 + (0.2 * value),
+                  child: Opacity(
+                    opacity: value,
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.verified_user_rounded,
+                        color: Colors.white,
+                        size: 80,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 32),
-            Text(
-              "Chokchey HR",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2.0,
-              ),
+
+            // Animated title
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 1000),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Text(
+                      "Chokchey HR",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 8),
-            Text(
-              "Human Resource Management",
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 16,
-                fontWeight: FontWeight.w300,
-                letterSpacing: 0.5,
-              ),
+
+            // Animated subtitle
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 1200),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Text(
+                      "Human Resource Management",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 40),
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 1500),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white.withOpacity(0.7),
+                      ),
+                      strokeWidth: 2,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
