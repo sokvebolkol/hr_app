@@ -12,6 +12,7 @@ import '../../constants/responsive.dart';
 import '../../repositories/approver_dashboard_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/approver_dashboard_viewmodel.dart';
+import '../../viewmodels/nofitication_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/leave_balance_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
@@ -60,13 +61,18 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = ApproverDashboardViewModel();
     _dashboardViewModel.initialize();
-
     // Listen for profile updates
     ProfileViewModel.onProfileUpdated = () {
       if (mounted && _currentIndex == 0) {
         _dashboardViewModel.refreshProfile();
       }
     };
+  }
+
+  void navigateToProfile() {
+    setState(() {
+      _currentIndex = 4;
+    });
   }
 
   Future<bool> _onBackPressed() async {
@@ -146,7 +152,14 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
                   viewModel.clearError();
                 });
               }
-
+              if (_currentIndex == 0) {
+                return Column(
+                  children: [
+                    _buildStickyHeader(viewModel),
+                    Expanded(child: _screens[_currentIndex]),
+                  ],
+                );
+              }
               return _screens[_currentIndex];
             },
           ),
@@ -193,27 +206,150 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
     );
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    ProfileViewModel.onProfileUpdated = null;
-    _dashboardViewModel.dispose();
-    super.dispose();
+  Widget _buildStickyHeader(ApproverDashboardViewModel viewModel) {
+    return Container(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      decoration: BoxDecoration(
+        color: primary,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          top: 16,
+        ),
+        child: Row(
+          children: [
+            InkWell(
+              onTap: () {
+                navigateToProfile();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    _buildProfileAvatar(viewModel),
+                    const SizedBox(width: 16),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          FileHelper().greeting,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 180,
+                          child: Text(
+                            viewModel.username,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Spacer(),
+
+            // Global notifications from NotificationViewModel
+            Consumer<NotificationViewModel>(
+              builder: (context, notificationViewModel, child) {
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/notifications');
+                      },
+                      icon: const Icon(
+                        Icons.notifications,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    if (notificationViewModel.unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '${notificationViewModel.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    if (state == AppLifecycleState.resumed && _currentIndex == 0) {
-      _dashboardViewModel.refreshProfile();
+  Widget _buildProfileAvatar(ApproverDashboardViewModel viewModel) {
+    final imageUrl = viewModel.profileImageUrl;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.blueAccent,
+        ),
+        child: ClipOval(
+          child: FadeInImage.assetNetwork(
+            placeholder: 'assets/images/profile.png',
+            image: imageUrl,
+            fit: BoxFit.cover,
+            imageErrorBuilder: (context, error, stackTrace) {
+              return Image.asset(
+                'assets/images/profile.png',
+                fit: BoxFit.cover,
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      return const CircleAvatar(
+        backgroundImage: AssetImage('assets/images/profile.png'),
+        backgroundColor: Colors.blueAccent,
+      );
     }
-  }
-
-  void navigateToProfile() {
-    setState(() {
-      _currentIndex = 4;
-    });
   }
 }
 
@@ -315,7 +451,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(viewModel),
                 const DateSection(),
                 SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
@@ -328,143 +463,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         );
       },
     );
-  }
-
-  Widget _buildHeader(ApproverDashboardViewModel viewModel) {
-    return Container(
-      color: primary,
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: 50,
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    final scaffoldState =
-                        context
-                            .findAncestorStateOfType<
-                              _ApproverDashboardScreenState
-                            >();
-                    scaffoldState?.navigateToProfile();
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        _buildProfileAvatar(viewModel),
-                        const SizedBox(width: 16),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              FileHelper().greeting,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            SizedBox(
-                              width: 180,
-                              child: Text(
-                                viewModel.username,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                _buildNotificationIcon(viewModel.pendingLeavesCount),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationIcon(int count) {
-    return Stack(
-      alignment: Alignment.topRight,
-      children: [
-        const Icon(
-          Icons.notifications_none_rounded,
-          color: Colors.white,
-          size: 24,
-        ),
-        if (count > 0)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(1),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              child: Text(
-                count > 99 ? '99+' : count.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildProfileAvatar(ApproverDashboardViewModel viewModel) {
-    final imageUrl = viewModel.profileImageUrl;
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.blueAccent,
-        ),
-        child: ClipOval(
-          child: FadeInImage.assetNetwork(
-            placeholder: 'assets/images/profile.png',
-            image: imageUrl,
-            fit: BoxFit.cover,
-            imageErrorBuilder: (context, error, stackTrace) {
-              return Image.asset(
-                'assets/images/profile.png',
-                fit: BoxFit.cover,
-              );
-            },
-          ),
-        ),
-      );
-    } else {
-      return const CircleAvatar(
-        backgroundImage: AssetImage('assets/images/profile.png'),
-        backgroundColor: Colors.blueAccent,
-      );
-    }
   }
 
   Widget _buildLeaveBalanceSection(ApproverDashboardViewModel viewModel) {

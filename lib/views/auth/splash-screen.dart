@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
+import '../../viewmodels/nofitication_viewmodel.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import '../dashboard/requester_dashboard.dart';
@@ -20,23 +22,22 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _handleStartup();
+    // Start periodic unread count update
+    context.read<NotificationViewModel>().startPeriodicUnreadCountUpdate();
   }
 
   Future<void> _handleStartup() async {
     try {
       // Add timeout for the entire startup process
-      await Future.wait([
-        _checkLogin(), // Priority: Check login first
-        _requestPermissions(), // Run permissions in parallel
-      ]).timeout(
+      await Future.wait([_checkLogin(), _requestPermissions()]).timeout(
         const Duration(seconds: 8), // Maximum 8 seconds for startup
         onTimeout: () {
-          print('⚠️ Startup timeout - proceeding with login check only');
+          print('Startup timeout - proceeding with login check only');
           return [null, null]; // Continue anyway
         },
       );
     } catch (e) {
-      print('❌ Startup error: $e');
+      print('Startup error: $e');
       // If anything fails, still proceed to login check
       await _checkLogin();
     }
@@ -92,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen> {
         _requestOptionalPermissions(optionalPermissions);
       }
     } catch (e) {
-      debugPrint('❌ Permission request error: $e');
+      debugPrint('Permission request error: $e');
       // Don't block startup for permission errors
     }
   }
@@ -163,7 +164,7 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
     } catch (e) {
-      print('❌ Login check error: $e');
+      print('Login check error: $e');
       // If anything fails, go to login screen
       if (mounted) {
         Navigator.pushReplacement(
@@ -182,7 +183,6 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Add subtle animation
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
               duration: const Duration(milliseconds: 800),

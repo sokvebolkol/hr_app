@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    as local_notifications;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../models/notification_model.dart';
+import '../models/notification_model.dart';
 import '../repositories/notification_repository.dart';
 
 class FirebaseNotificationService {
@@ -14,8 +15,8 @@ class FirebaseNotificationService {
   FirebaseNotificationService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
+  final local_notifications.FlutterLocalNotificationsPlugin
+  _localNotifications = local_notifications.FlutterLocalNotificationsPlugin();
   final NotificationRepository _repository = NotificationRepository();
 
   bool _isInitialized = false;
@@ -25,13 +26,16 @@ class FirebaseNotificationService {
   Function(NotificationModel)? onNotificationReceived;
   Function(NotificationModel)? onNotificationTapped;
 
+  // Navigation callback for specific actions
+  Function(String action, Map<String, dynamic> data)? onNavigationRequired;
+
   /// Initialize Firebase Notifications
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
       // Initialize Firebase if not already done
-      if (!Firebase.apps.isNotEmpty) {
+      if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp();
       }
 
@@ -78,16 +82,16 @@ class FirebaseNotificationService {
 
   /// Initialize local notifications
   Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings(
+    const androidSettings = local_notifications.AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const iosSettings = DarwinInitializationSettings(
+    const iosSettings = local_notifications.DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
 
-    const initSettings = InitializationSettings(
+    const initSettings = local_notifications.InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
@@ -106,40 +110,36 @@ class FirebaseNotificationService {
   /// Create notification channels for Android
   Future<void> _createNotificationChannels() async {
     const channels = [
-      AndroidNotificationChannel(
+      local_notifications.AndroidNotificationChannel(
         'default_channel',
         'Default Notifications',
         description: 'General notifications',
-        importance: Importance.high,
-        sound: RawResourceAndroidNotificationSound('notification'),
+        importance: local_notifications.Importance.high,
       ),
-      AndroidNotificationChannel(
+      local_notifications.AndroidNotificationChannel(
         'leave_channel',
         'Leave Notifications',
         description: 'Leave request and approval notifications',
-        importance: Importance.high,
-        sound: RawResourceAndroidNotificationSound('notification'),
+        importance: local_notifications.Importance.high,
       ),
-      AndroidNotificationChannel(
+      local_notifications.AndroidNotificationChannel(
         'attendance_channel',
         'Attendance Notifications',
         description: 'Attendance and clock-in reminders',
-        importance: Importance.high,
-        sound: RawResourceAndroidNotificationSound('notification'),
+        importance: local_notifications.Importance.high,
       ),
-      AndroidNotificationChannel(
+      local_notifications.AndroidNotificationChannel(
         'urgent_channel',
         'Urgent Notifications',
         description: 'Important and urgent notifications',
-        importance: Importance.max,
-        sound: RawResourceAndroidNotificationSound('urgent'),
+        importance: local_notifications.Importance.max,
       ),
     ];
 
     for (final channel in channels) {
       await _localNotifications
           .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
+            local_notifications.AndroidFlutterLocalNotificationsPlugin
           >()
           ?.createNotificationChannel(channel);
     }
@@ -173,9 +173,7 @@ class FirebaseNotificationService {
       if (_fcmToken != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('fcm_token', _fcmToken!);
-
-        // Send token to server
-        await _sendTokenToServer(_fcmToken!);
+        print('✅ FCM token saved locally');
       }
 
       // Listen for token refresh
@@ -183,20 +181,10 @@ class FirebaseNotificationService {
         _fcmToken = newToken;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('fcm_token', newToken);
-        await _sendTokenToServer(newToken);
+        print('🔄 FCM token refreshed: $newToken');
       });
     } catch (e) {
       print('❌ Error getting FCM token: $e');
-    }
-  }
-
-  /// Send FCM token to server
-  Future<void> _sendTokenToServer(String token) async {
-    try {
-      await _repository.updateFCMToken(token);
-      print('✅ FCM token sent to server');
-    } catch (e) {
-      print('❌ Error sending FCM token to server: $e');
     }
   }
 
@@ -204,10 +192,7 @@ class FirebaseNotificationService {
   void _handleForegroundMessage(RemoteMessage message) async {
     print('📨 Foreground message received: ${message.messageId}');
 
-    final notification = NotificationModel.fromRemoteMessage(message);
-
-    // Save to local storage
-    await _repository.saveNotificationLocally(notification);
+    final notification = _createNotificationFromRemoteMessage(message);
 
     // Show local notification
     await _showLocalNotification(notification);
@@ -220,70 +205,94 @@ class FirebaseNotificationService {
   void _handleNotificationTap(RemoteMessage message) async {
     print('👆 Notification tapped: ${message.messageId}');
 
-    final notification = NotificationModel.fromRemoteMessage(message);
+    final notification = _createNotificationFromRemoteMessage(message);
 
-    // Mark as read
-    await _repository.markNotificationAsRead(notification.id);
+    // Handle specific navigation based on click_action
+    final clickAction = notification.data['click_action'] as String?;
+    if (clickAction != null && onNavigationRequired != null) {
+      onNavigationRequired!(clickAction, notification.data);
+    }
 
     // Trigger callback
     onNotificationTapped?.call(notification);
   }
 
   /// Handle local notification tap
-  void _onLocalNotificationTapped(NotificationResponse response) async {
+  void _onLocalNotificationTapped(
+    local_notifications.NotificationResponse response,
+  ) async {
     if (response.payload != null) {
-      final notificationData = jsonDecode(response.payload!);
-      final notification = NotificationModel.fromJson(notificationData);
+      try {
+        final notificationData = jsonDecode(response.payload!);
+        final notification = NotificationModel.fromJson(notificationData);
 
-      // Mark as read
-      await _repository.markNotificationAsRead(notification.id);
+        // Handle specific navigation based on click_action
+        final clickAction = notification.data['click_action'] as String?;
+        if (clickAction != null && onNavigationRequired != null) {
+          onNavigationRequired!(clickAction, notification.data);
+        }
 
-      // Trigger callback
-      onNotificationTapped?.call(notification);
+        // Trigger callback
+        onNotificationTapped?.call(notification);
+      } catch (e) {
+        print('Error parsing notification payload: $e');
+      }
     }
+  }
+
+  /// Create NotificationModel from RemoteMessage
+  NotificationModel _createNotificationFromRemoteMessage(
+    RemoteMessage message,
+  ) {
+    return NotificationModel(
+      id: message.messageId?.hashCode ?? DateTime.now().millisecondsSinceEpoch,
+      title: message.notification?.title ?? 'New Notification',
+      body: message.notification?.body ?? '',
+      type: message.data['type'] ?? 'general',
+      category: message.data['category'] ?? 'info',
+      data: message.data,
+      isRead: false,
+      readAt: null,
+      createdAt: DateTime.now().toIso8601String(),
+      timeAgo: 'just now',
+      isRecent: true,
+    );
   }
 
   /// Show local notification
   Future<void> _showLocalNotification(NotificationModel notification) async {
     final channelId = _getChannelId(notification.type);
 
-    final androidDetails = AndroidNotificationDetails(
+    final androidDetails = local_notifications.AndroidNotificationDetails(
       channelId,
       _getChannelName(channelId),
       channelDescription: _getChannelDescription(channelId),
       importance:
-          notification.priority == NotificationPriority.high
-              ? Importance.high
-              : Importance.defaultImportance,
+          notification.type == 'urgent'
+              ? local_notifications.Importance.max
+              : local_notifications.Importance.high,
       priority:
-          notification.priority == NotificationPriority.high
-              ? Priority.high
-              : Priority.defaultPriority,
+          notification.type == 'urgent'
+              ? local_notifications.Priority.max
+              : local_notifications.Priority.high,
       showWhen: true,
-      when: notification.createdAt.millisecondsSinceEpoch,
       icon: '@mipmap/ic_launcher',
-      largeIcon:
-          notification.imageUrl != null
-              ? DrawableResourceAndroidBitmap(notification.imageUrl!)
-              : null,
       styleInformation:
           notification.body.length > 50
-              ? BigTextStyleInformation(
+              ? local_notifications.BigTextStyleInformation(
                 notification.body,
                 contentTitle: notification.title,
-                htmlFormatBigText: true,
-                htmlFormatContentTitle: true,
               )
               : null,
     );
 
-    const iosDetails = DarwinNotificationDetails(
+    const iosDetails = local_notifications.DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
     );
 
-    final details = NotificationDetails(
+    final details = local_notifications.NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -298,13 +307,13 @@ class FirebaseNotificationService {
   }
 
   /// Get appropriate channel ID based on notification type
-  String _getChannelId(NotificationType type) {
-    switch (type) {
-      case NotificationType.leave:
+  String _getChannelId(String type) {
+    switch (type.toLowerCase()) {
+      case 'leave':
         return 'leave_channel';
-      case NotificationType.attendance:
+      case 'attendance':
         return 'attendance_channel';
-      case NotificationType.urgent:
+      case 'urgent':
         return 'urgent_channel';
       default:
         return 'default_channel';
@@ -369,14 +378,77 @@ class FirebaseNotificationService {
 
   /// Get badge count
   Future<int> getBadgeCount() async {
-    return await _repository.getUnreadNotificationCount();
+    try {
+      final response = await _repository.getUnreadCount();
+      return response.unreadCount;
+    } catch (e) {
+      print('❌ Error getting badge count: $e');
+      return 0;
+    }
   }
 
   /// Update badge count
   Future<void> updateBadgeCount() async {
     final count = await getBadgeCount();
-    // You can implement platform-specific badge update here
     print('📛 Badge count: $count');
+
+    // For iOS, you can set the badge count
+    if (Platform.isIOS) {
+      await _firebaseMessaging.setAutoInitEnabled(true);
+    }
+  }
+
+  /// Subscribe to user-specific topics based on role
+  Future<void> subscribeToUserTopics({
+    required String userId,
+    bool isApprover = false,
+    bool isCeo = false,
+  }) async {
+    try {
+      // Subscribe to user-specific topic
+      await subscribeToTopic('user_$userId');
+
+      // Subscribe to role-based topics
+      if (isApprover) {
+        await subscribeToTopic('approvers');
+      }
+
+      if (isCeo) {
+        await subscribeToTopic('ceo');
+      }
+
+      // Subscribe to general HR topics
+      await subscribeToTopic('hr_general');
+
+      print('✅ Subscribed to user topics for: $userId');
+    } catch (e) {
+      print('❌ Error subscribing to user topics: $e');
+    }
+  }
+
+  /// Unsubscribe from all topics (for logout)
+  Future<void> unsubscribeFromAllTopics({
+    required String userId,
+    bool isApprover = false,
+    bool isCeo = false,
+  }) async {
+    try {
+      await unsubscribeFromTopic('user_$userId');
+
+      if (isApprover) {
+        await unsubscribeFromTopic('approvers');
+      }
+
+      if (isCeo) {
+        await unsubscribeFromTopic('ceo');
+      }
+
+      await unsubscribeFromTopic('hr_general');
+
+      print('✅ Unsubscribed from all topics for: $userId');
+    } catch (e) {
+      print('❌ Error unsubscribing from topics: $e');
+    }
   }
 }
 
@@ -386,8 +458,6 @@ Future<void> _backgroundMessageHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print('📨 Background message received: ${message.messageId}');
 
-  // Handle background message
-  final notification = NotificationModel.fromRemoteMessage(message);
-  final repository = NotificationRepository();
-  await repository.saveNotificationLocally(notification);
+  // You can handle background messages here
+  // For example, save to local storage, update badge count, etc.
 }

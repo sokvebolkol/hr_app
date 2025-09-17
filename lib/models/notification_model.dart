@@ -1,64 +1,44 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
-
-enum NotificationType { general, leave, attendance, approval, urgent, reminder }
-
-enum NotificationPriority { low, normal, high }
 
 class NotificationModel {
-  final String id;
+  final int id;
   final String title;
   final String body;
-  final NotificationType type;
-  final NotificationPriority priority;
-  final DateTime createdAt;
-  final bool isRead;
+  final String type;
+  final String category;
   final Map<String, dynamic> data;
-  final String? imageUrl;
-  final String? actionUrl;
+  final bool isRead;
+  final String? readAt;
+  final String createdAt;
+  final String timeAgo;
+  final bool isRecent;
 
   NotificationModel({
     required this.id,
     required this.title,
     required this.body,
     required this.type,
-    required this.priority,
+    required this.category,
+    required this.data,
+    required this.isRead,
+    this.readAt,
     required this.createdAt,
-    this.isRead = false,
-    this.data = const {},
-    this.imageUrl,
-    this.actionUrl,
+    required this.timeAgo,
+    required this.isRecent,
   });
-
-  factory NotificationModel.fromRemoteMessage(RemoteMessage message) {
-    return NotificationModel(
-      id: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      title: message.notification?.title ?? '',
-      body: message.notification?.body ?? '',
-      type: _parseNotificationType(message.data['type']),
-      priority: _parseNotificationPriority(message.data['priority']),
-      createdAt: DateTime.now(),
-      data: message.data,
-      imageUrl:
-          message.notification?.android?.imageUrl ??
-          message.notification?.apple?.imageUrl,
-      actionUrl: message.data['action_url'],
-    );
-  }
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id'] ?? '',
+      id: json['id'] ?? 0,
       title: json['title'] ?? '',
       body: json['body'] ?? '',
-      type: _parseNotificationType(json['type']),
-      priority: _parseNotificationPriority(json['priority']),
-      createdAt: DateTime.parse(
-        json['created_at'] ?? DateTime.now().toIso8601String(),
-      ),
+      type: json['type'] ?? '',
+      category: json['category'] ?? '',
+      data: json['data'] ?? {},
       isRead: json['is_read'] ?? false,
-      data: Map<String, dynamic>.from(json['data'] ?? {}),
-      imageUrl: json['image_url'],
-      actionUrl: json['action_url'],
+      readAt: json['read_at'],
+      createdAt: json['created_at'] ?? '',
+      timeAgo: json['time_ago'] ?? '',
+      isRecent: json['is_recent'] ?? false,
     );
   }
 
@@ -67,101 +47,139 @@ class NotificationModel {
       'id': id,
       'title': title,
       'body': body,
-      'type': type.name,
-      'priority': priority.name,
-      'created_at': createdAt.toIso8601String(),
-      'is_read': isRead,
+      'type': type,
+      'category': category,
       'data': data,
-      'image_url': imageUrl,
-      'action_url': actionUrl,
+      'is_read': isRead,
+      'read_at': readAt,
+      'created_at': createdAt,
+      'time_ago': timeAgo,
+      'is_recent': isRecent,
     };
   }
 
   NotificationModel copyWith({
-    String? id,
+    int? id,
     String? title,
     String? body,
-    NotificationType? type,
-    NotificationPriority? priority,
-    DateTime? createdAt,
-    bool? isRead,
+    String? type,
+    String? category,
     Map<String, dynamic>? data,
-    String? imageUrl,
-    String? actionUrl,
+    bool? isRead,
+    String? readAt,
+    String? createdAt,
+    String? timeAgo,
+    bool? isRecent,
   }) {
     return NotificationModel(
       id: id ?? this.id,
       title: title ?? this.title,
       body: body ?? this.body,
       type: type ?? this.type,
-      priority: priority ?? this.priority,
-      createdAt: createdAt ?? this.createdAt,
-      isRead: isRead ?? this.isRead,
+      category: category ?? this.category,
       data: data ?? this.data,
-      imageUrl: imageUrl ?? this.imageUrl,
-      actionUrl: actionUrl ?? this.actionUrl,
+      isRead: isRead ?? this.isRead,
+      readAt: readAt ?? this.readAt,
+      createdAt: createdAt ?? this.createdAt,
+      timeAgo: timeAgo ?? this.timeAgo,
+      isRecent: isRecent ?? this.isRecent,
     );
   }
+}
 
-  static NotificationType _parseNotificationType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'leave':
-        return NotificationType.leave;
-      case 'attendance':
-        return NotificationType.attendance;
-      case 'approval':
-        return NotificationType.approval;
-      case 'urgent':
-        return NotificationType.urgent;
-      case 'reminder':
-        return NotificationType.reminder;
-      default:
-        return NotificationType.general;
-    }
+class NotificationPagination {
+  final int currentPage;
+  final int perPage;
+  final int total;
+  final int lastPage;
+  final bool hasMorePages;
+
+  NotificationPagination({
+    required this.currentPage,
+    required this.perPage,
+    required this.total,
+    required this.lastPage,
+    required this.hasMorePages,
+  });
+
+  factory NotificationPagination.fromJson(Map<String, dynamic> json) {
+    return NotificationPagination(
+      currentPage: json['current_page'] ?? 1,
+      perPage: json['per_page'] ?? 20,
+      total: json['total'] ?? 0,
+      lastPage: json['last_page'] ?? 1,
+      hasMorePages: json['has_more_pages'] ?? false,
+    );
   }
+}
 
-  static NotificationPriority _parseNotificationPriority(String? priority) {
-    switch (priority?.toLowerCase()) {
-      case 'high':
-        return NotificationPriority.high;
-      case 'low':
-        return NotificationPriority.low;
-      default:
-        return NotificationPriority.normal;
-    }
+class NotificationSummary {
+  final int total;
+  final int unread;
+  final int read;
+  final Map<String, int> byType;
+  final int recentUnread;
+
+  NotificationSummary({
+    required this.total,
+    required this.unread,
+    required this.read,
+    required this.byType,
+    required this.recentUnread,
+  });
+
+  factory NotificationSummary.fromJson(Map<String, dynamic> json) {
+    return NotificationSummary(
+      total: json['total'] ?? 0,
+      unread: json['unread'] ?? 0,
+      read: json['read'] ?? 0,
+      byType: Map<String, int>.from(json['by_type'] ?? {}),
+      recentUnread: json['recent_unread'] ?? 0,
+    );
   }
+}
 
-  String get typeText {
-    switch (type) {
-      case NotificationType.leave:
-        return 'Leave';
-      case NotificationType.attendance:
-        return 'Attendance';
-      case NotificationType.approval:
-        return 'Approval';
-      case NotificationType.urgent:
-        return 'Urgent';
-      case NotificationType.reminder:
-        return 'Reminder';
-      default:
-        return 'General';
-    }
+class NotificationResponse {
+  final List<NotificationModel> notifications;
+  final NotificationPagination pagination;
+  final NotificationSummary summary;
+
+  NotificationResponse({
+    required this.notifications,
+    required this.pagination,
+    required this.summary,
+  });
+
+  factory NotificationResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] ?? {};
+
+    return NotificationResponse(
+      notifications:
+          (data['notifications'] as List<dynamic>?)
+              ?.map((item) => NotificationModel.fromJson(item))
+              .toList() ??
+          [],
+      pagination: NotificationPagination.fromJson(data['pagination'] ?? {}),
+      summary: NotificationSummary.fromJson(data['summary'] ?? {}),
+    );
   }
+}
 
-  String get timeAgo {
-    final now = DateTime.now();
-    final difference = now.difference(createdAt);
+class NotificationCountResponse {
+  final int unreadCount;
+  final String checkedAt;
 
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return '${(difference.inDays / 7).floor()}w ago';
-    }
+  NotificationCountResponse({
+    required this.unreadCount,
+    required this.checkedAt,
+  });
+
+  factory NotificationCountResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] ?? {};
+
+    return NotificationCountResponse(
+      unreadCount: data['unread_count'] ?? 0,
+      checkedAt: data['checked_at'] ?? '',
+    );
   }
 }

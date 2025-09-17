@@ -232,19 +232,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       if (documentPhoto != null) {
         fileToUpload = File(documentPhoto!.path);
       }
-
-      // Debug: Print submission data
-      print('=== DEBUG: SUBMISSION DATA ===');
-      print('Leave Type: ${selectedLeaveType!.leaid}');
-      print('From Date: $fromDate');
-      print('To Date: $toDate');
-      print('Reason: ${reason.trim()}');
-      print('Leave For: $leaveForValue');
-      print('Total Leave: $totalLeaveDays');
-      print('Approvers: ${formattedApprovers}');
-      print('File: ${fileToUpload?.path ?? 'No file'}');
-      print('=== END SUBMISSION DEBUG ===');
-
       // Submit leave request with file
       final response = await _repository.submitLeaveRequest(
         leaveType: selectedLeaveType!.leaid,
@@ -331,10 +318,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-
-              // Backend Message
               Text(
-                message, // Direct backend message: "Leave request submitted successfully"
+                message,
                 style: const TextStyle(
                   fontSize: 16,
                   color: Colors.black54,

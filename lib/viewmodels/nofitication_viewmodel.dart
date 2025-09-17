@@ -1,192 +1,211 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'package:flutter/material.dart';
 import '../models/notification_model.dart';
 import '../repositories/notification_repository.dart';
-import '../services/firebase_notification_service.dart';
 
 class NotificationViewModel extends ChangeNotifier {
   final NotificationRepository _repository = NotificationRepository();
-  final FirebaseNotificationService _notificationService = FirebaseNotificationService();
 
+  // State variables
   List<NotificationModel> _notifications = [];
-  bool _isLoading = false;
-  bool _isRefreshing = false;
-  String? _error;
   int _unreadCount = 0;
+  bool _isLoading = false;
+  bool _isLoadingMore = false;
+  String? _error;
+  NotificationPagination? _pagination;
+  NotificationSummary? _summary;
 
   // Getters
   List<NotificationModel> get notifications => _notifications;
-  bool get isLoading => _isLoading;
-  bool get isRefreshing => _isRefreshing;
-  String? get error => _error;
   int get unreadCount => _unreadCount;
-  bool get hasNotifications => _notifications.isNotEmpty;
+  bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
+  String? get error => _error;
+  NotificationPagination? get pagination => _pagination;
+  NotificationSummary? get summary => _summary;
+  bool get hasMorePages => _pagination?.hasMorePages ?? false;
 
-  // Filtered notifications
-  List<NotificationModel> get unreadNotifications => 
-      _notifications.where((n) => !n.isRead).toList();
+  // Filter states
+  String? _selectedType;
+  bool? _selectedReadStatus;
 
-  List<NotificationModel> get readNotifications => 
-      _notifications.where((n) => n.isRead).toList();
+  String? get selectedType => _selectedType;
+  bool? get selectedReadStatus => _selectedReadStatus;
 
-  List<NotificationModel> getNotificationsByType(NotificationType type) =>
-      _notifications.where((n) => n.type == type).toList();
+  // Timer for periodic updates
+  Timer? _timer;
 
-  /// Initialize notifications
-  Future<void> initialize() async {
-    await loadNotifications();
-    await _updateUnreadCount();
-    
-    // Set up notification callbacks
-    _notificationService.onNotificationReceived = _onNotificationReceived;
-    _notificationService.onNotificationTapped = _onNotificationTapped;
+  void startPeriodicUnreadCountUpdate() {
+    fetchUnreadCount(); // Initial fetch
+
+    _timer = Timer.periodic(const Duration(minutes: 2), (_) {
+      fetchUnreadCount();
+    });
   }
 
-  /// Load notifications from local storage
-  Future<void> loadNotifications() async {
-    _setLoading(true);
-    _setError(null);
-
-    try {
-      _notifications = await _repository.getLocalNotifications();
-      await _updateUnreadCount();
-    } catch (e) {
-      _setError('Failed to load notifications: $e');
-    } finally {
-      _setLoading(false);
-    }
+  void stopPeriodicUnreadCountUpdate() {
+    _timer?.cancel();
+    _timer = null;
   }
 
-  /// Refresh notifications from server
-  Future<void> refreshNotifications() async {
-    _setRefreshing(true);
-    _setError(null);
-
+  Future<void> fetchUnreadCount() async {
     try {
-      await _repository.syncNotificationsFromServer();
-      _notifications = await _repository.getLocalNotifications();
-      await _updateUnreadCount();
-    } catch (e) {
-      _setError('Failed to refresh notifications: $e');
-    } finally {
-      _setRefreshing(false);
-    }
-  }
-
-  /// Mark notification as read
-  Future<void> markAsRead(String notificationId) async {
-    try {
-      await _repository.markNotificationAsRead(notificationId);
-      
-      // Update local list
-      _notifications = _notifications.map((notification) {
-        if (notification.id == notificationId) {
-          return notification.copyWith(isRead: true);
-        }
-        return notification;
-      }).toList();
-      
-      await _updateUnreadCount();
+      final response = await _repository.getUnreadCount();
+      _unreadCount = response.unreadCount;
       notifyListeners();
     } catch (e) {
-      _setError('Failed to mark notification as read: $e');
+      print('❌ Error fetching unread count: $e');
+      // Don't show error to user for background updates
     }
   }
 
-  /// Mark all notifications as read
+  Future<void> fetchNotifications({bool refresh = false, int page = 1}) async {
+    if (refresh) {
+      _isLoading = true;
+      _error = null;
+      _notifications.clear();
+    } else if (page > 1) {
+      _isLoadingMore = true;
+    } else {
+      _isLoading = true;
+      _error = null;
+    }
+
+    notifyListeners();
+
+    try {
+      final response = await _repository.getNotifications(
+        page: page,
+        type: _selectedType,
+        isRead: _selectedReadStatus,
+      );
+
+      if (refresh || page == 1) {
+        _notifications = response.notifications;
+      } else {
+        _notifications.addAll(response.notifications);
+      }
+
+      _pagination = response.pagination;
+      _summary = response.summary;
+      _unreadCount = response.summary.unread;
+      _error = null;
+
+      print('✅ Loaded ${response.notifications.length} notifications');
+    } catch (e) {
+      _error = e.toString();
+      print('❌ Error fetching notifications: $e');
+    } finally {
+      _isLoading = false;
+      _isLoadingMore = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadMoreNotifications() async {
+    if (_isLoadingMore || !hasMorePages) return;
+
+    final nextPage = (_pagination?.currentPage ?? 0) + 1;
+    await fetchNotifications(page: nextPage);
+  }
+
+  Future<void> markAsRead(int notificationId) async {
+    try {
+      final success = await _repository.markAsRead(notificationId);
+
+      if (success) {
+        // Update local state
+        final index = _notifications.indexWhere((n) => n.id == notificationId);
+        if (index != -1) {
+          _notifications[index] = _notifications[index].copyWith(
+            isRead: true,
+            readAt: DateTime.now().toIso8601String(),
+          );
+
+          // Update unread count
+          if (_unreadCount > 0) _unreadCount--;
+
+          notifyListeners();
+
+          print('✅ Notification $notificationId marked as read');
+        }
+      }
+    } catch (e) {
+      print('❌ Error marking notification as read: $e');
+    }
+  }
+
   Future<void> markAllAsRead() async {
     try {
-      await _repository.markAllAsRead();
-      
-      // Update local list
-      _notifications = _notifications
-          .map((notification) => notification.copyWith(isRead: true))
-          .toList();
-      
-      await _updateUnreadCount();
-      notifyListeners();
-    } catch (e) {
-      _setError('Failed to mark all notifications as read: $e');
-    }
-  }
+      final success = await _repository.markAllAsRead();
 
-  /// Delete notification
-  Future<void> deleteNotification(String notificationId) async {
-    try {
-      _notifications.removeWhere((n) => n.id == notificationId);
-      
-      // Save updated list locally
-      for (final notification in _notifications) {
-        await _repository.saveNotificationLocally(notification);
+      if (success) {
+        // Update local state
+        _notifications =
+            _notifications.map((notification) {
+              return notification.copyWith(
+                isRead: true,
+                readAt: DateTime.now().toIso8601String(),
+              );
+            }).toList();
+
+        _unreadCount = 0;
+        notifyListeners();
+
+        print('✅ All notifications marked as read');
       }
-      
-      await _updateUnreadCount();
-      notifyListeners();
     } catch (e) {
-      _setError('Failed to delete notification: $e');
+      print('❌ Error marking all notifications as read: $e');
+      rethrow;
     }
   }
 
-  /// Clear all notifications
-  Future<void> clearAllNotifications() async {
-    try {
-      await _repository.clearAllNotifications();
-      await _notificationService.clearAllNotifications();
-      
-      _notifications.clear();
-      _unreadCount = 0;
-      notifyListeners();
-    } catch (e) {
-      _setError('Failed to clear notifications: $e');
+  void setTypeFilter(String? type) {
+    if (_selectedType != type) {
+      _selectedType = type;
+      fetchNotifications(refresh: true);
     }
   }
 
-  /// Handle new notification received
-  void _onNotificationReceived(NotificationModel notification) {
-    _notifications.insert(0, notification);
-    _updateUnreadCount();
+  void setReadStatusFilter(bool? isRead) {
+    if (_selectedReadStatus != isRead) {
+      _selectedReadStatus = isRead;
+      fetchNotifications(refresh: true);
+    }
+  }
+
+  void clearFilters() {
+    _selectedType = null;
+    _selectedReadStatus = null;
+    fetchNotifications(refresh: true);
+  }
+
+  void clearError() {
+    _error = null;
     notifyListeners();
   }
 
-  /// Handle notification tapped
-  void _onNotificationTapped(NotificationModel notification) {
-    // This will be handled by the navigation logic in the UI
-    print('Notification tapped: ${notification.title}');
+  // Handle notification click actions
+  void handleNotificationClick(NotificationModel notification) {
+    // Mark as read if not already read
+    if (!notification.isRead) {
+      markAsRead(notification.id);
+    }
+
+    // Handle click action based on notification data
+    final clickAction = notification.data['click_action'];
+    print('🔔 Notification clicked: $clickAction');
+
+    // You can add navigation logic here based on click_action
+    // For example:
+    // if (clickAction == 'leave_screen') {
+    //   NavigationService.navigateToLeaveScreen(notification.data['leave_id']);
+    // }
   }
 
-  /// Update unread count
-  Future<void> _updateUnreadCount() async {
-    _unreadCount = await _repository.getUnreadNotificationCount();
-    notifyListeners();
-  }
-
-  /// Set loading state
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  /// Set refreshing state
-  void _setRefreshing(bool refreshing) {
-    _isRefreshing = refreshing;
-    notifyListeners();
-  }
-
-  /// Set error state
-  void _setError(String? error) {
-    _error = error;
-    notifyListeners();
-  }
-
-  /// Get FCM token
-  String? get fcmToken => _notificationService.fcmToken;
-
-  /// Subscribe to topic
-  Future<void> subscribeToTopic(String topic) async {
-    await _notificationService.subscribeToTopic(topic);
-  }
-
-  /// Unsubscribe from topic
-  Future<void> unsubscribeFromTopic(String topic) async {
-    await _notificationService.unsubscribeFromTopic(topic);
+  @override
+  void dispose() {
+    stopPeriodicUnreadCountUpdate();
+    super.dispose();
   }
 }
