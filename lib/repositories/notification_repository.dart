@@ -113,24 +113,31 @@ class NotificationRepository {
       }
 
       final response = await http
-          .post(
+          .patch(
             Uri.parse('${baseUrl}notifications/$notificationId/mark-read'),
             headers: _getHeaders(token),
+            body: json.encode({}),
           )
           .timeout(const Duration(seconds: 10));
 
-      print('Mark as read API response: ${response.statusCode}');
+      print('📖 Mark as read API response: ${response.statusCode}');
+      print(
+        '📖 Mark as read URL: ${baseUrl}notifications/$notificationId/mark-read',
+      );
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+        print('📖 Mark as read response data: $jsonData');
         return jsonData['success'] == true;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized - Please login again');
       } else {
+        print('📖 Mark as read failed with status: ${response.statusCode}');
+        print('📖 Response body: ${response.body}');
         return false;
       }
     } catch (e) {
-      print('Error marking notification as read: $e');
+      print('❌ Error marking notification as read: $e');
       return false;
     }
   }

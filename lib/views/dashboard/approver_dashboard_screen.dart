@@ -12,7 +12,7 @@ import '../../constants/responsive.dart';
 import '../../repositories/approver_dashboard_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/approver_dashboard_viewmodel.dart';
-import '../../viewmodels/nofitication_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/leave_balance_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';

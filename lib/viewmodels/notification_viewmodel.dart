@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
 import '../models/notification_model.dart';
 import '../repositories/notification_repository.dart';
 
@@ -14,9 +14,6 @@ class NotificationViewModel extends ChangeNotifier {
   String? _error;
   NotificationPagination? _pagination;
   NotificationSummary? _summary;
-
-  // Timer for periodic updates
-  Timer? _timer;
 
   // Getters
   List<NotificationModel> get notifications => _notifications;
@@ -35,25 +32,22 @@ class NotificationViewModel extends ChangeNotifier {
   String? get selectedType => _selectedType;
   bool? get selectedReadStatus => _selectedReadStatus;
 
-  // Navigation callback
-  Function(String action, Map<String, dynamic> data)? onNavigationRequired;
+  // Timer for periodic updates
+  Timer? _timer;
 
-  /// Start periodic unread count updates
   void startPeriodicUnreadCountUpdate() {
     fetchUnreadCount(); // Initial fetch
-    
+
     _timer = Timer.periodic(const Duration(minutes: 2), (_) {
       fetchUnreadCount();
     });
   }
 
-  /// Stop periodic unread count updates
   void stopPeriodicUnreadCountUpdate() {
     _timer?.cancel();
     _timer = null;
   }
 
-  /// Fetch unread count only
   Future<void> fetchUnreadCount() async {
     try {
       final response = await _repository.getUnreadCount();
@@ -65,11 +59,16 @@ class NotificationViewModel extends ChangeNotifier {
     }
   }
 
-  /// Fetch notifications with pagination support
   Future<void> fetchNotifications({
     bool refresh = false,
     int page = 1,
+    String? type,
+    bool? isRead,
   }) async {
+    // Use provided parameters or fall back to stored filter values
+    final filterType = type ?? _selectedType;
+    final filterIsRead = isRead ?? _selectedReadStatus;
+
     if (refresh) {
       _isLoading = true;
       _error = null;
@@ -86,8 +85,8 @@ class NotificationViewModel extends ChangeNotifier {
     try {
       final response = await _repository.getNotifications(
         page: page,
-        type: _selectedType,
-        isRead: _selectedReadStatus,
+        type: filterType,
+        isRead: filterIsRead,
       );
 
       if (refresh || page == 1) {
@@ -102,7 +101,6 @@ class NotificationViewModel extends ChangeNotifier {
       _error = null;
 
       print('✅ Loaded ${response.notifications.length} notifications');
-      
     } catch (e) {
       _error = e.toString();
       print('❌ Error fetching notifications: $e');
@@ -113,7 +111,6 @@ class NotificationViewModel extends ChangeNotifier {
     }
   }
 
-  /// Load more notifications for pagination
   Future<void> loadMoreNotifications() async {
     if (_isLoadingMore || !hasMorePages) return;
 
@@ -121,111 +118,189 @@ class NotificationViewModel extends ChangeNotifier {
     await fetchNotifications(page: nextPage);
   }
 
-  /// Mark a single notification as read
-  Future<void> markAsRead(int notificationId) async {
+  Future<bool> markAsRead(int notificationId) async {
     try {
+      print('🔔 Attempting to mark notification $notificationId as read');
+
       final success = await _repository.markAsRead(notificationId);
-      
+
       if (success) {
-        // Update local state
-        final index = _notifications.indexWhere((n) => n.id == notificationId);
-        if (index != -1) {
-          _notifications[index] = _notifications[index].copyWith(
-            isRead: true,
+        // Update the local notification state immediately
+        final notificationIndex = _notifications.indexWhere(
+          (n) => n.id == notificationId,
+        );
+        if (notificationIndex != -1) {
+          _notifications[notificationIndex] = NotificationModel(
+            id: _notifications[notificationIndex].id,
+            title: _notifications[notificationIndex].title,
+            body: _notifications[notificationIndex].body,
+            type: _notifications[notificationIndex].type,
+            category: _notifications[notificationIndex].category,
+            data: _notifications[notificationIndex].data,
+            isRead: true, // Mark as read locally
             readAt: DateTime.now().toIso8601String(),
+            createdAt: _notifications[notificationIndex].createdAt,
+            timeAgo: _notifications[notificationIndex].timeAgo,
+            isRecent: _notifications[notificationIndex].isRecent,
+            leaveInformation:
+                _notifications[notificationIndex].leaveInformation,
           );
-          
+
           // Update unread count
-          if (_unreadCount > 0) _unreadCount--;
-          
-          // Update summary if available
-          if (_summary != null) {
-            _summary = NotificationSummary(
-              total: _summary!.total,
-              unread: _summary!.unread > 0 ? _summary!.unread - 1 : 0,
-              read: _summary!.read + 1,
-              byType: _summary!.byType,
-              recentUnread: _summary!.recentUnread > 0 ? _summary!.recentUnread - 1 : 0,
-            );
+          if (_unreadCount > 0) {
+            _unreadCount--;
           }
-          
+
           notifyListeners();
-          
-          print('✅ Notification $notificationId marked as read');
+          print('✅ Notification $notificationId marked as read successfully');
         }
+
+        return true;
+      } else {
+        print('❌ Failed to mark notification $notificationId as read');
+        return false;
       }
     } catch (e) {
       print('❌ Error marking notification as read: $e');
+      _error = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 
-  /// Mark all notifications as read
   Future<void> markAllAsRead() async {
     try {
       final success = await _repository.markAllAsRead();
-      
+
       if (success) {
-        // Update local state
-        _notifications = _notifications.map((notification) {
-          return notification.copyWith(
-            isRead: true,
-            readAt: DateTime.now().toIso8601String(),
-          );
-        }).toList();
-        
+        // Update all notifications to read status
+        _notifications =
+            _notifications.map((notification) {
+              if (!notification.isRead) {
+                return NotificationModel(
+                  id: notification.id,
+                  title: notification.title,
+                  body: notification.body,
+                  type: notification.type,
+                  category: notification.category,
+                  data: notification.data,
+                  isRead: true,
+                  readAt: DateTime.now().toIso8601String(),
+                  createdAt: notification.createdAt,
+                  timeAgo: notification.timeAgo,
+                  isRecent: notification.isRecent,
+                  leaveInformation: notification.leaveInformation,
+                );
+              }
+              return notification;
+            }).toList();
+
+        // Reset unread count
         _unreadCount = 0;
-        
-        // Update summary if available
-        if (_summary != null) {
-          _summary = NotificationSummary(
-            total: _summary!.total,
-            unread: 0,
-            read: _summary!.total,
-            byType: _summary!.byType,
-            recentUnread: 0,
-          );
-        }
-        
+
         notifyListeners();
-        
+
         print('✅ All notifications marked as read');
       }
     } catch (e) {
       print('❌ Error marking all notifications as read: $e');
-      rethrow;
+      rethrow; // Re-throw to handle in UI
     }
   }
 
-  /// Set type filter
   void setTypeFilter(String? type) {
     if (_selectedType != type) {
       _selectedType = type;
-      fetchNotifications(refresh: true);
+      print('🔄 Type filter set to: $type');
     }
   }
 
-  /// Set read status filter
   void setReadStatusFilter(bool? isRead) {
     if (_selectedReadStatus != isRead) {
       _selectedReadStatus = isRead;
-      fetchNotifications(refresh: true);
+      print('🔄 Read status filter set to: $isRead');
     }
   }
 
-  /// Clear all filters
   void clearFilters() {
     _selectedType = null;
     _selectedReadStatus = null;
     fetchNotifications(refresh: true);
   }
 
-  /// Clear error state
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  /// Handle notification click actions
+  // Refresh method for pull-to-refresh
+  Future<void> refresh() async {
+    await fetchNotifications(refresh: true);
+  }
+
+  // Get filtered notifications locally (for better performance)
+  List<NotificationModel> getFilteredNotifications({
+    String? type,
+    bool? isRead,
+  }) {
+    List<NotificationModel> filtered = List.from(_notifications);
+
+    if (type != null) {
+      if (type == 'my_alert') {
+        // My Alert includes all types except leave and announcement
+        filtered =
+            filtered
+                .where((n) => n.type != 'leave' && n.type != 'announcement')
+                .toList();
+      } else {
+        filtered = filtered.where((n) => n.type == type).toList();
+      }
+    }
+
+    if (isRead != null) {
+      filtered = filtered.where((n) => n.isRead == isRead).toList();
+    }
+
+    return filtered;
+  }
+
+  // Get notification counts by type (unread only)
+  Map<String, int> getNotificationCounts() {
+    final unreadNotifications = _notifications.where((n) => !n.isRead);
+
+    return {
+      'my_alert':
+          unreadNotifications
+              .where((n) => n.type != 'leave' && n.type != 'announcement')
+              .length,
+      'leave': unreadNotifications.where((n) => n.type == 'leave').length,
+      'announcement':
+          unreadNotifications.where((n) => n.type == 'announcement').length,
+      'total': unreadNotifications.length,
+    };
+  }
+
+  // Get unread notifications by type
+  List<NotificationModel> getUnreadNotificationsByType(String type) {
+    final unreadNotifications = _notifications.where((n) => !n.isRead);
+
+    switch (type.toLowerCase()) {
+      case 'my_alert':
+        return unreadNotifications
+            .where((n) => n.type != 'leave' && n.type != 'announcement')
+            .toList();
+      case 'leave':
+        return unreadNotifications.where((n) => n.type == 'leave').toList();
+      case 'announcement':
+        return unreadNotifications
+            .where((n) => n.type == 'announcement')
+            .toList();
+      default:
+        return unreadNotifications.toList();
+    }
+  }
+
+  // Handle notification click actions
   void handleNotificationClick(NotificationModel notification) {
     // Mark as read if not already read
     if (!notification.isRead) {
@@ -233,150 +308,104 @@ class NotificationViewModel extends ChangeNotifier {
     }
 
     // Handle click action based on notification data
-    final clickAction = notification.data['click_action'] as String?;
-    final leaveId = notification.data['leave_id'] as String?;
-    
-    print('🔔 Notification clicked: $clickAction, Leave ID: $leaveId');
-    
-    // Trigger navigation callback
-    if (clickAction != null && onNavigationRequired != null) {
-      onNavigationRequired!(clickAction, notification.data);
+    final clickAction = notification.data['click_action'];
+    print('🔔 Notification clicked: $clickAction');
+
+    // Navigation logic will be handled in the UI layer
+  }
+
+  // Update notification in list after external changes
+  void updateNotification(NotificationModel updatedNotification) {
+    final index = _notifications.indexWhere(
+      (n) => n.id == updatedNotification.id,
+    );
+    if (index != -1) {
+      _notifications[index] = updatedNotification;
+
+      // Update unread count if read status changed
+      _updateUnreadCount();
+
+      notifyListeners();
     }
   }
 
-  /// Add a new notification (for real-time updates)
+  // Remove notification from list
+  void removeNotification(int notificationId) {
+    final removedNotification = _notifications.firstWhere(
+      (n) => n.id == notificationId,
+      orElse: () => throw StateError('Notification not found'),
+    );
+
+    _notifications.removeWhere((n) => n.id == notificationId);
+
+    // Update unread count if removed notification was unread
+    if (!removedNotification.isRead && _unreadCount > 0) {
+      _unreadCount--;
+    }
+
+    notifyListeners();
+  }
+
+  // Add new notification (for real-time updates)
   void addNotification(NotificationModel notification) {
     _notifications.insert(0, notification);
-    
     if (!notification.isRead) {
       _unreadCount++;
     }
-    
-    // Update summary
-    if (_summary != null) {
-      final typeCount = _summary!.byType[notification.type] ?? 0;
-      final updatedByType = Map<String, int>.from(_summary!.byType);
-      updatedByType[notification.type] = typeCount + 1;
-      
-      _summary = NotificationSummary(
-        total: _summary!.total + 1,
-        unread: !notification.isRead ? _summary!.unread + 1 : _summary!.unread,
-        read: notification.isRead ? _summary!.read + 1 : _summary!.read,
-        byType: updatedByType,
-        recentUnread: !notification.isRead ? _summary!.recentUnread + 1 : _summary!.recentUnread,
-      );
-    }
-    
     notifyListeners();
-    print('✅ New notification added: ${notification.title}');
   }
 
-  /// Update notification status (for real-time updates)
-  void updateNotification(NotificationModel updatedNotification) {
-    final index = _notifications.indexWhere((n) => n.id == updatedNotification.id);
-    if (index != -1) {
-      final oldNotification = _notifications[index];
-      _notifications[index] = updatedNotification;
-      
-      // Update unread count if read status changed
-      if (oldNotification.isRead != updatedNotification.isRead) {
-        if (updatedNotification.isRead && !oldNotification.isRead) {
-          _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
-        } else if (!updatedNotification.isRead && oldNotification.isRead) {
-          _unreadCount++;
-        }
-      }
-      
-      notifyListeners();
-      print('✅ Notification updated: ${updatedNotification.title}');
+  // Private method to recalculate unread count from current notifications
+  void _updateUnreadCount() {
+    _unreadCount = _notifications.where((n) => !n.isRead).length;
+  }
+
+  // Force refresh unread count from local notifications
+  void recalculateUnreadCount() {
+    _updateUnreadCount();
+    notifyListeners();
+  }
+
+  // Check if notification has leave information
+  bool hasLeaveInformation(NotificationModel notification) {
+    return notification.type == 'leave' &&
+        notification.leaveInformation != null &&
+        notification.leaveInformation!.isNotEmpty;
+  }
+
+  // Get leave information from notification
+  Map<String, dynamic>? getLeaveInformation(NotificationModel notification) {
+    if (hasLeaveInformation(notification)) {
+      return notification.leaveInformation;
     }
+    return null;
   }
 
-  /// Remove notification
-  void removeNotification(int notificationId) {
-    final index = _notifications.indexWhere((n) => n.id == notificationId);
-    if (index != -1) {
-      final notification = _notifications[index];
-      _notifications.removeAt(index);
-      
-      if (!notification.isRead) {
-        _unreadCount = _unreadCount > 0 ? _unreadCount - 1 : 0;
-      }
-      
-      // Update summary
-      if (_summary != null) {
-        final typeCount = _summary!.byType[notification.type] ?? 0;
-        final updatedByType = Map<String, int>.from(_summary!.byType);
-        if (typeCount > 1) {
-          updatedByType[notification.type] = typeCount - 1;
-        } else {
-          updatedByType.remove(notification.type);
-        }
-        
-        _summary = NotificationSummary(
-          total: _summary!.total > 0 ? _summary!.total - 1 : 0,
-          unread: !notification.isRead ? 
-            (_summary!.unread > 0 ? _summary!.unread - 1 : 0) : 
-            _summary!.unread,
-          read: notification.isRead ? 
-            (_summary!.read > 0 ? _summary!.read - 1 : 0) : 
-            _summary!.read,
-          byType: updatedByType,
-          recentUnread: !notification.isRead ? 
-            (_summary!.recentUnread > 0 ? _summary!.recentUnread - 1 : 0) : 
-            _summary!.recentUnread,
-        );
-      }
-      
-      notifyListeners();
-      print('✅ Notification removed: ${notification.title}');
-    }
+  // Search notifications
+  List<NotificationModel> searchNotifications(String query) {
+    if (query.isEmpty) return _notifications;
+
+    final lowercaseQuery = query.toLowerCase();
+    return _notifications.where((notification) {
+      return notification.title.toLowerCase().contains(lowercaseQuery) ||
+          notification.body.toLowerCase().contains(lowercaseQuery) ||
+          notification.type.toLowerCase().contains(lowercaseQuery);
+    }).toList();
   }
 
-  /// Get notifications by type
-  List<NotificationModel> getNotificationsByType(String type) {
-    return _notifications.where((n) => n.type == type).toList();
-  }
-
-  /// Get unread notifications
-  List<NotificationModel> getUnreadNotifications() {
-    return _notifications.where((n) => !n.isRead).toList();
-  }
-
-  /// Get recent notifications (within last 24 hours)
+  // Get recent notifications (created in last 24 hours)
   List<NotificationModel> getRecentNotifications() {
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return _notifications.where((n) {
+    final now = DateTime.now();
+    final oneDayAgo = now.subtract(const Duration(days: 1));
+
+    return _notifications.where((notification) {
       try {
-        final createdAt = DateTime.parse(n.createdAt);
-        return createdAt.isAfter(yesterday);
+        final createdAt = DateTime.parse(notification.createdAt);
+        return createdAt.isAfter(oneDayAgo);
       } catch (e) {
         return false;
       }
     }).toList();
-  }
-
-  /// Refresh all data
-  Future<void> refresh() async {
-    await Future.wait([
-      fetchNotifications(refresh: true),
-      fetchUnreadCount(),
-    ]);
-  }
-
-  /// Reset all state
-  void reset() {
-    _notifications.clear();
-    _unreadCount = 0;
-    _isLoading = false;
-    _isLoadingMore = false;
-    _error = null;
-    _pagination = null;
-    _summary = null;
-    _selectedType = null;
-    _selectedReadStatus = null;
-    stopPeriodicUnreadCountUpdate();
-    notifyListeners();
   }
 
   @override

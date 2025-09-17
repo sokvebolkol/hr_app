@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'localization/language_logic.dart';
 import 'constants/constant.dart';
-import 'viewmodels/nofitication_viewmodel.dart';
+import 'viewmodels/notification_viewmodel.dart';
 import 'views/auth/splash-screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';

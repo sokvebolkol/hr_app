@@ -1,3 +1,5 @@
+import '../repositories/approver_dashboard_repository.dart';
+import 'leave_history_model.dart';
 
 class NotificationModel {
   final int id;
@@ -11,6 +13,7 @@ class NotificationModel {
   final String createdAt;
   final String timeAgo;
   final bool isRecent;
+  final Map<String, dynamic>? leaveInformation;
 
   NotificationModel({
     required this.id,
@@ -24,6 +27,7 @@ class NotificationModel {
     required this.createdAt,
     required this.timeAgo,
     required this.isRecent,
+    this.leaveInformation,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +43,7 @@ class NotificationModel {
       createdAt: json['created_at'] ?? '',
       timeAgo: json['time_ago'] ?? '',
       isRecent: json['is_recent'] ?? false,
+      leaveInformation: json['leave_information'],
     );
   }
 
@@ -55,34 +60,58 @@ class NotificationModel {
       'created_at': createdAt,
       'time_ago': timeAgo,
       'is_recent': isRecent,
+      'leave_information': leaveInformation,
     };
   }
 
-  NotificationModel copyWith({
-    int? id,
-    String? title,
-    String? body,
-    String? type,
-    String? category,
-    Map<String, dynamic>? data,
-    bool? isRead,
-    String? readAt,
-    String? createdAt,
-    String? timeAgo,
-    bool? isRecent,
-  }) {
-    return NotificationModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      body: body ?? this.body,
-      type: type ?? this.type,
-      category: category ?? this.category,
-      data: data ?? this.data,
-      isRead: isRead ?? this.isRead,
-      readAt: readAt ?? this.readAt,
-      createdAt: createdAt ?? this.createdAt,
-      timeAgo: timeAgo ?? this.timeAgo,
-      isRecent: isRecent ?? this.isRecent,
+  // Convert to PendingLeaveRequest (for EmployeeLeaveDetailScreen)
+  PendingLeaveRequest toPendingLeaveRequest() {
+    if (leaveInformation == null) {
+      throw Exception('No leave information available');
+    }
+
+    final leave = leaveInformation!;
+
+    return PendingLeaveRequest(
+      lreid: leave['lreid']?.toString() ?? '',
+      orgid: leave['orgid']?.toString() ?? '',
+      eid: leave['eid']?.toString() ?? '',
+      leaid: leave['leaid']?.toString() ?? '',
+      frdat: leave['frdat']?.toString() ?? '',
+      todat: leave['todat']?.toString() ?? '',
+      numleav: leave['numleav']?.toString() ?? '',
+      lfor: leave['lfor']?.toString() ?? '',
+      lnot: leave['lnot']?.toString() ?? '',
+      reason: leave['reason']?.toString() ?? '',
+      remark: leave['remark']?.toString() ?? '',
+      file: leave['file']?.toString(),
+      createdate: leave['createdate']?.toString() ?? '',
+      statu: leave['statu']?.toString() ?? '0',
+      holiday: leave['holiday']?.toString() ?? '0',
+      ltyp: leave['ltyp']?.toString() ?? '',
+      requesterName: leave['requester_name']?.toString() ?? '',
+      staffId: leave['staff_id']?.toString() ?? '',
+      email: leave['email']?.toString() ?? '',
+      positionName: leave['position_name']?.toString() ?? '',
+      departmentName: leave['department_name']?.toString() ?? '',
+      branchShortName: leave['branch_short_name']?.toString() ?? '',
+      branchFullName: leave['branch_full_name']?.toString() ?? '',
+      leaveNote: leave['leave_note']?.toString() ?? '',
+      statuText: leave['statu_text']?.toString() ?? '',
+      prioList:
+          (leave['prio_list'] as List<dynamic>?)
+              ?.map(
+                (prio) => ApprovalItem.fromJson({
+                  'approver_name': prio['approver_name'],
+                  'prio': prio['prio'],
+                  'apstatu': prio['apstatu'],
+                  'remark': prio['remark'],
+                  'apstatu_text': prio['apstatu_text'],
+                  'prio_text': prio['prio_text'],
+                }),
+              )
+              .toList() ??
+          [],
     );
   }
 }

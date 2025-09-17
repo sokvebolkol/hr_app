@@ -471,23 +471,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     );
   }
 
-  // Reset form for new request
-  void _resetForm() {
-    setState(() {
-      selectedLeaveType = null;
-      leaveDateRange = null;
-      leaveFor = 'Full Day';
-      halfDaySession = 'Morning';
-      reason = '';
-      approver = null;
-      documentSupport = null;
-      documentPhoto = null;
-    });
-
-    // Clear form validation
-    _formKey.currentState?.reset();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

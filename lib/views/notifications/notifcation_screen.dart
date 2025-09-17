@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
-import '../../viewmodels/nofitication_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
+import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -118,7 +119,7 @@ class _NotificationScreenState extends State<NotificationScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-        backgroundColor: primary, // Changed to orange
+        backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -134,7 +135,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('All notifications marked as read'),
+                          content: Text('✅ All notifications marked as read'),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -161,7 +162,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                     value: 'mark_all_read',
                     child: Row(
                       children: [
-                        Icon(Icons.done_all),
+                        Icon(Icons.done_all, color: secondary),
                         SizedBox(width: 8),
                         Text('Mark all as read'),
                       ],
@@ -171,7 +172,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                     value: 'refresh',
                     child: Row(
                       children: [
-                        Icon(Icons.refresh),
+                        Icon(Icons.refresh, color: secondary),
                         SizedBox(width: 8),
                         Text('Refresh'),
                       ],
@@ -469,14 +470,284 @@ class _NotificationScreenState extends State<NotificationScreen>
           ],
         ),
         onTap: () async {
-          await viewModel.markAsRead(notification.id);
-          _updateFilteredNotifications(viewModel.notifications);
+          final success = await viewModel.markAsRead(notification.id);
 
-          if (mounted) {
-            _showNotificationDetails(notification);
+          if (success) {
+            _updateFilteredNotifications(viewModel.notifications);
+
+            if (!mounted) return;
+
+            // Handle different notification types
+            switch (notification.type.toLowerCase()) {
+              case 'leave':
+                _handleLeaveNotificationTap(notification);
+                break;
+              case 'announcement':
+                _handleAnnouncementNotificationTap(notification);
+                break;
+              default:
+                _showNotificationDetails(notification);
+                break;
+            }
+          } else {
+            // Show error if marking as read failed
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('❌ Failed to mark notification as read'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+
+            // Still navigate even if marking as read failed
+            if (!mounted) return;
+
+            switch (notification.type.toLowerCase()) {
+              case 'leave':
+                _handleLeaveNotificationTap(notification);
+                break;
+              case 'announcement':
+                _handleAnnouncementNotificationTap(notification);
+                break;
+              default:
+                _showNotificationDetails(notification);
+                break;
+            }
           }
         },
       ),
+    );
+  }
+
+  // Handle leave notification tap
+  void _handleLeaveNotificationTap(NotificationModel notification) {
+    try {
+      if (notification.leaveInformation == null) {
+        _showErrorDialog('No leave information available');
+        return;
+      }
+
+      // Convert notification to LeaveHistoryModel
+      final leaveRequest = notification.toPendingLeaveRequest();
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
+        ),
+      ).then((result) {
+        // Refresh notifications if needed
+        if (result == true) {
+          _refreshNotifications();
+        }
+      });
+    } catch (e) {
+      _showErrorDialog('Error opening leave details: ${e.toString()}');
+    }
+  }
+
+  // Handle announcement notification tap
+  void _handleAnnouncementNotificationTap(NotificationModel notification) {
+    // Handle announcement navigation
+    _showNotificationDetails(notification);
+  }
+
+  // Show error dialog
+  void _showErrorDialog(String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // Show notification details modal
+  void _showNotificationDetails(NotificationModel notification) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  height: 4,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: primary,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              notification.title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              notification.timeAgo,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          notification.body,
+                          style: const TextStyle(fontSize: 16, height: 1.5),
+                        ),
+
+                        if (notification.data.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Details:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...notification.data.entries.map((entry) {
+                            if (entry.key == 'leave_information') {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${entry.key.replaceAll('_', ' ').toUpperCase()}:',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      entry.value.toString(),
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Action buttons
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      // If it's a leave notification, show "View Leave Details" button
+                      if (notification.type == 'leave' &&
+                          notification.leaveInformation != null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _handleLeaveNotificationTap(notification);
+                            },
+                            icon: const Icon(Icons.visibility),
+                            label: const Text('View Leave Details'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.all(16),
+                            ),
+                          ),
+                        ),
+
+                      // Generic action button for other click actions
+                      if (notification.data['click_action'] != null &&
+                          notification.data['click_action'] != 'leave_screen')
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              print(
+                                'Navigate to: ${notification.data['click_action']}',
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[600],
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.all(16),
+                            ),
+                            child: const Text('View Details'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
     );
   }
 
@@ -561,153 +832,6 @@ class _NotificationScreenState extends State<NotificationScreen>
           ),
         ],
       ),
-    );
-  }
-
-  void _showNotificationDetails(NotificationModel notification) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (context) => Container(
-            height: MediaQuery.of(context).size.height * 0.75,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Column(
-              children: [
-                // Handle bar
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  height: 4,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-
-                // Header - Changed to orange to match AppBar
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: Colors.orange, // Changed to orange
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              notification.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              notification.timeAgo,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          notification.body,
-                          style: const TextStyle(fontSize: 16, height: 1.5),
-                        ),
-
-                        if (notification.data.isNotEmpty) ...[
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Details:',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ...notification.data.entries.map((entry) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${entry.key.replaceAll('_', ' ').toUpperCase()}:',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      entry.value.toString(),
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Action button - Updated to use orange
-                if (notification.data['click_action'] != null)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          print(
-                            'Navigate to: ${notification.data['click_action']}',
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange, // Changed to orange
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.all(16),
-                        ),
-                        child: const Text('View Details'),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
     );
   }
 }
