@@ -43,5 +43,43 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-# Ignore Flutter SDK managed by FVM
-.fvm/
+
+# Android build outputs
+**/android/.gradle/
+**/android/build/
+**/android/app/build/
+**/android/gradle/
+**/android/.gradle/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/keystore/
+**/android/key.properties
+**/android/**/build/
+
+# Flutter build outputs
+**/build/
+**/.dart_tool/
+**/.packages
+**/.metadata
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# Generated files
+**/*.g.dart
+**/*.freezed.dart
+**/*.mocks.dart
+
+# IDE files
+**/.idea/
+**/.vscode/
+**/*.iml
+**/*.ipr
+**/*.iws
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
