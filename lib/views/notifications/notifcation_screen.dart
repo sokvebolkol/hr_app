@@ -63,6 +63,7 @@ class _NotificationScreenState extends State<NotificationScreen>
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
     // Filter and cache notifications locally to avoid refiltering
+    // Only show unread notifications in the filtered lists
     _myAlertNotifications =
         allNotifications
             .where(
@@ -129,42 +130,156 @@ class _NotificationScreenState extends State<NotificationScreen>
               final viewModel = context.read<NotificationViewModel>();
               switch (value) {
                 case 'mark_all_read':
-                  try {
-                    await viewModel.markAllAsRead();
-                    _updateFilteredNotifications(viewModel.notifications);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('✅ All notifications marked as read'),
-                          backgroundColor: Colors.green,
+                  // Show loading dialog
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder:
+                        (context) => const Center(
+                          child: Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 16),
+                                  Text('Marking all as read...'),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      );
+                  );
+
+                  try {
+                    final success = await viewModel.markAllAsRead();
+
+                    // Close loading dialog
+                    if (mounted) Navigator.pop(context);
+
+                    if (success) {
+                      _updateFilteredNotifications(viewModel.notifications);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text('All notifications marked as read'),
+                              ],
+                            ),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(Icons.error, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text(' Failed to mark all as read'),
+                              ],
+                            ),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
                     }
                   } catch (e) {
+                    // Close loading dialog
+                    if (mounted) Navigator.pop(context);
+
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Error: $e'),
+                          content: Row(
+                            children: [
+                              const Icon(Icons.error, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text('❌ Error: ${e.toString()}')),
+                            ],
+                          ),
                           backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 4),
                         ),
                       );
                     }
                   }
                   break;
                 case 'refresh':
+                  // Show loading indicator
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Text('Refreshing notifications...'),
+                        ],
+                      ),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
                   await _refreshNotifications();
                   break;
               }
             },
             itemBuilder:
                 (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'mark_all_read',
                     child: Row(
                       children: [
-                        Icon(Icons.done_all, color: secondary),
-                        SizedBox(width: 8),
-                        Text('Mark all as read'),
+                        const Icon(Icons.done_all, color: secondary),
+                        const SizedBox(width: 8),
+                        const Text('Mark all as read'),
+                        // Show count badge if there are unread notifications
+                        Consumer<NotificationViewModel>(
+                          builder: (context, viewModel, child) {
+                            final unreadCount =
+                                _myAlertNotifications.length +
+                                _leaveNotifications.length +
+                                _announcementNotifications.length;
+                            if (unreadCount > 0) {
+                              return Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$unreadCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
                     ),
                   ),

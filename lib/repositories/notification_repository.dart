@@ -150,13 +150,13 @@ class NotificationRepository {
       }
 
       final response = await http
-          .post(
+          .patch(
             Uri.parse('${baseUrl}notifications/mark-all-read'),
             headers: _getHeaders(token),
+            body: json.encode({}),
           )
           .timeout(const Duration(seconds: 10));
-
-      print('Mark all as read API response: ${response.statusCode}');
+      ;
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -167,7 +167,6 @@ class NotificationRepository {
         return false;
       }
     } catch (e) {
-      print('Error marking all notifications as read: $e');
       return false;
     }
   }

@@ -157,54 +157,51 @@ class NotificationViewModel extends ChangeNotifier {
 
         return true;
       } else {
-        print('❌ Failed to mark notification $notificationId as read');
+        print('Failed to mark notification $notificationId as read');
         return false;
       }
     } catch (e) {
-      print('❌ Error marking notification as read: $e');
+      print('Error marking notification as read: $e');
       _error = e.toString();
       notifyListeners();
       return false;
     }
   }
 
-  Future<void> markAllAsRead() async {
+  Future<bool> markAllAsRead() async {
     try {
       final success = await _repository.markAllAsRead();
 
       if (success) {
-        // Update all notifications to read status
         _notifications =
             _notifications.map((notification) {
-              if (!notification.isRead) {
-                return NotificationModel(
-                  id: notification.id,
-                  title: notification.title,
-                  body: notification.body,
-                  type: notification.type,
-                  category: notification.category,
-                  data: notification.data,
-                  isRead: true,
-                  readAt: DateTime.now().toIso8601String(),
-                  createdAt: notification.createdAt,
-                  timeAgo: notification.timeAgo,
-                  isRecent: notification.isRecent,
-                  leaveInformation: notification.leaveInformation,
-                );
-              }
-              return notification;
+              return NotificationModel(
+                id: notification.id,
+                title: notification.title,
+                body: notification.body,
+                type: notification.type,
+                category: notification.category,
+                data: notification.data,
+                isRead: true,
+                readAt: DateTime.now().toIso8601String(),
+                createdAt: notification.createdAt,
+                timeAgo: notification.timeAgo,
+                isRecent: notification.isRecent,
+                leaveInformation: notification.leaveInformation,
+              );
             }).toList();
 
-        // Reset unread count
         _unreadCount = 0;
 
         notifyListeners();
-
-        print('✅ All notifications marked as read');
+        return true;
+      } else {
+        return false;
       }
     } catch (e) {
-      print('❌ Error marking all notifications as read: $e');
-      rethrow; // Re-throw to handle in UI
+      _error = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 

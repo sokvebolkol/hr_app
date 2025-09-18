@@ -443,7 +443,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      _submitLeaveRequest(); // Retry submission
+                      _submitLeaveRequest();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primary,
@@ -476,7 +476,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Request Leave"),
+        title: const Text("Leave Request"),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -554,27 +554,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Center(
-                                      child: Icon(
-                                        Icons.beach_access,
-                                        color: primary,
-                                        size: isWide ? 64 : 48,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Center(
-                                      child: Text(
-                                        "Leave Application",
-                                        style: TextStyle(
-                                          fontSize: fontSizeTitle,
-                                          fontWeight: FontWeight.bold,
-                                          color: secondary,
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: isWide ? 32 : 24),
-
-                                    // UPDATED: Leave Type - Simplified approach without custom styling
                                     Row(
                                       children: [
                                         Icon(Icons.category, color: primary),
