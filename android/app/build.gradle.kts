@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId = "com.chokchey.hr"
         // Update minSdk to 23 for Firebase Firestore compatibility
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
