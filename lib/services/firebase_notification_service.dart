@@ -42,6 +42,14 @@ class FirebaseNotificationService {
       // Request permissions
       await _requestPermissions();
 
+      // Check iOS permissions specifically
+      if (Platform.isIOS) {
+        final hasPermission = await hasIOSPermissions();
+        if (!hasPermission) {
+          print('⚠️ iOS notification permissions not granted');
+        }
+      }
+
       // Initialize local notifications
       await _initializeLocalNotifications();
 
@@ -85,10 +93,15 @@ class FirebaseNotificationService {
     const androidSettings = local_notifications.AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
+
+    // Enhanced iOS settings
     const iosSettings = local_notifications.DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     const initSettings = local_notifications.InitializationSettings(
@@ -101,7 +114,7 @@ class FirebaseNotificationService {
       onDidReceiveNotificationResponse: _onLocalNotificationTapped,
     );
 
-    // Create notification channels for Android
+    // Create notification channels for Android only
     if (Platform.isAndroid) {
       await _createNotificationChannels();
     }
@@ -184,7 +197,7 @@ class FirebaseNotificationService {
         print('🔄 FCM token refreshed: $newToken');
       });
     } catch (e) {
-      print('❌ Error getting FCM token: $e');
+      print('Error getting FCM token: $e');
     }
   }
 
@@ -194,8 +207,13 @@ class FirebaseNotificationService {
 
     final notification = _createNotificationFromRemoteMessage(message);
 
-    // Show local notification
-    await _showLocalNotification(notification);
+    // For iOS: Always show notification in notification center, even in foreground
+    if (Platform.isIOS) {
+      await _showLocalNotification(notification);
+    } else {
+      // For Android: Only show if app is in background
+      await _showLocalNotification(notification);
+    }
 
     // Trigger callback
     onNotificationReceived?.call(notification);
@@ -277,19 +295,18 @@ class FirebaseNotificationService {
               : local_notifications.Priority.high,
       showWhen: true,
       icon: '@mipmap/ic_launcher',
-      styleInformation:
-          notification.body.length > 50
-              ? local_notifications.BigTextStyleInformation(
-                notification.body,
-                contentTitle: notification.title,
-              )
-              : null,
     );
 
-    const iosDetails = local_notifications.DarwinNotificationDetails(
+    // Enhanced iOS notification details with better settings
+    final iosDetails = local_notifications.DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      badgeNumber: await getBadgeCount(),
+      sound: 'default', // Always use default sound
+      categoryIdentifier: 'hr_notification', // Category for iOS
+      threadIdentifier: notification.type, // Group notifications by type
+      subtitle: notification.type.toUpperCase(), // Add subtitle
     );
 
     final details = local_notifications.NotificationDetails(
@@ -304,6 +321,8 @@ class FirebaseNotificationService {
       details,
       payload: jsonEncode(notification.toJson()),
     );
+
+    print('📱 Local notification shown: ${notification.title}');
   }
 
   /// Get appropriate channel ID based on notification type
@@ -392,9 +411,29 @@ class FirebaseNotificationService {
     final count = await getBadgeCount();
     print('📛 Badge count: $count');
 
-    // For iOS, you can set the badge count
+    // Update iOS badge
     if (Platform.isIOS) {
-      await _firebaseMessaging.setAutoInitEnabled(true);
+      await updateIOSBadgeCount(count);
+    }
+  }
+
+  /// Update badge count for iOS
+  Future<void> updateIOSBadgeCount(int count) async {
+    if (Platform.isIOS) {
+      try {
+        // For iOS, we can use local notifications to set badge
+        await _localNotifications
+            .resolvePlatformSpecificImplementation<
+              local_notifications.IOSFlutterLocalNotificationsPlugin
+            >()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+
+        // Set badge count
+        await FirebaseMessaging.instance.setAutoInitEnabled(true);
+        print('📱 iOS badge count updated to: $count');
+      } catch (e) {
+        print('❌ Error updating iOS badge: $e');
+      }
     }
   }
 
@@ -449,6 +488,22 @@ class FirebaseNotificationService {
     } catch (e) {
       print('❌ Error unsubscribing from topics: $e');
     }
+  }
+
+  /// Clear iOS badge count
+  Future<void> clearIOSBadge() async {
+    if (Platform.isIOS) {
+      await updateIOSBadgeCount(0);
+    }
+  }
+
+  /// Check iOS notification permissions
+  Future<bool> hasIOSPermissions() async {
+    if (Platform.isIOS) {
+      final settings = await _firebaseMessaging.getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.authorized;
+    }
+    return true; // Always true for non-iOS platforms
   }
 }
 

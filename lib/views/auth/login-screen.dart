@@ -201,15 +201,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  const SizedBox(height: 48),
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: Colors.white,
-                    child: Image.asset('assets/images/logo.png', width: 60),
-                  ),
-                  const SizedBox(height: 24),
+                  Image.asset('assets/images/logo.png', width: 100),
+                  const SizedBox(height: 50),
                   Card(
-                    elevation: 8,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
