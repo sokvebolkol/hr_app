@@ -142,8 +142,12 @@ class NotificationViewModel extends ChangeNotifier {
             createdAt: _notifications[notificationIndex].createdAt,
             timeAgo: _notifications[notificationIndex].timeAgo,
             isRecent: _notifications[notificationIndex].isRecent,
-            leaveInformation:
-                _notifications[notificationIndex].leaveInformation,
+            staffLeaveRequest:
+                _notifications[notificationIndex]
+                    .staffLeaveRequest, // Updated field name
+            ownLeaveRequestData:
+                _notifications[notificationIndex]
+                    .ownLeaveRequestData, // Updated field name
           );
 
           // Update unread count
@@ -187,7 +191,10 @@ class NotificationViewModel extends ChangeNotifier {
                 createdAt: notification.createdAt,
                 timeAgo: notification.timeAgo,
                 isRecent: notification.isRecent,
-                leaveInformation: notification.leaveInformation,
+                staffLeaveRequest:
+                    notification.staffLeaveRequest, // Updated field name
+                ownLeaveRequestData:
+                    notification.ownLeaveRequestData, // Updated field name
               );
             }).toList();
 
@@ -277,14 +284,30 @@ class NotificationViewModel extends ChangeNotifier {
     };
   }
 
-  // Get unread notifications by type
+  // Get unread notifications by type and action
   List<NotificationModel> getUnreadNotificationsByType(String type) {
     final unreadNotifications = _notifications.where((n) => !n.isRead);
 
     switch (type.toLowerCase()) {
-      case 'my_alert':
+      case 'leave_request':
+        // New leave requests for approval
         return unreadNotifications
-            .where((n) => n.type != 'leave' && n.type != 'announcement')
+            .where(
+              (n) => n.type == 'leave' && n.data['action'] == 'new_request',
+            )
+            .toList();
+      case 'leave_approval':
+      case 'leave_status':
+        // Approved/rejected/submitted leave notifications
+        return unreadNotifications
+            .where(
+              (n) =>
+                  n.type == 'leave' &&
+                  (n.data['action'] == 'approved' ||
+                      n.data['action'] == 'rejected' ||
+                      n.data['action'] == 'submitted' ||
+                      n.data['action'] == 'status_update'),
+            )
             .toList();
       case 'leave':
         return unreadNotifications.where((n) => n.type == 'leave').toList();
@@ -318,7 +341,6 @@ class NotificationViewModel extends ChangeNotifier {
     );
     if (index != -1) {
       _notifications[index] = updatedNotification;
-
       // Update unread count if read status changed
       _updateUnreadCount();
 
@@ -363,17 +385,15 @@ class NotificationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Check if notification has leave information
+  // Check if notification has leave information - Updated method
   bool hasLeaveInformation(NotificationModel notification) {
-    return notification.type == 'leave' &&
-        notification.leaveInformation != null &&
-        notification.leaveInformation!.isNotEmpty;
+    return notification.type == 'leave' && notification.leaveData != null;
   }
 
-  // Get leave information from notification
+  // Get leave information from notification - Updated method
   Map<String, dynamic>? getLeaveInformation(NotificationModel notification) {
     if (hasLeaveInformation(notification)) {
-      return notification.leaveInformation;
+      return notification.leaveData;
     }
     return null;
   }
@@ -403,6 +423,45 @@ class NotificationViewModel extends ChangeNotifier {
         return false;
       }
     }).toList();
+  }
+
+  // Get leave request notifications for CEO/Approvers
+  List<NotificationModel> getLeaveRequestNotifications() {
+    return _notifications
+        .where(
+          (n) =>
+              !n.isRead &&
+              n.type == 'leave' &&
+              n.data['action'] == 'new_request',
+        )
+        .toList();
+  }
+
+  // Get leave status notifications for requesters
+  List<NotificationModel> getLeaveStatusNotifications() {
+    return _notifications
+        .where(
+          (n) =>
+              !n.isRead &&
+              n.type == 'leave' &&
+              (n.data['action'] == 'approved' ||
+                  n.data['action'] == 'rejected' ||
+                  n.data['action'] == 'submitted' ||
+                  n.data['action'] == 'status_update'),
+        )
+        .toList();
+  }
+
+  // Get notification counts for dashboard badges
+  Map<String, int> getDashboardNotificationCounts() {
+    final leaveRequests = getLeaveRequestNotifications().length;
+    final leaveStatus = getLeaveStatusNotifications().length;
+
+    return {
+      'leave_request': leaveRequests,
+      'leave_status': leaveStatus,
+      'total': leaveRequests + leaveStatus,
+    };
   }
 
   @override

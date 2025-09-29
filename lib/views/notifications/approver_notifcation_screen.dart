@@ -4,23 +4,24 @@ import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
+import '../leaves/leave_detail/my_leave_detail_screen.dart';
 
-class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key});
+class ApproverNotificationScreen extends StatefulWidget {
+  const ApproverNotificationScreen({super.key});
 
   @override
-  State<NotificationScreen> createState() => _NotificationScreenState();
+  State<ApproverNotificationScreen> createState() =>
+      _ApproverNotificationScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen>
+class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
   late TabController _tabController;
 
-  // Cache filtered notifications to avoid refiltering on every build
-  List<NotificationModel> _myAlertNotifications = [];
-  List<NotificationModel> _leaveNotifications = [];
-  List<NotificationModel> _announcementNotifications = [];
+  // Cache filtered notifications - updated to only handle Leave Request and Leave Approval
+  List<NotificationModel> _leaveRequestNotifications = [];
+  List<NotificationModel> _leaveApprovalNotifications = [];
 
   bool _isInitialized = false;
 
@@ -32,7 +33,7 @@ class _NotificationScreenState extends State<NotificationScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
 
     // Load notifications only once when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,21 +63,27 @@ class _NotificationScreenState extends State<NotificationScreen>
   }
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
-    // Filter and cache notifications locally to avoid refiltering
-    // Only show unread notifications in the filtered lists
-    _myAlertNotifications =
+    // Filter notifications based on leave status and action type
+    _leaveRequestNotifications =
         allNotifications
             .where(
-              (n) => !n.isRead && n.type != 'leave' && n.type != 'announcement',
-            )
+              (n) =>
+                  !n.isRead &&
+                  n.type == 'leave' &&
+                  n.data['action'] == 'new_request',
+            ) // Only new leave requests
             .toList();
 
-    _leaveNotifications =
-        allNotifications.where((n) => !n.isRead && n.type == 'leave').toList();
-
-    _announcementNotifications =
+    _leaveApprovalNotifications =
         allNotifications
-            .where((n) => !n.isRead && n.type == 'announcement')
+            .where(
+              (n) =>
+                  !n.isRead &&
+                  n.type == 'leave' &&
+                  (n.data['action'] == 'approved' ||
+                      n.data['action'] == 'rejected' ||
+                      n.data['action'] == 'submitted'),
+            ) // Approved/rejected/ leaves
             .toList();
 
     if (mounted) {
@@ -87,7 +94,6 @@ class _NotificationScreenState extends State<NotificationScreen>
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      // Load more when near bottom
       _loadMoreNotifications();
     }
   }
@@ -130,7 +136,6 @@ class _NotificationScreenState extends State<NotificationScreen>
               final viewModel = context.read<NotificationViewModel>();
               switch (value) {
                 case 'mark_all_read':
-                  // Show loading dialog
                   showDialog(
                     context: context,
                     barrierDismissible: false,
@@ -183,7 +188,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                               children: [
                                 Icon(Icons.error, color: Colors.white),
                                 SizedBox(width: 8),
-                                Text(' Failed to mark all as read'),
+                                Text('Failed to mark all as read'),
                               ],
                             ),
                             backgroundColor: Colors.red,
@@ -193,7 +198,6 @@ class _NotificationScreenState extends State<NotificationScreen>
                       }
                     }
                   } catch (e) {
-                    // Close loading dialog
                     if (mounted) Navigator.pop(context);
 
                     if (mounted) {
@@ -203,7 +207,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                             children: [
                               const Icon(Icons.error, color: Colors.white),
                               const SizedBox(width: 8),
-                              Expanded(child: Text('❌ Error: ${e.toString()}')),
+                              Expanded(child: Text('Error: ${e.toString()}')),
                             ],
                           ),
                           backgroundColor: Colors.red,
@@ -253,9 +257,8 @@ class _NotificationScreenState extends State<NotificationScreen>
                         Consumer<NotificationViewModel>(
                           builder: (context, viewModel, child) {
                             final unreadCount =
-                                _myAlertNotifications.length +
-                                _leaveNotifications.length +
-                                _announcementNotifications.length;
+                                _leaveRequestNotifications.length +
+                                _leaveApprovalNotifications.length;
                             if (unreadCount > 0) {
                               return Container(
                                 margin: const EdgeInsets.only(left: 8),
@@ -331,11 +334,11 @@ class _NotificationScreenState extends State<NotificationScreen>
                       children: [
                         const Flexible(
                           child: Text(
-                            'My Alert',
+                            'Leave Request',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (_myAlertNotifications.isNotEmpty)
+                        if (_leaveRequestNotifications.isNotEmpty)
                           Container(
                             margin: const EdgeInsets.only(left: 6),
                             padding: const EdgeInsets.symmetric(
@@ -347,42 +350,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${_myAlertNotifications.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                Tab(
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Flexible(
-                          child: Text('Leave', overflow: TextOverflow.ellipsis),
-                        ),
-                        if (_leaveNotifications.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_leaveNotifications.length}',
+                              '${_leaveRequestNotifications.length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -404,11 +372,11 @@ class _NotificationScreenState extends State<NotificationScreen>
                       children: [
                         const Flexible(
                           child: Text(
-                            'Announcement',
+                            'Leave Approval',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (_announcementNotifications.isNotEmpty)
+                        if (_leaveApprovalNotifications.isNotEmpty)
                           Container(
                             margin: const EdgeInsets.only(left: 6),
                             padding: const EdgeInsets.symmetric(
@@ -420,7 +388,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${_announcementNotifications.length}',
+                              '${_leaveApprovalNotifications.length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -440,9 +408,8 @@ class _NotificationScreenState extends State<NotificationScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildNotificationList('my_alert', _myAlertNotifications),
-          _buildNotificationList('leave', _leaveNotifications),
-          _buildNotificationList('announcement', _announcementNotifications),
+          _buildNotificationList('leave_request', _leaveRequestNotifications),
+          _buildNotificationList('leave_approval', _leaveApprovalNotifications),
         ],
       ),
     );
@@ -592,18 +559,8 @@ class _NotificationScreenState extends State<NotificationScreen>
 
             if (!mounted) return;
 
-            // Handle different notification types
-            switch (notification.type.toLowerCase()) {
-              case 'leave':
-                _handleLeaveNotificationTap(notification);
-                break;
-              case 'announcement':
-                _handleAnnouncementNotificationTap(notification);
-                break;
-              default:
-                _showNotificationDetails(notification);
-                break;
-            }
+            // Handle leave notifications (both request and approval)
+            _handleLeaveNotificationTap(notification);
           } else {
             // Show error if marking as read failed
             if (mounted) {
@@ -617,55 +574,82 @@ class _NotificationScreenState extends State<NotificationScreen>
 
             // Still navigate even if marking as read failed
             if (!mounted) return;
-
-            switch (notification.type.toLowerCase()) {
-              case 'leave':
-                _handleLeaveNotificationTap(notification);
-                break;
-              case 'announcement':
-                _handleAnnouncementNotificationTap(notification);
-                break;
-              default:
-                _showNotificationDetails(notification);
-                break;
-            }
+            _handleLeaveNotificationTap(notification);
           }
         },
       ),
     );
   }
 
-  // Handle leave notification tap
+  // Handle leave notification tap (works for both request and approval)
   void _handleLeaveNotificationTap(NotificationModel notification) {
     try {
-      if (notification.leaveInformation == null) {
-        _showErrorDialog('No leave information available');
-        return;
-      }
+      final action = notification.data['action']?.toString() ?? '';
 
-      // Convert notification to LeaveHistoryModel
-      final leaveRequest = notification.toPendingLeaveRequest();
+      print("🔔 Notification tap - Action: $action");
+      print("🔔 Has leave data: ${notification.leaveData != null}");
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
-        ),
-      ).then((result) {
-        // Refresh notifications if needed
-        if (result == true) {
-          _refreshNotifications();
+      if (action == 'new_request') {
+        // For new leave requests, use ApproverLeaveDetailScreen with PendingLeaveRequest
+        print(
+          "➡️ Navigating to ApproverLeaveDetailScreen (PendingLeaveRequest)",
+        );
+
+        if (notification.leaveData == null) {
+          _showErrorDialog('No leave information available for this request');
+          return;
         }
-      });
+
+        final leaveRequest = notification.toPendingLeaveRequest();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
+          ),
+        ).then((result) {
+          if (result == true) {
+            _refreshNotifications();
+          }
+        });
+      } else if (action == 'approved' ||
+          action == 'rejected' ||
+          action == 'submitted') {
+        // For approved/rejected/submitted leaves, use MyLeaveDetailScreen with LeaveHistoryModel
+        print("➡️ Navigating to MyLeaveDetailScreen (LeaveHistoryModel)");
+
+        if (notification.leaveData == null) {
+          _showErrorDialog(
+            'No leave information available for this status update',
+          );
+          return;
+        }
+
+        try {
+          final leaveInfo = notification.toLeaveHistoryModel();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => MyLeaveDetailScreen(leaveRequest: leaveInfo),
+            ),
+          ).then((result) {
+            if (result == true) {
+              _refreshNotifications();
+            }
+          });
+        } catch (e) {
+          print("❌ Error converting to LeaveHistoryModel: $e");
+          _showErrorDialog('Error processing leave data: ${e.toString()}');
+        }
+      } else {
+        // Fallback: show notification details modal
+        _showNotificationDetails(notification);
+      }
     } catch (e) {
+      print("❌ Error handling leave notification: $e");
       _showErrorDialog('Error opening leave details: ${e.toString()}');
     }
-  }
-
-  // Handle announcement notification tap
-  void _handleAnnouncementNotificationTap(NotificationModel notification) {
-    // Handle announcement navigation
-    _showNotificationDetails(notification);
   }
 
   // Show error dialog
@@ -716,9 +700,9 @@ class _NotificationScreenState extends State<NotificationScreen>
                 // Header
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: primary,
-                    borderRadius: BorderRadius.vertical(
+                    borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(20),
                     ),
                   ),
@@ -778,7 +762,8 @@ class _NotificationScreenState extends State<NotificationScreen>
                           ),
                           const SizedBox(height: 12),
                           ...notification.data.entries.map((entry) {
-                            if (entry.key == 'leave_information') {
+                            if (entry.key == 'staff_leave_request' ||
+                                entry.key == 'own_leave_request_data') {
                               return const SizedBox.shrink();
                             }
 
@@ -818,7 +803,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                     children: [
                       // If it's a leave notification, show "View Leave Details" button
                       if (notification.type == 'leave' &&
-                          notification.leaveInformation != null)
+                          notification.leaveData != null)
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -909,17 +894,17 @@ class _NotificationScreenState extends State<NotificationScreen>
     String title, subtitle;
 
     switch (tabType) {
-      case 'leave':
-        title = 'No leave notifications';
-        subtitle = 'No new leave requests or updates';
+      case 'leave_request':
+        title = 'No leave requests';
+        subtitle = 'No new leave requests to review';
         break;
-      case 'announcement':
-        title = 'No announcements';
-        subtitle = 'No new announcements available';
+      case 'leave_approval':
+        title = 'No leave updates';
+        subtitle = 'No leave status updates available';
         break;
       default:
-        title = 'No alerts';
-        subtitle = 'No new alerts or notifications';
+        title = 'No notifications';
+        subtitle = 'No new notifications available';
         break;
     }
 

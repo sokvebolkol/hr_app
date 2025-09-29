@@ -28,6 +28,7 @@ import '../leaves/leave_history/manager_leave_history_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../memo/memo_screen.dart';
+import '../notifications/approver_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 
@@ -277,7 +278,13 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
                   children: [
                     IconButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/notifications');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => const ApproverNotificationScreen(),
+                          ),
+                        );
                       },
                       icon: const Icon(
                         Icons.notifications,

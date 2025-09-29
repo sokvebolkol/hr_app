@@ -14,6 +14,7 @@ import '../../utils/file_helper.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/leave_request.dart';
@@ -21,6 +22,7 @@ import '../attendance/staff_attendance_detail_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
+import '../notifications/ceo_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 import '../memo/memo_screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
@@ -29,7 +31,6 @@ class CeoDashboardScreen extends StatefulWidget {
   const CeoDashboardScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _CeoDashboardScreenState createState() => _CeoDashboardScreenState();
 }
 
@@ -158,7 +159,15 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                 });
               }
 
-              // Show the selected screen
+              // Show screens with header for home page
+              if (_currentIndex == 0) {
+                return Column(
+                  children: [
+                    _buildStickyHeader(dashboardViewModel),
+                    Expanded(child: _screens[_currentIndex]),
+                  ],
+                );
+              }
               return _screens[_currentIndex];
             },
           ),
@@ -190,6 +199,159 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
         ),
       ),
     );
+  }
+
+  // Add this new method for the sticky header
+  Widget _buildStickyHeader(DashboardViewModel viewModel) {
+    return Container(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      decoration: BoxDecoration(
+        color: secondary,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          top: 16,
+        ),
+        child: Row(
+          children: [
+            InkWell(
+              onTap: () {
+                navigateToProfile();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    _buildProfileAvatar(viewModel),
+                    const SizedBox(width: 16),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          FileHelper().greeting,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 180,
+                          child: Text(
+                            viewModel.username,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Spacer(),
+
+            // Global notifications from NotificationViewModel
+            Consumer<NotificationViewModel>(
+              builder: (context, notificationViewModel, child) {
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CeoNotificationScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.notifications,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    if (notificationViewModel.unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '${notificationViewModel.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Add this new method for profile avatar in sticky header
+  Widget _buildProfileAvatar(DashboardViewModel viewModel) {
+    final imageUrl = viewModel.profileImageUrl;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.blueAccent,
+        ),
+        child: ClipOval(
+          child: FadeInImage.assetNetwork(
+            placeholder: 'assets/images/profile.png',
+            image: imageUrl,
+            fit: BoxFit.cover,
+            imageErrorBuilder: (context, error, stackTrace) {
+              return Image.asset(
+                'assets/images/profile.png',
+                fit: BoxFit.cover,
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      return const CircleAvatar(
+        backgroundImage: AssetImage('assets/images/profile.png'),
+        backgroundColor: Colors.blueAccent,
+      );
+    }
   }
 
   @override
@@ -271,7 +433,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
+                // Remove the old _buildHeader() since it's now in sticky header
                 const DateSection(),
                 _buildTodayAttendanceCard(ceoViewModel),
                 _buildFunctionButtons(context),
@@ -284,199 +446,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      color: secondary,
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: 50,
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    final scaffoldState =
-                        context
-                            .findAncestorStateOfType<
-                              _CeoDashboardScreenState
-                            >();
-                    scaffoldState?.navigateToProfile();
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        _buildProfileAvatar(),
-                        const SizedBox(width: 16),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              FileHelper().greeting,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              widget.dashboardViewModel.username,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                _buildNotificationIcon(),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Remove the old _buildNotificationIcon method since it's now in sticky header
 
-  Widget _buildFunctionButtons(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        height: 100,
-        child: Row(
-          children: [
-            SizedBox(
-              width: screenWidth / 2 * 0.87,
-              child: FunctionIconCardWidget(
-                iconColor: secondary.withOpacity(0.8),
-                iconData: FontAwesomeIcons.networkWired,
-                iconSize: 30,
-                label: 'CHOKCHEY Team',
-                textSize: 14,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ChockcheyTeamScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(width: 16.0),
-            SizedBox(
-              width: screenWidth / 2 * 0.87,
-              child: FunctionIconCardWidget(
-                iconColor: secondary.withOpacity(0.8),
-                iconData: FontAwesomeIcons.userClock,
-                iconSize: 30,
-                label: 'Staff Attendances',
-                textSize: 14,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const StaffAttendanceDetailScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationIcon() {
-    return Consumer<CeoDashboardViewModel>(
-      builder: (context, viewModel, child) {
-        final pendingCount = viewModel.pendingLeavesCount;
-
-        return Stack(
-          alignment: Alignment.topRight,
-          children: [
-            const Icon(
-              Icons.notifications_none_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
-            if (pendingCount > 0)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(1),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    pendingCount > 99 ? '99+' : pendingCount.toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildProfileAvatar() {
-    final imageUrl = widget.dashboardViewModel.profileImageUrl;
-
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.blueAccent,
-        ),
-        child: ClipOval(
-          child: FadeInImage.assetNetwork(
-            placeholder: 'assets/images/profile.png',
-            image: imageUrl,
-            fit: BoxFit.cover,
-            imageErrorBuilder: (context, error, stackTrace) {
-              return Image.asset(
-                'assets/images/profile.png',
-                fit: BoxFit.cover,
-              );
-            },
-          ),
-        ),
-      );
-    } else {
-      return const CircleAvatar(
-        backgroundImage: AssetImage('assets/images/profile.png'),
-        backgroundColor: Colors.blueAccent,
-      );
-    }
-  }
+  // Remove the old _buildProfileAvatar method since it's now in sticky header
 
   Widget _buildTodayAttendanceCard(CeoDashboardViewModel viewModel) {
     if (viewModel.isLoading) {
@@ -661,6 +633,57 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFunctionButtons(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        height: 100,
+        child: Row(
+          children: [
+            SizedBox(
+              width: screenWidth / 2 * 0.87,
+              child: FunctionIconCardWidget(
+                iconColor: secondary.withOpacity(0.8),
+                iconData: FontAwesomeIcons.networkWired,
+                iconSize: 30,
+                label: 'CHOKCHEY Team',
+                textSize: 14,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ChockcheyTeamScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(width: 16.0),
+            SizedBox(
+              width: screenWidth / 2 * 0.87,
+              child: FunctionIconCardWidget(
+                iconColor: secondary.withOpacity(0.8),
+                iconData: FontAwesomeIcons.userClock,
+                iconSize: 30,
+                label: 'Staff Attendances',
+                textSize: 14,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StaffAttendanceDetailScreen(),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -1286,8 +1309,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
           (context, index) => _buildCompactLeaveItem(leaves[index], false),
     );
   }
-
-  // In _buildCompactLeaveItem method, replace the entire method with:
 
   Widget _buildCompactLeaveItem(LeaveRequest leave, bool isPending) {
     final screenWidth = MediaQuery.of(context).size.width;

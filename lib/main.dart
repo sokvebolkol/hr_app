@@ -9,7 +9,6 @@ import 'views/auth/splash-screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
 import 'firebase_options.dart';
-import 'views/notifications/notifcation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,9 +76,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chokchey HR',
-      routes: {
-        '/notifications': (context) => const NotificationScreen(),
-      },
       theme: ThemeData(
         fontFamily: 'times',
         colorScheme: ColorScheme.fromSeed(

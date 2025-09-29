@@ -13,7 +13,9 @@ class NotificationModel {
   final String createdAt;
   final String timeAgo;
   final bool isRecent;
-  final Map<String, dynamic>? leaveInformation;
+  final Map<String, dynamic>?
+  staffLeaveRequest; // Changed from leaveInformation
+  final Map<String, dynamic>? ownLeaveRequestData; // New field
 
   NotificationModel({
     required this.id,
@@ -27,7 +29,8 @@ class NotificationModel {
     required this.createdAt,
     required this.timeAgo,
     required this.isRecent,
-    this.leaveInformation,
+    this.staffLeaveRequest,
+    this.ownLeaveRequestData,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -43,7 +46,8 @@ class NotificationModel {
       createdAt: json['created_at'] ?? '',
       timeAgo: json['time_ago'] ?? '',
       isRecent: json['is_recent'] ?? false,
-      leaveInformation: json['leave_information'],
+      staffLeaveRequest: json['staff_leave_request'],
+      ownLeaveRequestData: json['own_leave_request_data'],
     );
   }
 
@@ -60,17 +64,35 @@ class NotificationModel {
       'created_at': createdAt,
       'time_ago': timeAgo,
       'is_recent': isRecent,
-      'leave_information': leaveInformation,
+      'staff_leave_request': staffLeaveRequest,
+      'own_leave_request_data': ownLeaveRequestData,
     };
   }
 
-  // Convert to PendingLeaveRequest (for EmployeeLeaveDetailScreen)
-  PendingLeaveRequest toPendingLeaveRequest() {
-    if (leaveInformation == null) {
-      throw Exception('No leave information available');
+  // Helper method to get the appropriate leave data based on notification type
+  Map<String, dynamic>? get leaveData {
+    // For new requests (staff requesting leave) - use staff_leave_request
+    if (data['action'] == 'new_request' && staffLeaveRequest != null) {
+      return staffLeaveRequest;
     }
 
-    final leave = leaveInformation!;
+    // For own leave updates (approved/rejected) - use own_leave_request_data
+    if ((data['action'] == 'approved' || data['action'] == 'rejected') &&
+        ownLeaveRequestData != null) {
+      return ownLeaveRequestData;
+    }
+
+    // Fallback to either available data
+    return staffLeaveRequest ?? ownLeaveRequestData;
+  }
+
+  // Convert to PendingLeaveRequest (for ApproverLeaveDetailScreen)
+  PendingLeaveRequest toPendingLeaveRequest() {
+    final leave = leaveData;
+
+    if (leave == null) {
+      throw Exception('No leave information available');
+    }
 
     return PendingLeaveRequest(
       lreid: leave['lreid']?.toString() ?? '',
@@ -89,7 +111,10 @@ class NotificationModel {
       statu: leave['statu']?.toString() ?? '0',
       holiday: leave['holiday']?.toString() ?? '0',
       ltyp: leave['ltyp']?.toString() ?? '',
-      requesterName: leave['requester_name']?.toString() ?? '',
+      requesterName:
+          leave['dname']?.toString() ??
+          leave['requester_name']?.toString() ??
+          '',
       staffId: leave['staff_id']?.toString() ?? '',
       email: leave['email']?.toString() ?? '',
       positionName: leave['position_name']?.toString() ?? '',
@@ -112,6 +137,59 @@ class NotificationModel {
               )
               .toList() ??
           [],
+    );
+  }
+
+  // Convert to LeaveHistoryModel (for MyLeaveDetailScreen)
+  LeaveHistoryModel toLeaveHistoryModel() {
+    final leave = leaveData;
+
+    if (leave == null) {
+      throw Exception('No leave information available');
+    }
+
+    // Convert prio_list from Map to PriorityModel objects
+    List<PriorityModel> prioList = [];
+    if (leave['prio_list'] != null) {
+      prioList =
+          (leave['prio_list'] as List<dynamic>).map((prioData) {
+            // prioData is a Map<String, dynamic>, not a PriorityModel
+            final Map<String, dynamic> prio = prioData as Map<String, dynamic>;
+            return PriorityModel(
+              approverName: prio['approver_name']?.toString() ?? 'Unknown',
+              userApproverToken: prio['user_approver_token']?.toString(),
+              prio: prio['prio'] ?? 0,
+              apstatu: prio['apstatu'] ?? 0,
+              apstatuText: prio['apstatu_text']?.toString() ?? '',
+              prioText:
+                  prio['prio_text']?.toString() ?? '', // Note: using prioText
+              remark: prio['remark']?.toString() ?? '',
+            );
+          }).toList();
+    }
+
+    return LeaveHistoryModel(
+      eid: leave['eid']?.toString() ?? '',
+      dname: leave['dname']?.toString() ?? '',
+      eCard: null,
+      position: null,
+      department: null,
+      email: null,
+      branchName: null,
+      lreid: leave['lreid']?.toString() ?? '',
+      frdat: leave['frdat']?.toString() ?? '',
+      todat: leave['todat']?.toString() ?? '',
+      leaid: leave['leaid']?.toString() ?? '',
+      ltyp: leave['ltyp']?.toString() ?? '',
+      numleav: leave['numleav']?.toString() ?? '',
+      lfor: leave['lfor']?.toString() ?? '',
+      leaveNote: leave['leave_note']?.toString() ?? '',
+      isLeaveCanCancel: leave['isLeaveCanCancel'] ?? false,
+      statu: leave['statu']?.toString() ?? '0',
+      reason: leave['reason']?.toString() ?? '',
+      createdate: leave['createdate']?.toString() ?? '',
+      prioList: prioList, // Use the converted list
+      statusText: leave['statu_text']?.toString() ?? '', // Fixed field name
     );
   }
 }

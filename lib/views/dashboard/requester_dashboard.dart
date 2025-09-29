@@ -12,6 +12,7 @@ import '../../constants/responsive.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/leave_balance_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
@@ -24,6 +25,7 @@ import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
+import '../notifications/requester_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -41,6 +43,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   double screenWidth = 0.0;
   double screenHeight = 0.0;
   late DashboardViewModel _dashboardViewModel;
+
+  final List<Widget> _screens = [const DashboardScreen(), const ProfilePage()];
 
   @override
   void initState() {
@@ -83,6 +87,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
+
+    // Set the home content dynamically
+    _screens[0] = const _DashboardHomeContent();
 
     return WillPopScope(
       onWillPop: _onBackPressed,
@@ -135,9 +142,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                 });
               }
 
-              return _currentIndex == 0
-                  ? const _DashboardHomeContent()
-                  : const ProfilePage();
+              // Show screens with header for home page
+              if (_currentIndex == 0) {
+                return Column(
+                  children: [
+                    _buildStickyHeader(viewModel),
+                    Expanded(child: _screens[_currentIndex]),
+                  ],
+                );
+              }
+              return _screens[_currentIndex];
             },
           ),
         ),
@@ -185,6 +199,161 @@ class _DashboardScreenState extends State<DashboardScreen>
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
+  }
+
+  // Add this new method for the sticky header
+  Widget _buildStickyHeader(DashboardViewModel viewModel) {
+    return Container(
+      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+      decoration: BoxDecoration(
+        color: primary,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          top: 16,
+        ),
+        child: Row(
+          children: [
+            InkWell(
+              onTap: () {
+                navigateToProfile();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    _buildProfileAvatar(viewModel),
+                    const SizedBox(width: 16),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          FileHelper().greeting,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 180,
+                          child: Text(
+                            viewModel.username,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Spacer(),
+
+            // Global notifications from NotificationViewModel
+            Consumer<NotificationViewModel>(
+              builder: (context, notificationViewModel, child) {
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    const RequesterNotificationScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.notifications,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    if (notificationViewModel.unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '${notificationViewModel.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Add this new method for profile avatar in sticky header
+  Widget _buildProfileAvatar(DashboardViewModel viewModel) {
+    final imageUrl = viewModel.profileImageUrl;
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.blueAccent,
+        ),
+        child: ClipOval(
+          child: FadeInImage.assetNetwork(
+            placeholder: 'assets/images/profile.png',
+            image: imageUrl,
+            fit: BoxFit.cover,
+            imageErrorBuilder: (context, error, stackTrace) {
+              return Image.asset(
+                'assets/images/profile.png',
+                fit: BoxFit.cover,
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      return const CircleAvatar(
+        backgroundImage: AssetImage('assets/images/profile.png'),
+        backgroundColor: Colors.blueAccent,
+      );
+    }
   }
 
   @override
@@ -331,7 +500,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(viewModel),
+                // Remove the old _buildHeader() since it's now in sticky header
                 const DateSection(),
                 const SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
@@ -344,129 +513,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         );
       },
     );
-  }
-
-  Widget _buildHeader(DashboardViewModel viewModel) {
-    return Container(
-      color: primary,
-      child: Padding(
-        padding: const EdgeInsets.only(
-          top: 50,
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    // Navigate to profile page by changing the current index
-                    final scaffoldState =
-                        context
-                            .findAncestorStateOfType<_DashboardScreenState>();
-                    scaffoldState?.navigateToProfile();
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        _buildProfileAvatar(viewModel),
-                        const SizedBox(width: 16),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              FileHelper().greeting,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              viewModel.username,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                _buildNotificationIcon(),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationIcon() {
-    return Stack(
-      alignment: Alignment.topRight,
-      children: [
-        const Icon(Icons.notifications_none, color: Colors.white, size: 24),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            padding: const EdgeInsets.all(1),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            constraints: const BoxConstraints(minWidth: 12, minHeight: 12),
-            child: const Text(
-              '1',
-              style: TextStyle(color: Colors.white, fontSize: 8),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProfileAvatar(DashboardViewModel viewModel) {
-    final imageUrl = viewModel.profileImageUrl;
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.blueAccent,
-        ),
-        child: ClipOval(
-          child: FadeInImage.assetNetwork(
-            placeholder: 'assets/images/profile.png',
-            image: imageUrl,
-            fit: BoxFit.cover,
-            imageErrorBuilder: (context, error, stackTrace) {
-              return Image.asset(
-                'assets/images/profile.png',
-                fit: BoxFit.cover,
-              );
-            },
-          ),
-        ),
-      );
-    } else {
-      return const CircleAvatar(
-        backgroundImage: AssetImage('assets/images/profile.png'),
-        backgroundColor: Colors.blueAccent,
-      );
-    }
   }
 
   Widget _buildLeaveBalanceSection(DashboardViewModel viewModel) {
