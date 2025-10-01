@@ -58,14 +58,23 @@ Future<void> _initializeFirebaseWithTimeout() async {
     print('✅ Firebase initialized successfully');
 
     // Initialize notification service with timeout
-    await FirebaseNotificationService().initialize().timeout(
-      const Duration(seconds: 5),
-    );
+    final notificationService = FirebaseNotificationService();
+    await notificationService.initialize().timeout(const Duration(seconds: 10));
     print('✅ Notification service initialized');
+
+    // Add this debug call
+    await notificationService.debugNotificationStatus();
+
+    // Show test notification after 5 seconds (for debugging)
+    Future.delayed(const Duration(seconds: 5), () async {
+      if (Platform.isIOS) {
+        print('🧪 Showing test notification in 5 seconds...');
+        await notificationService.showTestNotification();
+      }
+    });
   } catch (e) {
     print('⚠️ Firebase initialization failed or timed out: $e');
     print('📱 App will continue without Firebase features');
-    // Don't throw error - let app continue
   }
 }
 
@@ -107,29 +116,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Make permissions non-blocking
+// Make permissions non-blocking but more explicit for iOS
 Future<void> _requestPermissions() async {
   try {
     if (Platform.isIOS) {
+      print('📱 Requesting iOS permissions...');
+
+      // Request notification permission explicitly
+      final notificationStatus = await Permission.notification.request();
+      print('📋 iOS Notification permission: $notificationStatus');
+
       final permissions = <Permission>[
         Permission.camera,
         Permission.photos,
         Permission.locationWhenInUse,
-        Permission.notification,
       ];
 
       for (final permission in permissions) {
         final status = await permission.status;
-        debugPrint('iOS Permission for $permission is $status');
+        debugPrint('📋 iOS Permission for $permission is $status');
 
         if (status.isDenied) {
           debugPrint(
-            'iOS Permission $permission is denied, will request when needed',
+            '⚠️ iOS Permission $permission is denied, will request when needed',
           );
         }
       }
     } else {
-      // Request permissions in background for Android
+      // Android permissions
       final permissions = <Permission>[
         Permission.camera,
         Permission.photos,
@@ -142,15 +156,15 @@ Future<void> _requestPermissions() async {
           final status = await permission.request().timeout(
             const Duration(seconds: 3),
           );
-          debugPrint('Android Permission for $permission is $status');
+          debugPrint('📋 Android Permission for $permission is $status');
 
           if (status.isPermanentlyDenied) {
             debugPrint(
-              'Permission $permission is permanently denied. Please enable it in Settings.',
+              '❌ Permission $permission is permanently denied. Please enable it in Settings.',
             );
           }
         } catch (e) {
-          debugPrint('Permission request timeout for $permission: $e');
+          debugPrint('⏰ Permission request timeout for $permission: $e');
         }
       }
 
@@ -158,13 +172,13 @@ Future<void> _requestPermissions() async {
         final storageStatus = await Permission.storage.request().timeout(
           const Duration(seconds: 3),
         );
-        debugPrint('Permission for storage is $storageStatus');
+        debugPrint('📋 Permission for storage is $storageStatus');
       } catch (e) {
-        debugPrint('Storage permission timeout: $e');
+        debugPrint('⏰ Storage permission timeout: $e');
       }
     }
   } catch (e) {
-    debugPrint('Error requesting permissions: $e');
+    debugPrint('❌ Error requesting permissions: $e');
   }
 }
 
