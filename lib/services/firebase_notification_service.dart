@@ -287,7 +287,6 @@ class FirebaseNotificationService {
     print('📨 Body: ${message.notification?.body}');
     print('📨 Data: ${message.data}');
     print('📨 From: ${message.from}');
-    // print('📨 To: ${message.to}');
     print('📨 Sent Time: ${message.sentTime}');
     print('📨 TTL: ${message.ttl}');
     print('📨 === END FOREGROUND MESSAGE ===');
@@ -381,9 +380,10 @@ class FirebaseNotificationService {
       icon: '@mipmap/ic_launcher',
       enableVibration: true,
       playSound: true,
+      ongoing: false, // Allow dismissal
     );
 
-    // iOS notification details - simplified but effective
+    // iOS notification details - updated to persist in notification center
     final iosDetails = local_notifications.DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
@@ -393,6 +393,8 @@ class FirebaseNotificationService {
       threadIdentifier: notification.type,
       categoryIdentifier: 'hr_notification',
       subtitle: _getNotificationSubtitle(notification.type),
+      interruptionLevel:
+          local_notifications.InterruptionLevel.active, // Add this
     );
 
     final details = local_notifications.NotificationDetails(
@@ -466,7 +468,6 @@ class FirebaseNotificationService {
 
   /// Test notification (for debugging)
   Future<void> showTestNotification() async {
-    print('🧪 Showing test notification...');
 
     final testNotification = NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch,

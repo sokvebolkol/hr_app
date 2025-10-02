@@ -52,20 +52,22 @@ import UserNotifications
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
   
-  // Handle foreground notifications (iOS 10+) - Add override keyword
+  // Handle foreground notifications (iOS 10+) - Updated to keep notifications in center
   @available(iOS 10, *)
   override func userNotificationCenter(_ center: UNUserNotificationCenter,
-                             willPresent notification: UNNotification,
-                             withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+                           willPresent notification: UNNotification,
+                           withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
     
     print("📨 AppDelegate: Foreground notification received")
     print("📨 Title: \(notification.request.content.title)")
     print("📨 Body: \(notification.request.content.body)")
     
-    // Show notification even in foreground
+    // Show notification AND keep it in notification center
     if #available(iOS 14.0, *) {
-      completionHandler([[.banner, .badge, .sound]])
+      // iOS 14+: Use .list to keep in notification center
+      completionHandler([[.banner, .list, .badge, .sound]])
     } else {
+      // iOS 10-13: Use .alert to keep in notification center  
       completionHandler([[.alert, .badge, .sound]])
     }
   }
