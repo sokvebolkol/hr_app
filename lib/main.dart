@@ -6,6 +6,9 @@ import 'localization/language_logic.dart';
 import 'constants/constant.dart';
 import 'viewmodels/notification_viewmodel.dart';
 import 'views/auth/splash-screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'services/firebase_notification_service.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +17,12 @@ void main() async {
     final languageLogic = LanguageLogic();
     await languageLogic.initialize();
     HttpOverrides.global = MyHttpOverrides();
-    _requestPermissions();
+
+    // Initialize Firebase with timeout
+    await _initializeFirebaseWithTimeout();
+
+    // Request permissions after Firebase (non-blocking)
+    _requestPermissions(); // Remove await to make it non-blocking
 
     runApp(
       MultiProvider(
@@ -26,7 +34,7 @@ void main() async {
       ),
     );
   } catch (e) {
-    print('Error initializing app: $e');
+    print('❌ Error initializing app: $e');
     // Still run the app even if Firebase fails
     runApp(
       MultiProvider(
@@ -37,6 +45,28 @@ void main() async {
         child: const MyApp(),
       ),
     );
+  }
+}
+
+// Add timeout for Firebase initialization
+Future<void> _initializeFirebaseWithTimeout() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10)); // 10 second timeout
+
+    print('✅ Firebase initialized successfully');
+
+    // Initialize notification service with timeout
+    final notificationService = FirebaseNotificationService();
+    await notificationService.initialize().timeout(const Duration(seconds: 10));
+    print('✅ Notification service initialized');
+
+    // Add this debug call
+    await notificationService.debugNotificationStatus();
+  } catch (e) {
+    print('⚠️ Firebase initialization failed or timed out: $e');
+    print('📱 App will continue without Firebase features');
   }
 }
 
@@ -118,11 +148,11 @@ Future<void> _requestPermissions() async {
           final status = await permission.request().timeout(
             const Duration(seconds: 3),
           );
-          debugPrint('Android Permission for $permission is $status');
+          debugPrint('📋 Android Permission for $permission is $status');
 
           if (status.isPermanentlyDenied) {
             debugPrint(
-              'Permission $permission is permanently denied. Please enable it in Settings.',
+              '❌ Permission $permission is permanently denied. Please enable it in Settings.',
             );
           }
         } catch (e) {
@@ -134,13 +164,13 @@ Future<void> _requestPermissions() async {
         final storageStatus = await Permission.storage.request().timeout(
           const Duration(seconds: 3),
         );
-        debugPrint('Permission for storage is $storageStatus');
+        debugPrint('📋 Permission for storage is $storageStatus');
       } catch (e) {
-        debugPrint('Storage permission timeout: $e');
+        debugPrint('⏰ Storage permission timeout: $e');
       }
     }
   } catch (e) {
-    debugPrint('Error requesting permissions: $e');
+    debugPrint('❌ Error requesting permissions: $e');
   }
 }
 

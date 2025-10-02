@@ -386,15 +386,14 @@ class FirebaseNotificationService {
     // iOS notification details - updated to persist in notification center
     final iosDetails = local_notifications.DarwinNotificationDetails(
       presentAlert: true,
-      presentBadge: true,
+      presentBadge: false,
       presentSound: true,
       sound: 'default',
-      badgeNumber: await getBadgeCount(),
+      // badgeNumber: await getBadgeCount(),
       threadIdentifier: notification.type,
       categoryIdentifier: 'hr_notification',
       subtitle: _getNotificationSubtitle(notification.type),
-      interruptionLevel:
-          local_notifications.InterruptionLevel.active, // Add this
+      interruptionLevel: local_notifications.InterruptionLevel.active,
     );
 
     final details = local_notifications.NotificationDetails(
@@ -468,7 +467,6 @@ class FirebaseNotificationService {
 
   /// Test notification (for debugging)
   Future<void> showTestNotification() async {
-
     final testNotification = NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch,
       title: 'Test Notification',
