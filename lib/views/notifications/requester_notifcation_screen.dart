@@ -110,7 +110,7 @@ class _RequesterNotificationScreenState
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('Leave Status'),
+            const Text('Notifications'),
             // Show count badge in title
             if (_leaveStatusNotifications.isNotEmpty) ...[
               const SizedBox(width: 8),

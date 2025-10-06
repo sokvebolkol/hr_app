@@ -48,6 +48,10 @@ app.*.map.json
 **/android/.gradle/
 **/android/build/
 **/android/app/build/
+*.apk
+*.aab
+*.so
+**/build/
 **/android/gradle/
 **/android/.gradle/
 **/android/gradlew
@@ -56,6 +60,34 @@ app.*.map.json
 **/android/keystore/
 **/android/key.properties
 **/android/**/build/
+
+# Android Studio / IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# ==========================
+# iOS
+# ==========================
+# Flutter build outputs
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/App.framework
+**/ios/Flutter/engine/
+**/ios/Pods/
+**/ios/Runner.xcworkspace/
+**/ios/build/
+
+# Xcode
+*.xcuserstate
+*.xcworkspace
+*.xcuserdatad
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+DerivedData/
 
 # Flutter build outputs
 **/build/

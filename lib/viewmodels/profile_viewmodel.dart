@@ -68,12 +68,12 @@ class ProfileViewModel extends ChangeNotifier {
       label: "Joined Date",
       value: joinedDate,
     ),
-    ProfileItem(
-      icon: Icons.language,
-      label: _languageLogic.language.language,
-      value: currentLanguage,
-      isClickable: true,
-    ),
+    // ProfileItem(
+    //   icon: Icons.language,
+    //   label: _languageLogic.language.language,
+    //   value: currentLanguage,
+    //   isClickable: true,
+    // ),
   ];
 
   // Initialize profile data

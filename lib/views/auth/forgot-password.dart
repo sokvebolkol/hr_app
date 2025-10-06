@@ -56,7 +56,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  "Enter your E-Card and Email to receive an OTP.",
+                  "Enter your E-Card and Email to receive an OTP",
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
