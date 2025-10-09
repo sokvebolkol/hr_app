@@ -157,8 +157,10 @@ class _DashboardScreenState extends State<DashboardScreen>
         ),
         bottomNavigationBar: ConvexAppBar(
           key: ValueKey(_currentIndex),
-          color: Colors.white,
-          backgroundColor: primary,
+          backgroundColor: Colors.white,
+          activeColor: primary,
+          shadowColor: Colors.grey[200],
+          color: primary,
           style: TabStyle.react,
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),

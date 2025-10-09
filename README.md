@@ -152,8 +152,11 @@ mkdir -p build/app/outputs/flutter-apk/
 
 ### Step 3: Copy APK to Expected Location
 ```bash
-cp android/app/build/outputs/apk/release/app-release.apk \
+cp ./android/app/build/outputs/apk/release/app-release.apk \
    build/app/outputs/flutter-apk/app-release.apk
+   # Copy debug APK to expected location
+cp ./android/app/build/outputs/apk/debug/app-debug.apk \
+   build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 ### Step 4: Clean and Rebuild

@@ -507,7 +507,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _isLoading ? "Logging in..." : language.login,
+                          _isLoading ? "Logging in..." : "Login",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,

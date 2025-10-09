@@ -167,8 +167,10 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
         ),
         bottomNavigationBar: ConvexAppBar(
           key: ValueKey(_currentIndex),
-          color: Colors.white,
-          backgroundColor: primary,
+          backgroundColor: Colors.white,
+          activeColor: primary,
+          shadowColor: Colors.grey[200],
+          color: primary,
           style: TabStyle.react,
           items: [
             TabItem(icon: Icons.home, title: 'Home'),

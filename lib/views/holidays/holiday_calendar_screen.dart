@@ -1,3 +1,4 @@
+import 'package:chokchey_hr_app/views/dashboard/ceo_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -101,12 +102,17 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: themeColor,
-        leading: InkWell(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: const Icon(Icons.arrow_back, color: Colors.white),
-        ),
+        leading:
+            isCeoUser
+                ? null
+                : IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
         title: const Column(
           children: [
             Text(
@@ -122,7 +128,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
       ),
       body:
           _isLoading
-              ?  Center(child: SpinKitFadingCircle(color: themeColor))
+              ? Center(child: SpinKitFadingCircle(color: themeColor))
               : Column(
                 children: [
                   TableCalendar(

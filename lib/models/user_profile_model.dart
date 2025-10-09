@@ -53,7 +53,7 @@ class UserProfile {
       gender: json['gender']?.toString() ?? '',
       joinedDate: json['joined_date']?.toString() ?? '',
       employmentType: json['employment_type']?.toString() ?? '',
-      monthlySalary: (json['monthly_salary'] as num?)?.toDouble() ?? 0.0,
+      monthlySalary: _parseToDouble(json['monthly_salary']),
       previousMonthSalary: json['previous_month_salary']?.toString(),
       contract: json['contract']?.toString() ?? '',
       salaryType: json['salary_type']?.toString() ?? '',
@@ -63,6 +63,24 @@ class UserProfile {
       branchFullName: json['branch_full_name']?.toString() ?? '',
       profileImageUrl: json['profile_image_url']?.toString(),
     );
+  }
+
+  static double? _parseToDouble(dynamic value) {
+    if (value == null) return null;
+
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+
+    if (value is String) {
+      if (value.isEmpty) return null;
+      try {
+        return double.parse(value);
+      } catch (e) {
+        print('⚠️ Warning: Could not parse "$value" to double, returning null');
+        return null;
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
