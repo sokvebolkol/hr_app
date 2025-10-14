@@ -47,7 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
           if (viewModel.isLoading) {
             return Scaffold(
               backgroundColor: Colors.grey[100],
-              body:  Center(
+              body: Center(
                 child: Center(child: SpinKitFadingCircle(color: themeColor)),
               ),
             );
@@ -196,7 +196,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 ListTile(
                   leading: CircleAvatar(
                     backgroundColor: themeColor.withOpacity(0.13),
-                    child: Icon(viewModel.profileItems[i].icon, color: themeColor),
+                    child: Icon(
+                      viewModel.profileItems[i].icon,
+                      color: themeColor,
+                    ),
                   ),
                   title: Text(
                     viewModel.profileItems[i].label,

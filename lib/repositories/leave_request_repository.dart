@@ -96,10 +96,10 @@ class LeaveRequestRepository {
       }
 
       // Validate future dates (optional - remove if past dates are allowed)
-      final today = DateTime.now();
-      if (startDate.isBefore(DateTime(today.year, today.month, today.day))) {
-        throw Exception('Leave start date cannot be in the past');
-      }
+      // final today = DateTime.now();
+      // if (startDate.isBefore(DateTime(today.year, today.month, today.day))) {
+      //   throw Exception('Leave start date cannot be in the past');
+      // }
 
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");
@@ -380,7 +380,7 @@ class LeaveRequestRepository {
       // Check if dates are in the past (optional)
       final today = DateTime.now();
       if (startDate.isBefore(DateTime(today.year, today.month, today.day))) {
-        return 'Leave start date cannot be in the past';
+        return ' cannot be in the past';
       }
     } catch (e) {
       return 'Invalid date format';

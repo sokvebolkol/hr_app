@@ -24,6 +24,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
   List<HolidayModel> _currentMonthHolidays = [];
 
   bool isCeoUser = false;
+  bool isApproverUser = false;
   Color get themeColor => isCeoUser ? secondary : primary;
 
   @override
@@ -92,8 +93,10 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
   Future<void> _checkUserRole() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     final ceoUserValue = pref.getBool("ceoUser") ?? false;
+    final approverUserValue = pref.getBool("isApprover") ?? false;
     setState(() {
       isCeoUser = ceoUserValue;
+      isApproverUser = approverUserValue;
     });
   }
 
@@ -103,7 +106,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
       appBar: AppBar(
         backgroundColor: themeColor,
         leading:
-            isCeoUser
+            isCeoUser || isApproverUser
                 ? null
                 : IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -113,18 +116,8 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                     }
                   },
                 ),
-        title: const Column(
-          children: [
-            Text(
-              "Calendar",
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+        title: const Text("Calendar", style: TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body:
           _isLoading

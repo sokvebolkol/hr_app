@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../constants/constant.dart';
-import '../../localization/language.dart';
+// import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
 import '../dashboard/requester_dashboard.dart';
@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
-  Language language = Language();
+  // Language language = Language();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen>
     final password = passwordController.text.trim();
 
     if (eCard.isEmpty || password.isEmpty) {
-      _showErrorSnackBar("Please enter User ID and Password");
+      _showErrorSnackBar("Please enter Staff ID and Password");
       return;
     }
 
@@ -228,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    language = context.watch<LanguageLogic>().language;
+    // language = context.watch<LanguageLogic>().language;
 
     return KeyboardVisibilityBuilder(
       builder: (context, isKeyboardVisible) {
@@ -333,7 +333,7 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'User ID',
+          'Staff ID',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -351,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen>
             LengthLimitingTextInputFormatter(4),
           ],
           decoration: InputDecoration(
-            hintText: 'Enter your User ID',
+            hintText: 'Enter your Staff ID',
             prefixIcon: Icon(Icons.person_outline, color: primary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -384,10 +384,10 @@ class _LoginScreenState extends State<LoginScreen>
           },
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your User ID';
+              return 'Please enter your Staff ID';
             }
             if (value.length != 4) {
-              return 'User ID must be 4 digits';
+              return 'Staff ID must be 4 digits';
             }
             return null;
           },
@@ -542,92 +542,92 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildLanguageSelector() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          GestureDetector(
-            onTap: () {
-              if (language.code != 'KH') {
-                context.read<LanguageLogic>().toggleLanguage();
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color:
-                    language.code == 'KH'
-                        ? primary.withOpacity(0.15)
-                        : Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  const Text('🇰🇭', style: TextStyle(fontSize: 22)),
-                  if (language.code == 'KH')
-                    const Padding(
-                      padding: EdgeInsets.only(left: 6),
-                      child: Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 18,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () {
-              if (language.code != 'EN') {
-                context.read<LanguageLogic>().toggleLanguage();
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color:
-                    language.code == 'EN'
-                        ? primary.withOpacity(0.15)
-                        : Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-                  if (language.code == 'EN')
-                    const Padding(
-                      padding: EdgeInsets.only(left: 6),
-                      child: Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 18,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildLanguageSelector() {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(24),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.15),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Row(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         GestureDetector(
+  //           onTap: () {
+  //             if (language.code != 'KH') {
+  //               context.read<LanguageLogic>().toggleLanguage();
+  //             }
+  //           },
+  //           child: AnimatedContainer(
+  //             duration: const Duration(milliseconds: 200),
+  //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+  //             decoration: BoxDecoration(
+  //               color:
+  //                   language.code == 'KH'
+  //                       ? primary.withOpacity(0.15)
+  //                       : Colors.transparent,
+  //               borderRadius: BorderRadius.circular(18),
+  //             ),
+  //             child: Row(
+  //               children: [
+  //                 const Text('🇰🇭', style: TextStyle(fontSize: 22)),
+  //                 if (language.code == 'KH')
+  //                   const Padding(
+  //                     padding: EdgeInsets.only(left: 6),
+  //                     child: Icon(
+  //                       Icons.check_circle,
+  //                       color: Colors.green,
+  //                       size: 18,
+  //                     ),
+  //                   ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 12),
+  //         GestureDetector(
+  //           onTap: () {
+  //             if (language.code != 'EN') {
+  //               context.read<LanguageLogic>().toggleLanguage();
+  //             }
+  //           },
+  //           child: AnimatedContainer(
+  //             duration: const Duration(milliseconds: 200),
+  //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+  //             decoration: BoxDecoration(
+  //               color:
+  //                   language.code == 'EN'
+  //                       ? primary.withOpacity(0.15)
+  //                       : Colors.transparent,
+  //               borderRadius: BorderRadius.circular(18),
+  //             ),
+  //             child: Row(
+  //               children: [
+  //                 const Text('🇬🇧', style: TextStyle(fontSize: 22)),
+  //                 if (language.code == 'EN')
+  //                   const Padding(
+  //                     padding: EdgeInsets.only(left: 6),
+  //                     child: Icon(
+  //                       Icons.check_circle,
+  //                       color: Colors.green,
+  //                       size: 18,
+  //                     ),
+  //                   ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildFooter() {
     return Column(
