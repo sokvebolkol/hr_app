@@ -217,7 +217,11 @@ class LeaveDetailRepository {
   }
 
   // Send follow-up message
-  Future<bool> sendFollowUpMessage(String leaveId, String message) async {
+  Future<bool> sendFollowUpMessage(
+    String approverId,
+    String leaveId,
+    String message,
+  ) async {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");
@@ -225,9 +229,10 @@ class LeaveDetailRepository {
       if (token == null) {
         throw Exception('Token not found in local storage');
       }
-
       final response = await http.post(
-        Uri.parse('${_serverService.baseUrl}follow-up-leave'),
+        Uri.parse(
+          '${_serverService.baseUrl}leave/follow-up/$approverId/$leaveId',
+        ),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

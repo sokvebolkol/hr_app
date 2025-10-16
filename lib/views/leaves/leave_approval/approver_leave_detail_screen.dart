@@ -45,6 +45,11 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   const SizedBox(height: 16),
                   _buildLeaveDetailsCard(),
                   const SizedBox(height: 16),
+                  if (widget.leave.file != null &&
+                      widget.leave.file!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildSupportingDocumentCard(),
+                  ],
                   const SizedBox(height: 16),
                   ApprovalWorkflowWidget(
                     approvalList:
@@ -55,11 +60,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                             )
                             .toList(),
                   ),
-                  if (widget.leave.file != null &&
-                      widget.leave.file!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildSupportingDocumentCard(),
-                  ],
                   const SizedBox(height: 100),
                 ],
               ),
@@ -551,14 +551,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                       );
                     },
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _getFileName(widget.leave.file!),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
                 ),
               ),
             ] else ...[

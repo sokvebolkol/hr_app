@@ -31,6 +31,7 @@ class ManagerLeaveHistoryResponse {
 // Add StaffApprovalItem class for the approval workflow
 class StaffApprovalItem {
   final String approverName;
+  final String approverId;
   final int prio;
   final int apstatu;
   final String remark;
@@ -39,6 +40,7 @@ class StaffApprovalItem {
 
   StaffApprovalItem({
     required this.approverName,
+    required this.approverId,
     required this.prio,
     required this.apstatu,
     required this.remark,
@@ -49,6 +51,7 @@ class StaffApprovalItem {
   factory StaffApprovalItem.fromJson(Map<String, dynamic> json) {
     return StaffApprovalItem(
       approverName: json['approver_name'] as String? ?? '',
+      approverId: json['approver_id'] as String? ?? '',
       prio: json['prio'] as int? ?? 0,
       apstatu: json['apstatu'] as int? ?? 0,
       remark: json['remark'] as String? ?? '',
@@ -253,6 +256,7 @@ class StaffLeaveModel {
               .map(
                 (item) => PriorityModel(
                   approverName: item.approverName,
+                  approverId: item.approverId,
                   prio: item.prio,
                   apstatu: item.apstatu,
                   remark: item.remark,

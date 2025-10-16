@@ -36,6 +36,7 @@ class ApproverDashboardScreen extends StatefulWidget {
   const ApproverDashboardScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ApproverDashboardScreenState createState() =>
       _ApproverDashboardScreenState();
 }

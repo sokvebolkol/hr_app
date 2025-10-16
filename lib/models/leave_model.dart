@@ -14,6 +14,8 @@ class LeaveModel {
   final bool isLeaveCanCancel;
   final String statu;
   final String reason;
+  final String? documentUrl;
+  final bool? hasDocument;
   final String createdate;
   final List<PrioModel> prioList;
   final String statuText;
@@ -32,6 +34,8 @@ class LeaveModel {
     required this.isLeaveCanCancel,
     required this.statu,
     required this.reason,
+    this.documentUrl,
+    this.hasDocument,
     required this.createdate,
     required this.prioList,
     required this.statuText,
@@ -51,6 +55,8 @@ class LeaveModel {
     isLeaveCanCancel: json['isLeaveCanCancel'] ?? false,
     statu: json['statu'].toString(),
     reason: json['reason'],
+    hasDocument: json['has_document'],
+    documentUrl: json['document_url'],
     createdate: json['createdate'],
     prioList:
         (json['prio_list'] as List<dynamic>?)
@@ -63,6 +69,7 @@ class LeaveModel {
 
 class PrioModel {
   final String? approverName;
+  final String approverId;
   final String? userApproverToken;
   final int prio;
   final int apstatu;
@@ -72,6 +79,7 @@ class PrioModel {
 
   PrioModel({
     this.approverName,
+    required this.approverId,
     this.userApproverToken,
     required this.prio,
     required this.apstatu,
@@ -82,6 +90,7 @@ class PrioModel {
 
   factory PrioModel.fromJson(Map<String, dynamic> json) => PrioModel(
     approverName: json['approver_name'],
+    approverId: json['approver_id'],
     userApproverToken: json['user_approver_token'],
     prio: json['prio'],
     apstatu: json['apstatu'],
@@ -113,6 +122,8 @@ extension LeaveModelExtension on LeaveModel {
       isLeaveCanCancel: isLeaveCanCancel,
       statu: statu,
       reason: reason,
+      documentUrl: documentUrl,
+      hasDocument: hasDocument,
       createdate: createdate,
       prioList:
           prioList
@@ -121,6 +132,7 @@ extension LeaveModelExtension on LeaveModel {
                   approverName:
                       prioModel.approverName ??
                       'Unknown', // Provide default if null
+                  approverId: prioModel.approverId,
                   userApproverToken: prioModel.userApproverToken,
                   prio: prioModel.prio,
                   apstatu: prioModel.apstatu,

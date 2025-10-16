@@ -99,6 +99,7 @@ class LeaveHistoryModel {
 
 class PriorityModel {
   final String approverName;
+  final String approverId;
   final String? userApproverToken;
   final int prio;
   final int apstatu;
@@ -108,6 +109,7 @@ class PriorityModel {
 
   PriorityModel({
     required this.approverName,
+    required this.approverId,
     this.userApproverToken,
     required this.prio,
     required this.apstatu,
@@ -119,6 +121,7 @@ class PriorityModel {
   factory PriorityModel.fromJson(Map<String, dynamic> json) {
     return PriorityModel(
       approverName: json['approver_name'],
+      approverId: json['approver_id'],
       userApproverToken: json['user_approver_token'],
       prio: json['prio'],
       apstatu: json['apstatu'],

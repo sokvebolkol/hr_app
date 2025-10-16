@@ -157,6 +157,7 @@ class NotificationModel {
             final Map<String, dynamic> prio = prioData as Map<String, dynamic>;
             return PriorityModel(
               approverName: prio['approver_name']?.toString() ?? 'Unknown',
+              approverId: prio['approver_id']?.toString() ?? 'Unknown',
               userApproverToken: prio['user_approver_token']?.toString(),
               prio: prio['prio'] ?? 0,
               apstatu: prio['apstatu'] ?? 0,

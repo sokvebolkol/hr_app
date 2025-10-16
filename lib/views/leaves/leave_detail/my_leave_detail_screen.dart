@@ -764,32 +764,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Container(
-                      //   padding: const EdgeInsets.all(12),
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.grey[50],
-                      //     borderRadius: BorderRadius.circular(8),
-                      //   ),
-                        // child: Column(
-                        //   crossAxisAlignment: CrossAxisAlignment.start,
-                        //   children: [
-                            // Text(
-                            //   priority.approverName,
-                            //   style: const TextStyle(
-                            //     fontWeight: FontWeight.w600,
-                            //     fontSize: 14,
-                            //   ),
-                            // ),
-                            // Text(
-                            //   priority.prioText,
-                            //   style: TextStyle(
-                            //     color: Colors.grey[600],
-                            //     fontSize: 12,
-                            //   ),
-                            // ),
-                          // ],
-                        // ),
-                      // ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: messageController,
@@ -824,6 +798,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                                   try {
                                     final success = await _repository
                                         .sendFollowUpMessage(
+                                          priority.approverId,
                                           widget.leaveRequest.lreid,
                                           messageController.text.trim(),
                                         );
