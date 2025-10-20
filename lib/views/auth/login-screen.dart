@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
-import 'package:provider/provider.dart';
 import 'dart:convert' as convert;
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
-  // Language language = Language();
+  // language language = Language();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -133,7 +132,10 @@ class _LoginScreenState extends State<LoginScreen>
     final password = passwordController.text.trim();
 
     if (eCard.isEmpty || password.isEmpty) {
-      _showErrorSnackBar("Please enter Staff ID and Password");
+      _showErrorDialog(
+        title: "Missing Information",
+        message: "Please enter both Staff ID and Password to continue.",
+      );
       return;
     }
 
@@ -149,19 +151,44 @@ class _LoginScreenState extends State<LoginScreen>
       print('📱 Device type: $deviceType');
       print('🔥 FCM Token: ${deviceToken != null ? "✅ Obtained" : "❌ Failed"}');
 
-      final response = await http.post(
-        Uri.parse('${ServerService().baseUrl}login'),
-        body: {
-          "ecard": eCard,
-          "upassword": password,
-          "device_name": deviceName,
-          "device_type": deviceType,
-          "device_token": deviceToken ?? '',
-        },
-      );
+      final response = await http
+          .post(
+            Uri.parse('${ServerService().baseUrl}login'),
+            body: {
+              "ecard": eCard,
+              "upassword": password,
+              "device_name": deviceName,
+              "device_type": deviceType,
+              "device_token": deviceToken ?? '',
+            },
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Connection timeout. Please check your internet connection.',
+              );
+            },
+          );
+
+      print('📡 Response status: ${response.statusCode}');
+      print('📡 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = convert.jsonDecode(response.body);
+
+        // ✅ Check if login was successful
+        if (data['success'] == false || data['token'] == null) {
+          final errorMessage =
+              data['message'] ??
+              'Invalid credentials. Please check your Staff ID and Password.';
+          _showErrorDialog(
+            title: "Authentication Failed",
+            message: errorMessage,
+          );
+          return;
+        }
+
         final token = data['token'];
         final userId = data['userLoginInfo']['uid'];
         final isApprover = data['userProfile']['is_approver'] ?? false;
@@ -191,16 +218,61 @@ class _LoginScreenState extends State<LoginScreen>
 
         if (!mounted) return;
 
+        // ✅ Show success message
+        _showSuccessSnackBar("Welcome back!");
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => targetScreen),
         );
+      } else if (response.statusCode == 401) {
+        // ✅ Unauthorized - wrong credentials
+        _showErrorDialog(
+          title: "Authentication Failed",
+          message:
+              "Invalid Staff ID or Password. Please check your credentials and try again.",
+        );
+      } else if (response.statusCode == 422) {
+        // ✅ Validation error
+        try {
+          final data = convert.jsonDecode(response.body);
+          final errorMessage = data['message'] ?? 'Validation error occurred.';
+          _showErrorDialog(title: "Validation Error", message: errorMessage);
+        } catch (_) {
+          _showErrorDialog(
+            title: "Validation Error",
+            message: "Please check your input and try again.",
+          );
+        }
+      } else if (response.statusCode >= 500) {
+        // ✅ Server error
+        _showErrorDialog(
+          title: "Server Error",
+          message:
+              "Our server is currently experiencing issues. Please try again later.",
+        );
       } else {
-        _showErrorSnackBar("Login failed: ${response.body}");
+        // ✅ Other errors
+        String errorMessage = "An unexpected error occurred.";
+        try {
+          final data = convert.jsonDecode(response.body);
+          errorMessage = data['message'] ?? errorMessage;
+        } catch (_) {}
+
+        _showErrorDialog(title: "Login Failed", message: errorMessage);
       }
-    } catch (e) {
-      print('❌ Login error: $e');
-      _showErrorSnackBar("Network error. Please try again.");
+    } on SocketException {
+      _showErrorDialog(
+        title: "Network Error",
+        message:
+            "No internet connection detected. Please check your network settings and try again.",
+      );
+    } on FormatException {
+      _showErrorDialog(
+        title: "Data Error",
+        message:
+            "Invalid response from server. Please contact support if this persists.",
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -208,20 +280,144 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _showErrorSnackBar(String message) {
+  // ✅ NEW: Formal error dialog
+  void _showErrorDialog({
+    required String title,
+    required String message,
+    String? technicalDetails,
+  }) {
+    if (!mounted) return;
+
+    HapticFeedback.mediumImpact();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
+                ),
+                if (technicalDetails != null) ...[
+                  const SizedBox(height: 16),
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: Text(
+                      'Technical Details',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          technicalDetails,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[700],
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // ✅ NEW: Success snackbar
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white),
+            const Icon(Icons.check_circle, color: Colors.white, size: 22),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.red.shade600,
+        backgroundColor: Colors.green.shade600,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -541,93 +737,6 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
-
-  // Widget _buildLanguageSelector() {
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(24),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.grey.withOpacity(0.15),
-  //           blurRadius: 8,
-  //           offset: const Offset(0, 2),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Row(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         GestureDetector(
-  //           onTap: () {
-  //             if (language.code != 'KH') {
-  //               context.read<LanguageLogic>().toggleLanguage();
-  //             }
-  //           },
-  //           child: AnimatedContainer(
-  //             duration: const Duration(milliseconds: 200),
-  //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-  //             decoration: BoxDecoration(
-  //               color:
-  //                   language.code == 'KH'
-  //                       ? primary.withOpacity(0.15)
-  //                       : Colors.transparent,
-  //               borderRadius: BorderRadius.circular(18),
-  //             ),
-  //             child: Row(
-  //               children: [
-  //                 const Text('🇰🇭', style: TextStyle(fontSize: 22)),
-  //                 if (language.code == 'KH')
-  //                   const Padding(
-  //                     padding: EdgeInsets.only(left: 6),
-  //                     child: Icon(
-  //                       Icons.check_circle,
-  //                       color: Colors.green,
-  //                       size: 18,
-  //                     ),
-  //                   ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //         const SizedBox(width: 12),
-  //         GestureDetector(
-  //           onTap: () {
-  //             if (language.code != 'EN') {
-  //               context.read<LanguageLogic>().toggleLanguage();
-  //             }
-  //           },
-  //           child: AnimatedContainer(
-  //             duration: const Duration(milliseconds: 200),
-  //             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-  //             decoration: BoxDecoration(
-  //               color:
-  //                   language.code == 'EN'
-  //                       ? primary.withOpacity(0.15)
-  //                       : Colors.transparent,
-  //               borderRadius: BorderRadius.circular(18),
-  //             ),
-  //             child: Row(
-  //               children: [
-  //                 const Text('🇬🇧', style: TextStyle(fontSize: 22)),
-  //                 if (language.code == 'EN')
-  //                   const Padding(
-  //                     padding: EdgeInsets.only(left: 6),
-  //                     child: Icon(
-  //                       Icons.check_circle,
-  //                       color: Colors.green,
-  //                       size: 18,
-  //                     ),
-  //                   ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildFooter() {
     return Column(

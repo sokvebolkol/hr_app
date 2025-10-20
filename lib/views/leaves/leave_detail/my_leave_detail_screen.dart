@@ -71,16 +71,12 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
             children: [
               _buildCompactStatusCard(),
               const SizedBox(height: 16),
-              // Details Section
               _buildDetailsCard(),
               const SizedBox(height: 16),
-              // Approval Workflow Section using reusable widget
               _buildApprovalWorkflowSection(),
               const SizedBox(height: 16),
-              // Document Support Section (if available)
               if (_hasDocumentSupport()) _buildDocumentSupportCard(),
               const SizedBox(height: 16),
-              // Action Buttons (if pending)
               if (widget.leaveRequest.isLeaveCanCancel) _buildActionButtons(),
             ],
           ),
@@ -89,7 +85,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  // Updated to use global widget
   Widget _buildCompactStatusCard() {
     return CompactStatusCard(
       status: widget.leaveRequest.statu,
@@ -102,7 +97,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  // Separate details card without approval section
   Widget _buildDetailsCard() {
     return Container(
       decoration: BoxDecoration(
@@ -121,22 +115,18 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  // New method for approval workflow using reusable widget
   Widget _buildApprovalWorkflowSection() {
     return ApprovalWorkflowWidget(
       approvalList:
           widget.leaveRequest.prioList
               .map((priority) => ApprovalItemData.fromPriorityModel(priority))
               .toList(),
-      // Override the widget to add follow-up functionality for pending items
       customApprovalBuilder:
           (approval, isLast) => _buildCustomApprovalStep(approval, isLast),
     );
   }
 
-  // Custom approval step builder to maintain follow-up functionality
   Widget _buildCustomApprovalStep(ApprovalItemData approval, bool isLast) {
-    // Find the original PriorityModel for follow-up functionality
     final originalPriority = widget.leaveRequest.prioList.firstWhere(
       (p) =>
           p.approverName == approval.approverName &&
@@ -151,7 +141,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Timeline indicator
             Column(
               children: [
                 Container(
@@ -174,13 +163,10 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
               ],
             ),
             const SizedBox(width: 16),
-
-            // Approval details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Approver info
                   Row(
                     children: [
                       Expanded(
@@ -207,8 +193,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                           ],
                         ),
                       ),
-
-                      // Status badge or follow-up button
                       if (originalPriority.isPending &&
                           widget.leaveRequest.isPending)
                         CompactFollowUpButton(
@@ -235,8 +219,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                         ),
                     ],
                   ),
-
-                  // Approval remark (if available)
                   if (approval.remark != null &&
                       approval.remark!.trim().isNotEmpty) ...[
                     const SizedBox(height: 8),
@@ -292,14 +274,13 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  // Helper methods for status colors and icons
   Color _getApprovalStatusColor(int status) {
     switch (status) {
-      case 1: // Approved
+      case 1:
         return Colors.green;
-      case 0: // Rejected
+      case 0:
         return Colors.red;
-      case 2: // Pending
+      case 2:
         return Colors.orange;
       default:
         return Colors.grey;
@@ -308,23 +289,22 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
 
   IconData _getApprovalStatusIcon(int status) {
     switch (status) {
-      case 1: // Approved
+      case 1:
         return Icons.check_circle;
-      case 0: // Rejected
+      case 0:
         return Icons.cancel;
-      case 2: // Pending
+      case 2:
         return Icons.access_time;
       default:
         return Icons.help_outline;
     }
   }
 
-  // Check if leave request has document support
   bool _hasDocumentSupport() {
     return widget.leaveRequest.hasDocument == true;
   }
 
-  // Build document support card - RESTORED
+  // ✅ UPDATED: Make document card clickable
   Widget _buildDocumentSupportCard() {
     return Container(
       decoration: BoxDecoration(
@@ -356,11 +336,19 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                     color: Colors.black87,
                   ),
                 ),
+                const Spacer(),
+                // ✅ Add view full screen button
+                if (widget.leaveRequest.documentUrl != null &&
+                    widget.leaveRequest.documentUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.fullscreen, color: Colors.blue),
+                    onPressed: () => _viewDocumentFullScreen(),
+                    tooltip: 'View Full Screen',
+                  ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Check if document URL exists
             if (widget.leaveRequest.documentUrl != null &&
                 widget.leaveRequest.documentUrl!.isNotEmpty)
               _buildDocumentImage()
@@ -372,62 +360,126 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  // Build document image with preview - RESTORED
+  // ✅ UPDATED: Make image clickable
   Widget _buildDocumentImage() {
-    return Container(
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          widget.leaveRequest.documentUrl!,
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value:
-                        loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('Loading document...'),
-                ],
+    return GestureDetector(
+      onTap: () => _viewDocumentFullScreen(),
+      child: Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                widget.leaveRequest.documentUrl!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          value:
+                              loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Loading document...'),
+                      ],
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Failed to load document',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.broken_image, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Failed to load document',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                  ),
-                ],
+            ),
+            // ✅ Add tap indicator overlay
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      'Tap to view',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Build placeholder when no document is available - RESTORED
+  // ✅ NEW: Full screen document viewer
+  void _viewDocumentFullScreen() {
+    if (widget.leaveRequest.documentUrl == null ||
+        widget.leaveRequest.documentUrl!.isEmpty) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => _FullScreenDocumentViewer(
+              imageUrl: widget.leaveRequest.documentUrl!,
+              title: 'Document Support',
+            ),
+      ),
+    );
+  }
+
   Widget _buildNoDocumentPlaceholder() {
     return Container(
       width: double.infinity,
@@ -512,7 +564,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                 ),
               ),
               const SizedBox(width: 16),
-              // Right column
               Expanded(
                 child: Column(
                   children: [
@@ -540,7 +591,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
             ],
           ),
 
-          // Reason (full width if not empty)
           if (widget.leaveRequest.reason.isNotEmpty) ...[
             const SizedBox(height: 16),
             Container(
@@ -599,7 +649,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
   }
 
-  // Navigate to update screen
   Future<void> _navigateToUpdateScreen() async {
     final result = await Navigator.push(
       context,
@@ -621,7 +670,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     }
   }
 
-  // Show cancel confirmation dialog
   void _showCancelConfirmation() {
     showDialog(
       context: context,
@@ -894,5 +942,128 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
         ),
       );
     }
+  }
+}
+
+// ✅ NEW: Full Screen Document Viewer Widget
+class _FullScreenDocumentViewer extends StatefulWidget {
+  final String imageUrl;
+  final String title;
+
+  const _FullScreenDocumentViewer({
+    required this.imageUrl,
+    required this.title,
+  });
+
+  @override
+  State<_FullScreenDocumentViewer> createState() =>
+      _FullScreenDocumentViewerState();
+}
+
+class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
+  final TransformationController _transformationController =
+      TransformationController();
+  TapDownDetails? _doubleTapDetails;
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    _doubleTapDetails = details;
+  }
+
+  void _handleDoubleTap() {
+    if (_transformationController.value != Matrix4.identity()) {
+      _transformationController.value = Matrix4.identity();
+    } else {
+      final position = _doubleTapDetails!.localPosition;
+      _transformationController.value =
+          Matrix4.identity()
+            ..translate(-position.dx * 2, -position.dy * 2)
+            ..scale(3.0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        onDoubleTapDown: _handleDoubleTapDown,
+        onDoubleTap: _handleDoubleTap,
+        child: Center(
+          child: InteractiveViewer(
+            transformationController: _transformationController,
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: Image.network(
+              widget.imageUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Loading document...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text(
+                        'Failed to load document',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.black87,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: const Text(
+          'Pinch to zoom • Double tap to zoom in/out',
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
   }
 }

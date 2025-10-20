@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../constants/constant.dart';
@@ -18,6 +17,9 @@ class LeaveRequestScreen extends StatefulWidget {
 class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   final _formKey = GlobalKey<FormState>();
   final LeaveRequestRepository _repository = LeaveRequestRepository();
+
+  // ✅ File size limit constant
+  static const int maxFileSizeInBytes = 5 * 1024 * 1024; // 5MB
 
   // Backend data
   List<LeaveTypeModel> leaveTypes = [];
@@ -471,6 +473,287 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     );
   }
 
+  // ✅ Image picker with progressive compression
+  Future<void> _pickAndValidateImage(ImageSource source) async {
+    try {
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (context) => const Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text("Processing image..."),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+        );
+      }
+
+      final picker = ImagePicker();
+      XFile? pickedFile;
+      int? finalFileSize;
+      int imageQuality = 85;
+      int maxDimension = 1920;
+
+      // Progressive compression strategy
+      while (imageQuality >= 50 && maxDimension >= 1024) {
+        pickedFile = await picker.pickImage(
+          source: source,
+          maxWidth: maxDimension.toDouble(),
+          maxHeight: maxDimension.toDouble(),
+          imageQuality: imageQuality,
+        );
+
+        if (pickedFile == null) {
+          if (mounted) Navigator.pop(context);
+          return;
+        }
+
+        final file = File(pickedFile.path);
+        finalFileSize = await file.length();
+
+        print(
+          '📁 Attempt with quality $imageQuality, dimension $maxDimension: ${(finalFileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+        );
+
+        if (finalFileSize <= maxFileSizeInBytes) {
+          print(
+            '✅ File size acceptable: ${(finalFileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+          );
+          break;
+        }
+
+        if (imageQuality > 50) {
+          imageQuality -= 15;
+        } else if (maxDimension > 1024) {
+          maxDimension = (maxDimension * 0.8).toInt();
+          imageQuality = 85;
+        } else {
+          break;
+        }
+      }
+
+      if (pickedFile == null) {
+        if (mounted) Navigator.pop(context);
+        return;
+      }
+
+      final file = File(pickedFile.path);
+      finalFileSize = await file.length();
+
+      if (finalFileSize > maxFileSizeInBytes) {
+        if (mounted) Navigator.pop(context);
+        _showSnackBar(
+          "File too large (${(finalFileSize / 1024 / 1024).toStringAsFixed(1)} MB). Max: 5MB\nPlease choose a smaller image.",
+          Colors.red,
+          Icons.error_outline,
+        );
+        return;
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+        setState(() => documentPhoto = pickedFile);
+
+        final sizeInKB = (finalFileSize / 1024).toStringAsFixed(0);
+        final sizeInMB = (finalFileSize / 1024 / 1024).toStringAsFixed(1);
+
+        _showSnackBar(
+          "Photo selected (${finalFileSize > 1024 * 1024 ? '$sizeInMB MB' : '$sizeInKB KB'})",
+          Colors.green,
+          Icons.check_circle,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        _showSnackBar(
+          "Error: ${e.toString()}",
+          Colors.red,
+          Icons.error_outline,
+        );
+      }
+      print('❌ Error picking image: $e');
+    }
+  }
+
+  // ✅ Add this helper method for consistent snackbars:
+  void _showSnackBar(String message, Color backgroundColor, IconData icon) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // ✅ Replace the _showImagePicker method with this improved version:
+  void _showImagePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder:
+          (context) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Select Photo Source",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.camera_alt, color: Colors.blue),
+                    ),
+                    title: const Text(
+                      "Camera",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text(
+                      "Take a new photo",
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickAndValidateImage(ImageSource.camera);
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.photo_library,
+                        color: Colors.green,
+                      ),
+                    ),
+                    title: const Text(
+                      "Gallery",
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: const Text(
+                      "Choose from photos",
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickAndValidateImage(ImageSource.gallery);
+                    },
+                  ),
+                  if (documentPhoto != null) ...[
+                    const Divider(),
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.delete, color: Colors.red),
+                      ),
+                      title: const Text(
+                        "Remove Photo",
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: const Text(
+                        "Clear selected photo",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() => documentPhoto = null);
+                        _showSnackBar(
+                          "Photo removed",
+                          Colors.orange,
+                          Icons.delete,
+                        );
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 20, color: primary),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            "Max file size: 5MB\nImages will be compressed to fit",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -486,7 +769,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SpinKitFadingCircle(color: primary),
+                    CircularProgressIndicator(color: primary),
                     SizedBox(height: 16),
                     Text('Loading leave request data...'),
                   ],
@@ -527,7 +810,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     final isWide = constraints.maxWidth > 600;
                     final horizontalPadding = isWide ? 80.0 : 18.0;
                     final cardPadding = isWide ? 32.0 : 18.0;
-                    final fontSizeTitle = isWide ? 26.0 : 22.0;
                     final fontSizeLabel = isWide ? 18.0 : 15.0;
                     final imageSize = isWide ? 80.0 : 48.0;
 
@@ -553,6 +835,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // Leave Type
                                     Row(
                                       children: [
                                         Icon(Icons.category, color: primary),
@@ -624,7 +907,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                     ),
                                     SizedBox(height: isWide ? 24 : 18),
 
-                                    // Leave Date Range Picker
+                                    // Leave Date Range
                                     Row(
                                       children: [
                                         Icon(Icons.date_range, color: primary),
@@ -771,6 +1054,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         ),
                                       ],
                                     ),
+
+                                    // Half Day Session
                                     if (leaveFor == 'Half Day') ...[
                                       const SizedBox(height: 8),
                                       Row(
@@ -856,7 +1141,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                     ),
                                     SizedBox(height: isWide ? 24 : 18),
 
-                                    // Document Support - Updated to check backend data
+                                    // Document Support
                                     if (selectedLeaveType?.requiresDocument ??
                                         false) ...[
                                       SizedBox(height: isWide ? 24 : 18),
@@ -1098,7 +1383,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                             Text(
                                                               entry
                                                                   .value
-                                                                  .approverLevelName, // Use the new field
+                                                                  .approverLevelName,
                                                               style: TextStyle(
                                                                 fontSize:
                                                                     isWide
@@ -1129,6 +1414,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               ),
                             ),
                             SizedBox(height: isWide ? 32 : 18),
+
+                            // Submit Button
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
@@ -1172,64 +1459,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   },
                 ),
               ),
-    );
-  }
-
-  void _showImagePicker() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder:
-          (context) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Select Photo Source",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                const SizedBox(height: 16),
-                ListTile(
-                  leading: const Icon(Icons.camera_alt, color: Colors.black87),
-                  title: const Text("Camera"),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final picker = ImagePicker();
-                    final picked = await picker.pickImage(
-                      source: ImageSource.camera,
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        documentPhoto = picked;
-                      });
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(
-                    Icons.photo_library,
-                    color: Colors.black87,
-                  ),
-                  title: const Text("Gallery"),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    final picker = ImagePicker();
-                    final picked = await picker.pickImage(
-                      source: ImageSource.gallery,
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        documentPhoto = picked;
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
     );
   }
 }
