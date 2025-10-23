@@ -225,7 +225,8 @@ flutter drive --target=test_driver/app.dart
 - **Code splitting** for better load times
 - **Image optimization** for faster loading
 - **Lazy loading** for large lists
-- **Memory management** best practices
+- **Memory management** best practicescp ./android/app/build/outputs/apk/debug/app-debug.apk \
+   build/app/outputs/flutter-apk/app-debug.apk
 
 ## 🤝 Contributing
 

@@ -43,7 +43,6 @@
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
     
-    <!-- ✅ FIXED: Removed invalid 'background-fetch' and corrected background modes -->
     <key>UIBackgroundModes</key>
     <array>
         <string>location</string>
@@ -52,7 +51,6 @@
         <string>remote-notification</string>
     </array>
     
-    <!-- ✅ FIXED: Updated with correct bundle ID com.vebol.chokchey.hr -->
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
         <string>com.vebol.chokchey.hr.refresh</string>

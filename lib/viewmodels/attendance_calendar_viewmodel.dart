@@ -55,8 +55,7 @@ class AttendanceCalendarViewModel extends ChangeNotifier {
   Future<void> loadCurrentMonthAttendance() async {
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 0);
-
+    final endOfMonth = DateTime(now.year, now.month, now.day);
     await loadAttendanceForDateRange(startOfMonth, endOfMonth);
   }
 
