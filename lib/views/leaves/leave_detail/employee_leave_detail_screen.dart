@@ -26,7 +26,7 @@ class _EmployeeLeaveDetailScreenState extends State<EmployeeLeaveDetailScreen> {
         foregroundColor: Colors.white,
         centerTitle: false,
         title: const Text(
-          'Leave Details',
+          'Leave Detail',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
       ),

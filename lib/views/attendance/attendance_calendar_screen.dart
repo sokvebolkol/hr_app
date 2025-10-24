@@ -176,7 +176,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
       color: primary,
       child: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _buildUserInfoHeader(viewModel)),
+          // ✅ REMOVED: User info header
           SliverToBoxAdapter(child: _buildSummaryCards(viewModel)),
           SliverToBoxAdapter(child: _buildDateRangeHeader(viewModel)),
           SliverFillRemaining(
@@ -188,112 +188,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     );
   }
 
-  Widget _buildUserInfoHeader(AttendanceCalendarViewModel viewModel) {
-    final userInfo = viewModel.userInfo;
-    if (userInfo == null) return const SizedBox();
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primary, primary.withOpacity(0.8)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: CircleAvatar(
-              backgroundColor: Colors.transparent,
-              radius: 30,
-              child: const Icon(
-                Icons.person_rounded,
-                color: Colors.white,
-                size: 30,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  userInfo.username.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Employee ID: ${userInfo.employeeId}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Staff ID: ${userInfo.staffId}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  // ✅ UPDATED: Fancy Monthly Summary with WHITE background
   Widget _buildSummaryCards(AttendanceCalendarViewModel viewModel) {
     final summary = viewModel.summary;
     if (summary == null) return const SizedBox();
@@ -301,153 +196,196 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     final statusCounts = viewModel.getStatusCounts();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.analytics_rounded, color: primary, size: 24),
-              const SizedBox(width: 8),
-              const Text(
-                'Monthly Summary',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Present',
-                  statusCounts['Present'].toString(),
-                  Colors.green,
-                  Icons.check_circle_rounded,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Absent',
-                  statusCounts['Absent'].toString(),
-                  Colors.red,
-                  Icons.cancel_rounded,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Late',
-                  statusCounts['Late'].toString(),
-                  Colors.orange,
-                  Icons.access_time_rounded,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildSummaryCard(
-                  'On Leave',
-                  statusCounts['On Leave'].toString(),
-                  Colors.blue,
-                  Icons.beach_access_rounded,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          // Header with gradient
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [primary.withOpacity(0.1), primary.withOpacity(0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primary, primary.withOpacity(0.8)],
               ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: primary.withOpacity(0.2)),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.trending_up_rounded, color: primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Attendance Rate',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: primary,
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.analytics_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
-                Text(
-                  '${summary.attendanceRate.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primary,
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Monthly Summary',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Your attendance overview',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${summary.totalDays} Days',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+
+          // Stats Grid with WHITE background
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatItem(
+                        'Present',
+                        statusCounts['Present'].toString(),
+                        Icons.check_circle_rounded,
+                        Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatItem(
+                        'Absent',
+                        statusCounts['Absent'].toString(),
+                        Icons.cancel_rounded,
+                        Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatItem(
+                        'Late',
+                        statusCounts['Late'].toString(),
+                        Icons.access_time_rounded,
+                        Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatItem(
+                        'Leave',
+                        statusCounts['On Leave'].toString(),
+                        Icons.beach_access_rounded,
+                        Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard(
-    String title,
+  Widget _buildStatItem(
+    String label,
     String value,
-    Color color,
     IconData icon,
+    Color accentColor,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: accentColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accentColor.withOpacity(0.2), width: 1.5),
       ),
-      child: Column(
+      child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+              color: accentColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: accentColor, size: 24),
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: accentColor,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -583,7 +521,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
             ),
           ),
 
-          // Table Content with proper constraints
+          // Table Content
           ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.6,
@@ -610,25 +548,25 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     ),
                     DataColumn(
                       label: SizedBox(
-                        width: 65,
+                        width: 55,
                         child: Text('Finger In', textAlign: TextAlign.center),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
-                        width: 65,
+                        width: 55,
                         child: Text('Finger Out', textAlign: TextAlign.center),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
-                        width: 65,
+                        width: 55,
                         child: Text('Clock In', textAlign: TextAlign.center),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
-                        width: 65,
+                        width: 55,
                         child: Text('Clock Out', textAlign: TextAlign.center),
                       ),
                     ),
@@ -686,7 +624,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
         ),
         DataCell(
           SizedBox(
-            width: 65,
+            width: 55,
             child: _buildTimeCell(
               report.scanIn,
               Icons.fingerprint,
@@ -696,7 +634,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
         ),
         DataCell(
           SizedBox(
-            width: 65,
+            width: 50,
             child: _buildTimeCell(
               report.scanOut,
               Icons.fingerprint,
@@ -706,7 +644,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
         ),
         DataCell(
           SizedBox(
-            width: 65,
+            width: 55,
             child: _buildTimeCell(
               report.clockIn,
               Icons.login_rounded,
@@ -716,7 +654,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
         ),
         DataCell(
           SizedBox(
-            width: 65,
+            width: 55,
             child: _buildTimeCell(
               report.clockOut,
               Icons.logout_rounded,

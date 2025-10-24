@@ -34,7 +34,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
             backgroundColor: Colors.grey[50],
             appBar: AppBar(
               elevation: 0,
-              backgroundColor: primary,
+              backgroundColor: secondary,
               foregroundColor: Colors.white,
               centerTitle: false,
               title: const Text(
