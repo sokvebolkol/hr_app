@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
+import 'login-screen.dart';
 
 class ConfirmPasswordScreen extends StatefulWidget {
   const ConfirmPasswordScreen({super.key, this.eCard});
@@ -57,7 +58,10 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Password reset successful!")),
         );
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to reset password: ${response.body}")),
@@ -83,7 +87,13 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed:
+              () => {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                ),
+              },
         ),
         backgroundColor: primary,
         foregroundColor: Colors.white,

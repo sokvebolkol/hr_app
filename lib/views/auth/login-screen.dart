@@ -11,9 +11,11 @@ import '../../constants/constant.dart';
 // import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
+import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
+import 'confirm-password-screen.dart';
 import 'forgot-password.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -147,10 +149,6 @@ class _LoginScreenState extends State<LoginScreen>
       final deviceToken = await _getFCMToken();
       final deviceType = Platform.isAndroid ? 'android' : 'ios';
 
-      print('🔐 Logging in with device: $deviceName');
-      print('📱 Device type: $deviceType');
-      print('🔥 FCM Token: ${deviceToken != null ? "✅ Obtained" : "❌ Failed"}');
-
       final response = await http
           .post(
             Uri.parse('${ServerService().baseUrl}login'),
@@ -171,20 +169,33 @@ class _LoginScreenState extends State<LoginScreen>
             },
           );
 
-      print('📡 Response status: ${response.statusCode}');
-      print('📡 Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = convert.jsonDecode(response.body);
-
         // ✅ Check if login was successful
-        if (data['success'] == false || data['token'] == null) {
+        if (data['success'] == false &&
+            (data['token'] == null &&
+                data['require_password_change'] == false)) {
           final errorMessage =
               data['message'] ??
               'Invalid credentials. Please check your Staff ID and Password.';
           _showErrorDialog(
             title: "Authentication Failed",
             message: errorMessage,
+          );
+          return;
+        }
+        // ✅ NEW: Check if password change is required
+        if (data['require_password_change'] == true) {
+          if (!mounted) return;
+          // Show information dialog
+          await _showPasswordChangeRequiredDialog();
+
+          // Navigate to password change screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ConfirmPasswordScreen(eCard: eCard),
+            ),
           );
           return;
         }
@@ -219,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen>
         if (!mounted) return;
 
         // ✅ Show success message
-        _showSuccessSnackBar("Welcome back!");
+        // _showSuccessSnackBar("Welcome back!");
 
         Navigator.pushReplacement(
           context,
@@ -278,6 +289,112 @@ class _LoginScreenState extends State<LoginScreen>
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  // ✅ NEW: Password change required dialog
+  Future<void> _showPasswordChangeRequiredDialog() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => WillPopScope(
+            onWillPop: () async => false, // Prevent back button
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.lock_reset,
+                      color: primary,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Password Change Required',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'For security reasons, you need to change your password before continuing.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey[700],
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue[700],
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Please create a strong password that you haven\'t used before.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.blue[900],
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_forward, size: 20),
+                    label: const Text('Change Password Now'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
   }
 
   // ✅ NEW: Formal error dialog
