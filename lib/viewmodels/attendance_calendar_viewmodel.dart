@@ -190,6 +190,7 @@ class AttendanceCalendarViewModel extends ChangeNotifier {
       if (report.isPresent && !report.isLate) {
         counts['Present'] = (counts['Present'] ?? 0) + 1;
       } else if (report.isLate) {
+        counts['Present'] = (counts['Present'] ?? 0) + 1;
         counts['Late'] = (counts['Late'] ?? 0) + 1;
       } else if (report.isOnLeave) {
         counts['On Leave'] = (counts['On Leave'] ?? 0) + 1;
