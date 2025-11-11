@@ -46,6 +46,10 @@ bool isEmoji(String input) {
   return emojiRegex.hasMatch(input);
 }
 
+const getIosUpdateUrl = "itms-beta://testflight.apple.com/join/FeNKCUGS";
+const getAndroidUpdateUrl =
+    "https://drive.google.com/file/d/1E2VcMH2lDqC76ZaoY9FwaYlmcAVX3CXe/view?usp=sharing";
+
 enum LoadingStatus { none, loading, error, done }
 
 final leaveTypes = [
