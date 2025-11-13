@@ -5,9 +5,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
 import '../../constants/constant.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import '../../services/global_service.dart';
 import '../auth/login-screen.dart';
+import '../auth/welcome.dart'; // ✅ Add this import
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -285,40 +289,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _handleLogout(ProfileViewModel viewModel) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Logout"),
-            content: const Text("Are you sure you want to logout?"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text("Logout"),
-              ),
-            ],
-          ),
-    );
-
-    if (shouldLogout == true) {
-      await viewModel.logout();
-      if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) => const LoginScreen(),
-          ),
-          (route) => false,
-        );
-      }
-    }
-  }
-
   Future<void> _pickImage(
     ProfileViewModel viewModel,
     ImageSource source,
@@ -442,6 +412,230 @@ class _ProfilePageState extends State<ProfilePage> {
           duration: Duration(seconds: isSuccess ? 3 : 4),
         ),
       );
+    }
+  }
+
+  // ✅ Updated Logout Function
+  void _handleLogout(ProfileViewModel viewModel) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.logout_rounded, color: themeColor, size: 28),
+                const SizedBox(width: 12),
+                const Text(
+                  "Logout",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: const Text(
+              "Are you sure you want to logout?",
+              style: TextStyle(fontSize: 15, height: 1.5),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldLogout == true) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => WillPopScope(
+              onWillPop: () async => false,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SpinKitFadingCircle(color: themeColor, size: 50),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Logging out...',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+      );
+
+      try {
+        // Get token from SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token') ?? '';
+
+        if (token.isEmpty) {
+          // If no token, just clear local data and navigate
+          if (mounted) {
+            Navigator.of(context).pop(); // Close loading dialog
+          }
+          await _clearLocalDataAndNavigate();
+          return;
+        }
+
+        // Call logout API
+        final response = await http
+            .post(
+              Uri.parse('${ServerService().baseUrl}logout'),
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+              body: convert.jsonEncode({'token': token}),
+            )
+            .timeout(
+              const Duration(seconds: 15),
+              onTimeout: () {
+                throw Exception('Request timeout');
+              },
+            );
+
+        if (mounted) {
+          Navigator.of(context).pop(); // Close loading dialog
+        }
+        // Handle response
+        if (response.statusCode == 200) {
+          final data = convert.jsonDecode(response.body);
+
+          if (data['success'] == true) {
+            // Successful logout
+            await _clearLocalDataAndNavigate();
+
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(data['message'] ?? 'Logged out successfully'),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          } else {
+            // API returned success: false
+            await _clearLocalDataAndNavigate();
+          }
+        } else if (response.statusCode == 401) {
+          // Token invalid or expired - still logout locally
+          await _clearLocalDataAndNavigate();
+        } else {
+          // Other error - still logout locally
+          await _clearLocalDataAndNavigate();
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Logged out locally'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        print('❌ Logout Error: $e');
+
+        if (mounted) {
+          Navigator.of(context).pop(); // Close loading dialog
+        }
+
+        // Even on error, clear local data and logout
+        await _clearLocalDataAndNavigate();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.toString().contains('timeout')
+                    ? 'Connection timeout. Logged out locally.'
+                    : 'Network error. Logged out locally.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // ✅ Clear local data and navigate to welcome screen
+  Future<void> _clearLocalDataAndNavigate() async {
+    try {
+      // Call ViewModel logout to clear local data
+      await _viewModel.logout();
+
+      // Clear all SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      if (mounted) {
+        // Navigate to Welcome Screen and remove all previous routes
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => const WelcomeScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      print('❌ Error clearing local data: $e');
+
+      if (mounted) {
+        // Still navigate even if clearing fails
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => const WelcomeScreen(),
+          ),
+          (route) => false,
+        );
+      }
     }
   }
 

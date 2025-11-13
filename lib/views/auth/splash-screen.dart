@@ -10,6 +10,8 @@ import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
+import 'welcome.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -126,7 +128,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-
       if (!mounted) return;
 
       if (token != null && token.isNotEmpty) {
@@ -160,7 +161,7 @@ class _SplashScreenState extends State<SplashScreen> {
         print('🔓 No valid token - redirecting to login');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
         );
       }
     } catch (e) {

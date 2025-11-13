@@ -9,6 +9,7 @@ class ConfirmPasswordScreen extends StatefulWidget {
   final String? eCard; // Pass eCard from previous screen
 
   @override
+  // ignore: library_private_types_in_public_api
   _ConfirmPasswordScreenState createState() => _ConfirmPasswordScreenState();
 }
 
