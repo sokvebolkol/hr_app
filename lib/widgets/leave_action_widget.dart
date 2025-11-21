@@ -197,13 +197,13 @@ class LeaveActionButtons extends StatelessWidget {
                     ),
                   ),
                 ],
-                const SizedBox(height: 12),
-                Text(
-                  isApprove
-                      ? 'Are you sure you want to approve this leave request?'
-                      : 'Are you sure you want to reject this leave request?',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
+                // const SizedBox(height: 12),
+                // Text(
+                //   isApprove
+                //       ? 'Are you sure you want to approve this leave request?'
+                //       : 'Are you sure you want to reject this leave request?',
+                //   style: const TextStyle(fontWeight: FontWeight.w500),
+                // ),
               ],
             ),
             actions: [

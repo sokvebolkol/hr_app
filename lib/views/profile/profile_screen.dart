@@ -10,8 +10,7 @@ import 'dart:convert' as convert;
 import '../../constants/constant.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../services/global_service.dart';
-import '../auth/login-screen.dart';
-import '../auth/welcome.dart'; // ✅ Add this import
+import '../auth/welcome.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

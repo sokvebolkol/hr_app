@@ -1,5 +1,4 @@
 plugins {
-    // Add the dependency for the Google services Gradle plugin
     id("com.google.gms.google-services") version "4.4.3" apply false
 }
 
@@ -9,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("com.android.tools.build:gradle:8.12.0")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
     }
 }
@@ -18,6 +17,17 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+subprojects {
+    afterEvaluate {
+        if (project.hasProperty("android")) {
+            val android = project.extensions.findByType(com.android.build.gradle.BaseExtension::class.java)
+            android?.apply {
+                compileSdkVersion(36)
+            }
+        }
     }
 }
 

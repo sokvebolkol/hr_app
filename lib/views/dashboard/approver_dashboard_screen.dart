@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:awesome_dialog/awesome_dialog.dart';
+import '../../widgets/fancy_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
@@ -78,24 +78,19 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
   }
 
   Future<bool> _onBackPressed() async {
-    AwesomeDialog(
+    await FancyDialog.show(
       context: context,
-      width: Responsive.isMobile(context) ? screenWidth : screenWidth / 2,
-      headerAnimationLoop: false,
-      dialogType: DialogType.info,
-      transitionAnimationDuration: const Duration(milliseconds: 500),
+      dialogType: DialogType.question,
       title: 'Information',
-      desc: 'Do you want to exit?',
-      btnOkOnPress: () async {
+      description: 'Do you want to exit?',
+      confirmText: 'Yes',
+      cancelText: 'No',
+      onConfirm: () async {
         Future.delayed(const Duration(milliseconds: 500), () {
           SystemChannels.platform.invokeMethod('SystemNavigator.pop');
         });
       },
-      btnCancelText: "No",
-      btnCancelOnPress: () {},
-      btnOkColor: primary,
-      btnOkText: 'Yes',
-    ).show();
+    );
     return false;
   }
 

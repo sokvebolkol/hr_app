@@ -1,4 +1,4 @@
-package com.vebol.chokchey.hr
+package com.vebol.employee.hr
 
 import io.flutter.embedding.android.FlutterActivity
 

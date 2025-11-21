@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1045629204112:android:5484b41229e3cb4860ca15",
+        "mobilesdk_app_id": "1:1045629204112:android:79a91ff2a38f1e2360ca15",
         "android_client_info": {
-          "package_name": "com.chokchey.hr"
+          "package_name": "com.vebol.chokchey.hr"
         }
       },
       "oauth_client": [],
@@ -26,9 +26,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1045629204112:android:79a91ff2a38f1e2360ca15",
+        "mobilesdk_app_id": "1:1045629204112:android:7cee564c8d56592460ca15",
         "android_client_info": {
-          "package_name": "com.vebol.chokchey.hr"
+          "package_name": "com.vebol.employee.hr"
         }
       },
       "oauth_client": [],
