@@ -91,7 +91,21 @@ tasks.register<Copy>("copyApkToFlutterOutput") {
     }
 }
 
-// Automatically run copy task after assembling
+// Task to copy AAB to Flutter's expected location
+tasks.register<Copy>("copyAabToFlutterOutput") {
+    description = "Copies AAB to Flutter's expected output directory"
+    from("$buildDir/outputs/bundle/release") {
+        include("*.aab")
+        rename { "app-release.aab" }
+    }
+    into("${rootProject.projectDir}/../build/app/outputs/bundle/release")
+    
+    doFirst {
+        file("${rootProject.projectDir}/../build/app/outputs/bundle/release").mkdirs()
+    }
+}
+
+// Automatically run copy tasks after assembling
 afterEvaluate {
     tasks.named("assembleDebug") {
         finalizedBy("copyApkToFlutterOutput")
@@ -99,5 +113,9 @@ afterEvaluate {
     
     tasks.named("assembleRelease") {
         finalizedBy("copyApkToFlutterOutput")
+    }
+    
+    tasks.named("bundleRelease") {
+        finalizedBy("copyAabToFlutterOutput")
     }
 }
