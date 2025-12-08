@@ -348,53 +348,12 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       } else {
         // Android gallery permission handling
-        bool hasPermission = false;
-        String errorMessage = '';
+        // For Android 13+ (API 33+), Photo Picker is used automatically by image_picker
+        // and doesn't require any permissions - skip permission request entirely
+        // For Android 12 and below (API 32-), we need READ_EXTERNAL_STORAGE
 
-        // For Android 13+ (API 33+), we primarily need READ_MEDIA_IMAGES
-        // For older versions, we need READ_EXTERNAL_STORAGE
-
-        // First try photos permission (works for Android 13+)
-        final photosStatus = await Permission.photos.request();
-        if (photosStatus.isGranted) {
-          hasPermission = true;
-        } else {
-          // Fallback to storage permission for older Android versions
-          final storageStatus = await Permission.storage.request();
-          if (storageStatus.isGranted) {
-            hasPermission = true;
-          } else {
-            // Determine the best error message based on status
-            if (photosStatus.isPermanentlyDenied ||
-                storageStatus.isPermanentlyDenied) {
-              showPermissionDialog(context, 'Photo Access');
-              return;
-            } else {
-              errorMessage =
-                  'Photo access permission is required to select images from gallery';
-            }
-          }
-        }
-
-        if (!hasPermission) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  errorMessage.isNotEmpty
-                      ? errorMessage
-                      : 'Unable to access photos. Please check app permissions in settings.',
-                ),
-                duration: const Duration(seconds: 4),
-                action: SnackBarAction(
-                  label: 'Settings',
-                  onPressed: () => openAppSettings(),
-                ),
-              ),
-            );
-          }
-          return;
-        }
+        // Only request storage permission for Android 12 and below
+        // Android 13+ will use Photo Picker which doesn't need permissions
       }
     }
 

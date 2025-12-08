@@ -241,6 +241,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         toDate: toDate,
         reason: reason.trim(),
         leaveFor: leaveForValue,
+        halfDaySession: halfDaySession,
         totalLeave: totalLeaveDays,
         approvers: formattedApprovers,
         file: fileToUpload,

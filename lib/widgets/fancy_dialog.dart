@@ -140,6 +140,9 @@ class _FancyDialogWidgetState extends State<_FancyDialogWidget>
           elevation: 8,
           backgroundColor: Colors.transparent,
           child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -151,116 +154,119 @@ class _FancyDialogWidgetState extends State<_FancyDialogWidget>
                 ),
               ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header with icon
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color.withOpacity(0.8), color],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with icon
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [color.withOpacity(0.8), color],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
                     ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Animated icon
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.elasticOut,
-                        builder: (context, value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
+                    child: Column(
+                      children: [
+                        // Animated icon
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.elasticOut,
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(icon, size: 48, color: color),
                               ),
-                              child: Icon(icon, size: 48, color: color),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Title
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                            );
+                          },
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        // Title
+                        Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Text(
-                        widget.description,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                          height: 1.5,
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.description,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      // Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (widget.showCancelButton) ...[
+                        const SizedBox(height: 24),
+                        // Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (widget.showCancelButton) ...[
+                              Expanded(
+                                child: _buildButton(
+                                  text: widget.cancelText ?? 'Cancel',
+                                  color: Colors.grey[400]!,
+                                  textColor: Colors.grey[700]!,
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                    widget.onCancel?.call();
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
                             Expanded(
                               child: _buildButton(
-                                text: widget.cancelText ?? 'Cancel',
-                                color: Colors.grey[400]!,
-                                textColor: Colors.grey[700]!,
+                                text: widget.confirmText ?? 'OK',
+                                color: color,
+                                textColor: Colors.white,
                                 onPressed: () {
-                                  Navigator.of(context).pop(false);
-                                  widget.onCancel?.call();
+                                  Navigator.of(context).pop(true);
+                                  widget.onConfirm?.call();
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
                           ],
-                          Expanded(
-                            child: _buildButton(
-                              text: widget.confirmText ?? 'OK',
-                              color: color,
-                              textColor: Colors.white,
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                                widget.onConfirm?.call();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

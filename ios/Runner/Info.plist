@@ -2,80 +2,77 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CADisableMinimumFrameDurationOnPhone</key>
-    <true/>
-    <key>CFBundleDevelopmentRegion</key>
-    <string>$(DEVELOPMENT_LANGUAGE)</string>
-    <key>CFBundleDisplayName</key>
-    <string>Chokchey HR</string>
-    <key>CFBundleExecutable</key>
-    <string>$(EXECUTABLE_NAME)</string>
-    <key>CFBundleIdentifier</key>
-    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-    <key>CFBundleName</key>
-    <string>com.vebol.chokchey.hr</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$(FLUTTER_BUILD_NAME)</string>
-    <key>CFBundleSignature</key>
-    <string>????</string>
-    <key>CFBundleVersion</key>
-    <string>$(FLUTTER_BUILD_NUMBER)</string>
-    <key>FirebaseAppDelegateProxyEnabled</key>
-    <false/>
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-    <key>NSCameraUsageDescription</key>
-    <string>This app needs camera access to take profile photos.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Chokchey HR requires location access to accurately record your attendance and verify your workplace location when clocking in or out, even when the app is in the background. Your location data is only used for attendance verification and is never shared with third parties.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Chokchey HR needs your location to verify your attendance when you clock in or out. This ensures you are at the designated workplace location during attendance marking.</string>
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>This app needs photo library access to save profile photos.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>This app needs photo library access to select profile photos.</string>
-    <key>NSUserNotificationsUsageDescription</key>
-    <string>This app needs notification access to send you important HR updates and reminders.</string>
-    <key>UIApplicationSupportsIndirectInputEvents</key>
-    <true/>
-    
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>fetch</string>
-        <string>processing</string>
-        <string>remote-notification</string>
-    </array>
-    
-    <key>BGTaskSchedulerPermittedIdentifiers</key>
-    <array>
-        <string>com.vebol.chokchey.hr.refresh</string>
-        <string>com.vebol.chokchey.hr.processing</string>
-        <string>com.vebol.chokchey.hr.notification</string>
-    </array>
-    
-    <key>UILaunchStoryboardName</key>
-    <string>LaunchScreen</string>
-    <key>UIMainStoryboardFile</key>
-    <string>Main</string>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-    </array>
-    <key>CFBundleIcons</key>
-    <dict>
-        <key>CFBundlePrimaryIcon</key>
-        <dict>
-            <key>CFBundleIconFiles</key>
-            <array>
-                <string>AppIcon</string>
-            </array>
-            <key>CFBundleIconName</key>
-            <string>AppIcon</string>
-        </dict>
-    </dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.vebol.chokchey.hr.refresh</string>
+		<string>com.vebol.chokchey.hr.processing</string>
+		<string>com.vebol.chokchey.hr.notification</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Chokchey HR</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+			<key>CFBundleIconName</key>
+			<string>AppIcon</string>
+		</dict>
+	</dict>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>com.vebol.chokchey.hr</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take profile photos.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Chokchey HR requires location access to accurately record your attendance and verify your workplace location when clocking in or out, even when the app is in the background. Your location data is only used for attendance verification and is never shared with third parties.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Chokchey HR needs your location to verify your attendance when you clock in or out. This ensures you are at the designated workplace location during attendance marking.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs photo library access to save profile photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to select profile photos.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app needs notification access to send you important HR updates and reminders.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>

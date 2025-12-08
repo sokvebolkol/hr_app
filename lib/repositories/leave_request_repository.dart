@@ -60,6 +60,7 @@ class LeaveRequestRepository {
     required String toDate,
     required String reason,
     required int leaveFor,
+    required String halfDaySession,
     required double totalLeave,
     required List<Map<String, dynamic>> approvers,
     File? file,
@@ -151,6 +152,7 @@ class LeaveRequestRepository {
           toDate: toDate,
           reason: reason,
           leaveFor: leaveFor,
+          halfDaySession: halfDaySession,
           totalLeave: totalLeave,
           approvers: approvers,
           token: token,
@@ -257,6 +259,7 @@ class LeaveRequestRepository {
     required String toDate,
     required String reason,
     required int leaveFor,
+    required String halfDaySession,
     required double totalLeave,
     required List<Map<String, dynamic>> approvers,
     required String token,
@@ -267,9 +270,14 @@ class LeaveRequestRepository {
       "to_date": toDate,
       "reason": reason,
       "leave_for": leaveFor,
+      "leave_session": halfDaySession,
       "total_leave": totalLeave,
       "approvers": approvers,
     };
+
+    print("--------------------------");
+    print(body);
+    print("--------------------------");
 
     final response = await http.post(
       Uri.parse('${_serverService.baseUrl}request-leave'),

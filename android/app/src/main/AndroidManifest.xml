@@ -6,14 +6,14 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     
+    <!-- Storage permissions for Android 12 and below -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-    <!-- Removed READ_MEDIA_IMAGES to comply with Google Play policy.
-         Use the system picker (image_picker or Android Photo Picker) for
-         one-time or infrequent photo/video access instead of persistent
-         READ_MEDIA_* permissions. -->
+    
+    <!-- For Android 13+: Use Photo Picker instead of READ_MEDIA_IMAGES -->
+    <!-- No READ_MEDIA_IMAGES permission needed - Photo Picker handles it -->
     
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

@@ -230,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen>
         if (!mounted) return;
 
         // ✅ Show success message
-        // _showSuccessSnackBar("Welcome back!");
 
         Navigator.pushReplacement(
           context,
@@ -509,36 +508,6 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ✅ NEW: Success snackbar
-  void _showSuccessSnackBar(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // language = context.watch<LanguageLogic>().language;
@@ -565,7 +534,6 @@ class _LoginScreenState extends State<LoginScreen>
                         _buildHeader(),
                         const SizedBox(height: 60),
                         _buildLoginCard(),
-                        const SizedBox(height: 20),
                         // _buildLanguageSelector(),
                         const Spacer(),
                         _buildFooter(),

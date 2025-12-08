@@ -414,7 +414,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             child: Row(
               children: [
                 Container(

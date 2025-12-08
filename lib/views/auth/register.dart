@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../../localization/language.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../localization/language_logic.dart';
 import '../../widgets/InputFormField.dart';
 import '../../widgets/RoundedButton.dart';
@@ -42,6 +43,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _getImage(ImageSource source) async {
+    // Request permission first
+    PermissionStatus status = await Permission.photos.request();
+
+    if (status.isDenied || status.isPermanentlyDenied) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo permission is required to upload images'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return;
+    }
+
     final pickedFile = await _picker.pickImage(source: source);
 
     setState(() {
@@ -80,10 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const Divider(color: primary, thickness: 0.2),
                 ListTile(
-                  leading: const Icon(
-                    Icons.photo_camera,
-                    color: primary,
-                  ),
+                  leading: const Icon(Icons.photo_camera, color: primary),
                   title: Text("Camera"),
                   onTap: () {
                     _getImage(ImageSource.camera);
@@ -91,10 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(
-                    Icons.photo_library,
-                    color: primary,
-                  ),
+                  leading: const Icon(Icons.photo_library, color: primary),
                   title: Text("Gallery"),
                   onTap: () {
                     _getImage(ImageSource.gallery);
@@ -213,7 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: screenWidth,
             child: RoundedButton(
               roundSize: screenWidth / 22,
-              color:  primary,
+              color: primary,
               btnWith: screenWidth,
               btnText: "Register",
               onBtnPressed:

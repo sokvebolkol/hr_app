@@ -1129,7 +1129,7 @@ class _StaffAttendanceDetailScreenState
                     _buildLeaveInfoRow(
                       Icons.schedule_outlined,
                       'Duration',
-                      '${staff.leaveDetails!.totalDays.toString().split('.')[0]} day${double.parse(staff.leaveDetails!.totalDays.toString()) > 1 ? 's' : ''}',
+                      '${double.parse(staff.leaveDetails!.totalDays) % 1 == 0 ? double.parse(staff.leaveDetails!.totalDays).toInt() : double.parse(staff.leaveDetails!.totalDays)} day${double.parse(staff.leaveDetails!.totalDays) == 1 ? '' : 's'}',
                     ),
 
                     const SizedBox(height: 8),
