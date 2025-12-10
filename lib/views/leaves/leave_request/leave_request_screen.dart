@@ -111,10 +111,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
 
       if (leaveFor == 'Half Day') {
         if (workingDays == 1) return 0.5;
-        if (workingDays == 2) return 1.0; // 0.5 + 0.5
-        return (workingDays - 2) +
-            0.5 +
-            0.5; // first and last day half, rest full
+        if (workingDays == 2) return 1.5; // 0.5 (first) + 1.0 (second)
+        // For >2 days: 0.5 (first) + full for days 2..n
+        return 0.5 + (workingDays - 1);
       }
       return workingDays.toDouble();
     }
