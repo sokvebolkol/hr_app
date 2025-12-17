@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../../widgets/fancy_dialog.dart';
+import '../../widgets/custom_alert_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
-import '../../constants/responsive.dart';
 import '../../repositories/approver_dashboard_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/approver_dashboard_viewmodel.dart';
@@ -78,17 +77,19 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
   }
 
   Future<bool> _onBackPressed() async {
-    await FancyDialog.show(
-      context: context,
-      dialogType: DialogType.question,
+    await CustomAlertDialog.show(
+      context,
       title: 'Information',
-      description: 'Do you want to exit?',
-      confirmText: 'Yes',
-      cancelText: 'No',
-      onConfirm: () async {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-        });
+      message: 'Do you want to exit?',
+      icon: Icons.exit_to_app,
+      iconColor: primary,
+      primaryButtonText: 'No',
+      secondaryButtonText: 'Yes',
+      onPrimaryPressed: () async {
+        Navigator.of(context).pop();
+      },
+      onSecondaryPressed: () {
+        SystemChannels.platform.invokeMethod('SystemNavigator.pop');
       },
     );
     return false;

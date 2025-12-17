@@ -41,7 +41,7 @@ class LeaveHistoryRepository {
         );
       }
     } catch (e) {
-      throw Exception('Error fetching leave history: $e');
+      throw Exception('Error fetching leave history');
     }
   }
 }

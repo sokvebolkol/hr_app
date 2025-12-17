@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
@@ -153,7 +154,7 @@ class _RequesterNotificationScreenState
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  CircularProgressIndicator(),
+                                  SpinKitFadingCircle(color: primary),
                                   SizedBox(height: 16),
                                   Text('Marking all as read...'),
                                 ],
@@ -178,7 +179,7 @@ class _RequesterNotificationScreenState
                               children: [
                                 Icon(Icons.check_circle, color: Colors.white),
                                 SizedBox(width: 8),
-                                Text('✅ All notifications marked as read'),
+                                Text('All notifications marked as read'),
                               ],
                             ),
                             backgroundColor: Colors.green,
@@ -232,11 +233,9 @@ class _RequesterNotificationScreenState
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
+                            child: SpinKitFadingCircle(
+                              size: 16,
+                              color: Colors.white,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -307,7 +306,7 @@ class _RequesterNotificationScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: primary),
+                  SpinKitFadingCircle(color: primary),
                   SizedBox(height: 16),
                   Text('Loading leave status updates...'),
                 ],
@@ -344,7 +343,7 @@ class _RequesterNotificationScreenState
                     child: Center(
                       child:
                           viewModel.isLoadingMore
-                              ? const CircularProgressIndicator(color: primary)
+                              ? const SpinKitFadingCircle(color: primary)
                               : const SizedBox.shrink(),
                     ),
                   );
@@ -496,7 +495,7 @@ class _RequesterNotificationScreenState
                   SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: SpinKitFadingCircle(size: 16, color: primary),
                   ),
                   SizedBox(width: 12),
                   Text('Opening leave details...'),

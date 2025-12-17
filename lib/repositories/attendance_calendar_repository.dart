@@ -46,8 +46,7 @@ class AttendanceCalendarRepository {
         }
       }
     } catch (e) {
-      print('Error in getAttendanceCalendar: $e');
-      throw Exception('Error loading attendance calendar: $e');
+      throw Exception('Error loading attendance calendar');
     }
   }
 }

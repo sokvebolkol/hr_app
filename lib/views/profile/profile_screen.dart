@@ -11,6 +11,7 @@ import '../../constants/constant.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../services/global_service.dart';
 import '../auth/welcome.dart';
+import '../../widgets/custom_alert_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -375,58 +376,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // ✅ Updated Logout Function
   void _handleLogout(ProfileViewModel viewModel) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Icon(Icons.logout_rounded, color: themeColor, size: 28),
-                const SizedBox(width: 12),
-                const Text(
-                  "Logout",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            content: const Text(
-              "Are you sure you want to logout?",
-              style: TextStyle(fontSize: 15, height: 1.5),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: Colors.grey[600], fontSize: 15),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-            ],
-          ),
+    final shouldLogout = await CustomAlertDialog.showConfirmation(
+      context,
+      title: "Logout",
+      message: "Are you sure you want to logout?",
+      icon: Icons.logout_rounded,
+      iconColor: themeColor,
+      yesButtonText: "Logout",
+      noButtonText: "Cancel",
     );
 
     if (shouldLogout == true) {
@@ -582,8 +539,6 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } catch (e) {
-      print('❌ Error clearing local data: $e');
-
       if (mounted) {
         // Still navigate even if clearing fails
         Navigator.pushAndRemoveUntil(

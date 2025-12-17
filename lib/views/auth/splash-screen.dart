@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import '../../constants/constant.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
@@ -9,6 +8,7 @@ import '../dashboard/requester_dashboard.dart';
 import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import '../../utils/internet_helper.dart';
 
 import 'welcome.dart';
 
@@ -30,16 +30,30 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _handleStartup() async {
     try {
+      // Check internet connection first
+      await Future.delayed(
+        const Duration(milliseconds: 100),
+      ); // Brief delay for splash
+
+      if (mounted) {
+        final hasInternet = await InternetHelper.checkAndAlert(context);
+        if (!hasInternet) {
+          debugPrint(
+            'No internet connection - proceeding with limited functionality',
+          );
+        }
+      }
+
       // Add timeout for the entire startup process
       await Future.wait([_checkLogin(), _requestPermissions()]).timeout(
         const Duration(seconds: 8), // Maximum 8 seconds for startup
         onTimeout: () {
-          print('Startup timeout - proceeding with login check only');
+          debugPrint('Startup timeout - proceeding with login check only');
           return [null, null]; // Continue anyway
         },
       );
     } catch (e) {
-      print('Startup error: $e');
+      debugPrint('Startup error: $e');
       // If anything fails, still proceed to login check
       await _checkLogin();
     }
@@ -165,7 +179,6 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       }
     } catch (e) {
-      print('Login check error: $e');
       // If anything fails, go to login screen
       if (mounted) {
         Navigator.pushReplacement(

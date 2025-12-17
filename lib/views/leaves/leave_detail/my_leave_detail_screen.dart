@@ -795,12 +795,12 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
                           Icons.message,
-                          color: Colors.blue,
+                          color: primary,
                           size: 20,
                         ),
                       ),
@@ -892,7 +892,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                                 }
                               },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: primary,
                       ),
                       child:
                           isSending

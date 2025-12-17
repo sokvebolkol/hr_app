@@ -108,8 +108,7 @@ class DashboardRepository {
         );
       }
     } catch (e) {
-      print('Dashboard Repository Error: $e');
-      throw Exception('Error fetching dashboard data: $e');
+      throw Exception('Error fetching dashboard data');
     }
   }
 

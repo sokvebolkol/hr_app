@@ -38,8 +38,7 @@ class AttendanceRepository {
         throw Exception('Server error: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in getAttendanceClockData: $e');
-      throw Exception('Error loading attendance data: $e');
+      throw Exception('Error loading attendance data');
     }
   }
 

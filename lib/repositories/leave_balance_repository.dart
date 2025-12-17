@@ -42,7 +42,7 @@ class LeaveBalanceRepository {
         );
       }
     } catch (e) {
-      throw Exception('Error fetching leave balance: $e');
+      throw Exception('Error fetching leave balance');
     }
   }
 }

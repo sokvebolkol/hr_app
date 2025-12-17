@@ -39,7 +39,7 @@ class ApproverDashboardRepository {
         );
       }
     } catch (e) {
-      throw Exception('Error fetching approver dashboard data: $e');
+      throw Exception('Error fetching approver dashboard data');
     }
   }
 }

@@ -49,7 +49,7 @@ class LeaveRequestRepository {
         );
       }
     } catch (e) {
-      throw Exception('Error fetching leave request data: $e');
+      throw Exception('Error fetching leave request data');
     }
   }
 
@@ -159,7 +159,7 @@ class LeaveRequestRepository {
         );
       }
     } catch (e) {
-      throw Exception('Error submitting leave request: $e');
+      throw Exception('Error submitting leave request');
     }
   }
 
@@ -220,7 +220,7 @@ class LeaveRequestRepository {
 
           request.files.add(multipartFile);
         } catch (fileError) {
-          throw Exception('Failed to prepare file for upload: $fileError');
+          throw Exception('Failed to prepare file for upload');
         }
       } else {
         throw Exception('File does not exist at path: ${file.path}');

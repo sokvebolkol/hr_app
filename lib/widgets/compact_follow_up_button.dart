@@ -1,3 +1,4 @@
+import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
 
 class CompactFollowUpButton extends StatelessWidget {
@@ -32,22 +33,22 @@ class CompactFollowUpButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding:
-            padding ?? const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            padding ?? const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: gradientColors ?? [Colors.blue, Colors.blue.shade600],
+            colors: gradientColors ?? [primary, Colors.blue.shade600],
           ),
           borderRadius: BorderRadius.circular(borderRadius ?? 6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: iconSize ?? 8, color: textColor ?? Colors.white),
+            Icon(icon, size: iconSize ?? 10, color: textColor ?? Colors.white),
             SizedBox(width: spacing ?? 3),
             Text(
               text,
               style: TextStyle(
-                fontSize: fontSize ?? 8,
+                fontSize: fontSize ?? 10,
                 fontWeight: FontWeight.w600,
                 color: textColor ?? Colors.white,
               ),

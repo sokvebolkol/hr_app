@@ -39,7 +39,9 @@ class ProfileRepository {
         throw Exception('Failed to fetch user profile: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error fetching profile: $e');
+      // Remove print statement to avoid redundancy
+      return null;
+      // throw Exception('Error fetching profile: $e');
     }
   }
 
