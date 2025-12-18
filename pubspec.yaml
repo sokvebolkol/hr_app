@@ -148,6 +148,12 @@ flutter:
     - family: times
       fonts:
         - asset: assets/fonts/times.ttf
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/Roboto.ttf
+    - family: Roboto-Bold
+      fonts:
+        - asset: assets/fonts/Roboto-Bold.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 flutter_icons:

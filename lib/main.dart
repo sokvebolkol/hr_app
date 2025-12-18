@@ -79,7 +79,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Chokchey HR',
       theme: ThemeData(
-        fontFamily: 'times',
+        fontFamily: 'Roboto',
         colorScheme: ColorScheme.fromSeed(
           seedColor: primary,
           primary: primary,
