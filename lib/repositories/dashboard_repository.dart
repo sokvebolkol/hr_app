@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/app_version.dart';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
 import '../models/user_model.dart';
@@ -97,10 +98,30 @@ class DashboardRepository {
           leaveBalance = _createDefaultLeaveBalance();
         }
 
+        // Safely parse app version data
+        final appVersionData = data['app_version'];
+        AppVersion? appVersion;
+
+        if (appVersionData != null &&
+            appVersionData is List &&
+            appVersionData.isNotEmpty &&
+            appVersionData[0] != null) {
+          try {
+            appVersion = AppVersion.fromJson(
+              appVersionData[0] as Map<String, dynamic>,
+            );
+          } catch (error) {
+            print(
+              'Error parsing app version: ${appVersionData[0]}, Error: $error',
+            );
+          }
+        }
+
         return DashboardData(
           user: UserModel.fromJson(userData as Map<String, dynamic>),
           leaves: leaves,
           leaveBalance: leaveBalance,
+          appVersion: appVersion,
         );
       } else {
         throw Exception(
@@ -163,10 +184,12 @@ class DashboardData {
   final UserModel user;
   final List<LeaveModel> leaves;
   final LeaveBalanceModel leaveBalance;
+  final AppVersion? appVersion;
 
   DashboardData({
     required this.user,
     required this.leaves,
     required this.leaveBalance,
+    this.appVersion,
   });
 }

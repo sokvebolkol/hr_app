@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:chokchey_hr_app/widgets/function_card.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constant.dart';
 import '../../constants/responsive.dart';
 import '../../utils/file_helper.dart';
@@ -142,6 +144,40 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                     ],
                   ),
                 );
+              }
+
+              // Check for force update
+              if (dashboardViewModel.appVersion != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  final shouldUpdate =
+                      await dashboardViewModel.shouldForceUpdate();
+                  if (shouldUpdate && mounted) {
+                    final updateUrl =
+                        Platform.isAndroid
+                            ? dashboardViewModel.appVersion!.androidUrl
+                            : dashboardViewModel.appVersion!.iosUrl;
+
+                    CustomAlertDialog.show(
+                      context,
+                      title: 'Update Required',
+                      message:
+                          'A new version ${dashboardViewModel.appVersion?.version} is available and must be installed to continue using the app.\n\n${dashboardViewModel.appVersion?.releaseNotes ?? ''}',
+                      icon: Icons.system_update,
+                      iconColor: Colors.orange,
+                      primaryButtonText: 'Update Now',
+                      onPrimaryPressed: () async {
+                        final uri = Uri.parse(updateUrl);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      barrierDismissible: false,
+                    );
+                  }
+                });
               }
 
               if (dashboardViewModel.errorMessage != null) {

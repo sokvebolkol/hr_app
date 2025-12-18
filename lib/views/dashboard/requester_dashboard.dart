@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:chokchey_hr_app/widgets/custom_alert_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -124,6 +126,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ],
                   ),
                 );
+              }
+
+              // Check for force update
+              if (viewModel.appVersion != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  final shouldUpdate = await viewModel.shouldForceUpdate();
+                  if (shouldUpdate && mounted) {
+                    final updateUrl =
+                        Platform.isAndroid
+                            ? viewModel.appVersion!.androidUrl
+                            : viewModel.appVersion!.iosUrl;
+
+                    CustomAlertDialog.show(
+                      // ignore: use_build_context_synchronously
+                      context,
+                      title: 'Update Required',
+                      message:
+                          'A new version ${viewModel.appVersion?.version} is available and must be installed to continue using the app.\n\n${viewModel.appVersion?.releaseNotes ?? ''}',
+                      icon: Icons.system_update,
+                      iconColor: primary,
+                      primaryButtonText: 'Update Now',
+                      onPrimaryPressed: () async {
+                        final uri = Uri.parse(updateUrl);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      barrierDismissible: false,
+                    );
+                  }
+                });
               }
 
               if (viewModel.errorMessage != null) {

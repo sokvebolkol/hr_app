@@ -56,7 +56,7 @@ class CeoDashboardRepository {
         } catch (e) {
           print('JSON Parsing Error: $e');
           print('Raw Response: ${response.body}');
-          throw Exception('Failed to parse response: $e');
+          throw Exception('Failed to parse response');
         }
       } else {
         try {
@@ -77,7 +77,7 @@ class CeoDashboardRepository {
       } else if (e.toString().contains('FormatException')) {
         throw Exception('Invalid response format from server');
       } else {
-        throw Exception('Error loading attendance summary: $e');
+        throw Exception('Error loading attendance summary');
       }
     }
   }

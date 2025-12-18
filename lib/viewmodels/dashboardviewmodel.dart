@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import '../models/app_version.dart';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
 import '../models/user_model.dart';
@@ -12,6 +14,7 @@ class DashboardViewModel extends ChangeNotifier {
 
   // State variables
   UserModel? _user;
+  AppVersion? _appVersion;
   UserProfile? _userProfile;
   List<LeaveModel> _leaves = [];
   LeaveBalanceModel? _leaveBalance;
@@ -20,6 +23,7 @@ class DashboardViewModel extends ChangeNotifier {
 
   // Getters
   UserModel? get user => _user;
+  AppVersion? get appVersion => _appVersion;
   UserProfile? get userProfile => _userProfile;
   List<LeaveModel> get leaves => _leaves;
   LeaveBalanceModel? get leaveBalance => _leaveBalance;
@@ -66,6 +70,7 @@ class DashboardViewModel extends ChangeNotifier {
       _user = dashboardData.user;
       _leaves = dashboardData.leaves;
       _leaveBalance = dashboardData.leaveBalance;
+      _appVersion = dashboardData.appVersion;
       _userProfile = userProfile;
       _setLoading(false);
     } catch (e) {
@@ -126,6 +131,33 @@ class DashboardViewModel extends ChangeNotifier {
       // Even if logout API fails, we should proceed with clearing local data
       print('Error during force logout: $e');
     }
+  }
+
+  // Check if app update is available
+  Future<bool> isUpdateAvailable() async {
+    if (_appVersion == null) return false;
+
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+      return _appVersion!.isVersionGreaterThan(currentVersion);
+    } catch (e) {
+      print('Error checking update: $e');
+      return false;
+    }
+  }
+
+  // Check if update is mandatory
+  bool isUpdateMandatory() {
+    return _appVersion?.isMandatory ?? false;
+  }
+
+  // Check if force update is required
+  // Force update when: current version < new version AND isMandatory is true
+  Future<bool> shouldForceUpdate() async {
+    final updateAvailable = await isUpdateAvailable();
+    final isMandatory = isUpdateMandatory();
+    return updateAvailable && isMandatory;
   }
 
   @override
