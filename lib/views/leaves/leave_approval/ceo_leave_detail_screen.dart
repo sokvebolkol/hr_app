@@ -31,7 +31,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
       child: Consumer<LeaveActionViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
-            backgroundColor: Colors.grey[50],
+            backgroundColor: Colors.white,
             appBar: AppBar(
               elevation: 0,
               backgroundColor: secondary,
@@ -43,12 +43,11 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               ),
             ),
             body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(2),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildEmployeeCard(viewModel),
-                  const SizedBox(height: 16),
                   _buildLeaveDetailsCard(viewModel),
                   const SizedBox(height: 16),
                   if (widget.leave.file != null &&
@@ -56,18 +55,18 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                     const SizedBox(height: 16),
                     _buildSupportingDocumentCard(),
                   ],
-                  const SizedBox(height: 16),
-                  ApprovalWorkflowWidget(
-                    approvalList:
-                        widget.leave.prioList
-                            .map(
-                              (approval) =>
-                                  ApprovalItemData.fromCeoApprovalItem(
-                                    approval,
-                                  ),
-                            )
-                            .toList(),
-                  ),
+                  // const SizedBox(height: 16),
+                  // ApprovalWorkflowWidget(
+                  //   approvalList:
+                  //       widget.leave.prioList
+                  //           .map(
+                  //             (approval) =>
+                  //                 ApprovalItemData.fromCeoApprovalItem(
+                  //                   approval,
+                  //                 ),
+                  //           )
+                  //           .toList(),
+                  // ),
                   const SizedBox(height: 100), // Space for floating buttons
                 ],
               ),
@@ -115,11 +114,13 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
 
   Widget _buildEmployeeCard(LeaveActionViewModel viewModel) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -130,20 +131,20 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
           children: [
             // Header Section with Avatar and Status
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
                   Stack(
                     children: [
                       CircleAvatar(
-                        radius: 35,
+                        radius: 30,
                         backgroundColor: Colors.white,
                         child: Text(
                           widget.leave.requesterName.isNotEmpty
                               ? widget.leave.requesterName[0].toUpperCase()
                               : 'U',
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: primary,
                           ),
@@ -157,7 +158,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                           decoration: BoxDecoration(
                             color:
                                 viewModel.hasActionTaken
-                                    ? Colors.green
+                                    ? Colors.orange
                                     : FileHelper.getStatusColor(
                                       widget.leave.statusText,
                                     ),
@@ -183,7 +184,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         Text(
                           widget.leave.requesterName,
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -192,7 +193,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         Text(
                           'Staff ID: ${widget.leave.staff_id}',
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             color: Colors.white70,
                             fontWeight: FontWeight.w500,
                           ),
@@ -201,7 +202,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
-                            vertical: 6,
+                            vertical: 2,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
@@ -229,10 +230,10 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: (viewModel.hasActionTaken
-                              ? Colors.green
+                              ? Colors.orange
                               : FileHelper.getStatusColor(widget.leave.statu))
-                          .withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
+                          .withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
                     child: Column(
@@ -265,7 +266,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
             // Employee Details Section
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: const BorderRadius.only(
@@ -279,50 +280,34 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                   const Text(
                     'Employee Information',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.work_outline,
-                          'Position',
-                          widget.leave.position,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.business_outlined,
-                          'Department',
-                          widget.leave.department,
-                        ),
-                      ),
-                    ],
+                  _buildInfoItem(
+                    Icons.location_on_outlined,
+                    'Branch',
+                    widget.leave.branch,
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.location_on_outlined,
-                          'Branch',
-                          widget.leave.branch,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.email_outlined,
-                          'Email',
-                          widget.leave.email,
-                        ),
-                      ),
-                    ],
+                  _buildInfoItem(
+                    Icons.work_outline,
+                    'Position',
+                    widget.leave.position,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoItem(
+                    Icons.business_outlined,
+                    'Department',
+                    widget.leave.department,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoItem(
+                    Icons.email_outlined,
+                    'Email',
+                    widget.leave.email,
                   ),
                 ],
               ),
@@ -350,19 +335,11 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
               const SizedBox(height: 2),
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -391,40 +368,19 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
 
   Widget _buildLeaveDetailsCard(LeaveActionViewModel viewModel) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.info_outline, color: primary, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Leave Information',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            _buildDetailRow('Leave Type', widget.leave.ltyp, Icons.category),
-            _buildDetailRow(
-              'Duration',
-              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
-              Icons.schedule,
-            ),
-            _buildDetailRow(
-              'Leave Note',
-              widget.leave.leaveNote,
-              Icons.note_outlined,
-            ),
             _buildDetailRow(
               'From Date',
               DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.fromDate),
@@ -436,6 +392,16 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               Icons.date_range,
             ),
             _buildDetailRow(
+              'Duration',
+              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
+              Icons.schedule,
+            ),
+            _buildDetailRow(
+              'Leave Note',
+              widget.leave.leaveNote,
+              Icons.note_outlined,
+            ),
+            _buildDetailRow(
               'Applied On',
               DateFormat(
                 'MMMM dd, yyyy at hh:mm a',
@@ -444,7 +410,6 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
             ),
 
             if (widget.leave.reason.isNotEmpty) ...[
-              const SizedBox(height: 20),
               const Text(
                 'Reason',
                 style: TextStyle(

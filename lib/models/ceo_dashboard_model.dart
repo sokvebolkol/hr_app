@@ -144,6 +144,7 @@ class LeaveRequest {
   final String? adjustFromDate;
   final String? adjustToDate;
   final String? leaveSupportDoc;
+  final String? requesterProfileImage;
   final String? updatedAt;
   final String? createdAt;
   final String ltyp;
@@ -178,6 +179,7 @@ class LeaveRequest {
     this.adjustFromDate,
     this.adjustToDate,
     this.leaveSupportDoc,
+    this.requesterProfileImage,
     this.updatedAt,
     this.createdAt,
     required this.ltyp,
@@ -214,6 +216,7 @@ class LeaveRequest {
       adjustFromDate: json['adjust_from_date']?.toString(),
       adjustToDate: json['adjust_to_date']?.toString(),
       leaveSupportDoc: json['document_url']?.toString(),
+      requesterProfileImage: json['profile_image_url']?.toString(),
       updatedAt: json['updated_at']?.toString(),
       createdAt: json['created_at']?.toString(),
       ltyp: json['ltyp']?.toString() ?? '',

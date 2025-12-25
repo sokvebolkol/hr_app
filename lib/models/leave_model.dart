@@ -15,6 +15,7 @@ class LeaveModel {
   final String statu;
   final String reason;
   final String? documentUrl;
+  final String? empProfileImage;
   final bool? hasDocument;
   final String createdate;
   final List<PrioModel> prioList;
@@ -35,6 +36,7 @@ class LeaveModel {
     required this.statu,
     required this.reason,
     this.documentUrl,
+    this.empProfileImage,
     this.hasDocument,
     required this.createdate,
     required this.prioList,
@@ -56,6 +58,7 @@ class LeaveModel {
     statu: json['statu'].toString(),
     reason: json['reason'],
     hasDocument: json['has_document'],
+    empProfileImage: json['profile_image_url'],
     documentUrl: json['document_url'],
     createdate: json['createdate'],
     prioList:
@@ -123,6 +126,7 @@ extension LeaveModelExtension on LeaveModel {
       statu: statu,
       reason: reason,
       documentUrl: documentUrl,
+      empProfileImage: empProfileImage,
       hasDocument: hasDocument,
       createdate: createdate,
       prioList:

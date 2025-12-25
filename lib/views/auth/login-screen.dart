@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../constants/constant.dart';
 // import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
@@ -33,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  String _appVersion = '1.0.0';
 
   // language language = Language();
 
@@ -46,6 +48,18 @@ class _LoginScreenState extends State<LoginScreen>
     super.initState();
     _setupAnimations();
     _startAnimations();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      setState(() {
+        _appVersion = packageInfo.version;
+      });
+    } catch (e) {
+      print('Error loading app version');
+    }
   }
 
   void _setupAnimations() {
@@ -827,7 +841,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       children: [
         Text(
-          'Chokchey HR v1.0.0',
+          'Chokchey HR v$_appVersion',
           style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
         ),
         const SizedBox(height: 8),

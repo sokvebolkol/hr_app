@@ -26,10 +26,9 @@ class ProfileViewModel extends ChangeNotifier {
   LanguageLogic get languageLogic => _languageLogic;
 
   // Computed properties
-  String get profileImagePath =>
-      _userProfile?.currentProfileImagePath ?? 'assets/images/profile.png';
-  String get username => _userProfile?.username ?? "Unknown User";
-  String get position => _userProfile?.positionName ?? "Unknown Position";
+  String get profileImagePath => _userProfile?.currentProfileImagePath ?? "";
+  String get username => _userProfile?.username ?? "";
+  String get position => _userProfile?.positionName ?? "";
   String get email => _userProfile?.email ?? "";
   String get employeeId => _userProfile?.employeeId ?? "";
   String get employeeCard => _userProfile?.employeeCard ?? "";

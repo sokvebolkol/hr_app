@@ -198,6 +198,25 @@ class FileHelper {
     }
   }
 
+  Color getLeaveTypeColor(String? leaveType) {
+    if (leaveType == null) return secondary;
+
+    switch (leaveType.toLowerCase()) {
+      case 'annual leave':
+        return secondary;
+      case 'sick leave':
+        return const Color(0xFFFF9800); // Orange
+      case 'special leave':
+        return const Color(0xFF9C27B0); // Purple
+      case 'maternity leave':
+        return const Color(0xFF4CAF50); // Green
+      case 'unpaid leave':
+        return const Color(0xFF607D8B); // Blue Grey
+      default:
+        return secondary;
+    }
+  }
+
   // Version comparison
   // Return true if currentVersion is older than latestVersion
 

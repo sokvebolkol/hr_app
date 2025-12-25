@@ -33,6 +33,8 @@ class DashboardViewModel extends ChangeNotifier {
   String get username => _userProfile?.fullName ?? _user?.uname ?? "User";
   String? get profileImageUrl =>
       _userProfile?.profileImageUrl ?? _userProfile?.profileImage;
+  String? get empProfileImage =>
+      leaves.isNotEmpty ? leaves.first.empProfileImage : null;
   String get usedLeave => _leaveBalance?.annualLeaveUsed ?? "0";
   String get availableLeave => _leaveBalance?.annualLeaveBalance ?? "0";
 

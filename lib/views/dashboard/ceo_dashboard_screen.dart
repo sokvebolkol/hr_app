@@ -15,18 +15,17 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
+import '../../widgets/ceo_leave_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
-import '../../widgets/leave_request.dart';
 import '../attendance/staff_attendance_detail_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
+import '../menu/menu_screen.dart';
 import '../notifications/ceo_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
-import '../memo/memo_screen.dart';
-import '../holidays/holiday_calendar_screen.dart';
 
 class CeoDashboardScreen extends StatefulWidget {
   const CeoDashboardScreen({super.key});
@@ -42,9 +41,8 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
 
   final List<Widget> _screens = [
     const CeoDashboardScreen(),
-    const HolidayCalendarScreen(),
-    const MemoScreen(),
-    const ProfilePage(),
+    ProfilePage(currentIndex: 1),
+    const MenuScreen(),
   ];
 
   double screenWidth = 0.0;
@@ -157,6 +155,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                             : dashboardViewModel.appVersion!.iosUrl;
 
                     CustomAlertDialog.show(
+                      // ignore: use_build_context_synchronously
                       context,
                       title: 'Update Required',
                       message:
@@ -206,16 +205,15 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
         ),
         bottomNavigationBar: ConvexAppBar(
           key: ValueKey(_currentIndex),
-          color: Colors.black87,
+          color: Colors.black,
           backgroundColor: Colors.white,
           activeColor: secondary,
           shadowColor: Colors.grey[200],
-          style: TabStyle.react,
+          style: TabStyle.fixedCircle,
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.calendar_month, title: 'Holiday'),
-            TabItem(icon: Icons.campaign, title: 'Memo'),
-            TabItem(icon: Icons.more_horiz_sharp, title: 'More'),
+            TabItem(icon: Icons.person, title: 'Profile'),
+            TabItem(icon: Icons.menu, title: 'Menu'),
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
@@ -429,11 +427,24 @@ class _CeoDashboardHomeContent extends StatefulWidget {
 class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  late AnimationController _progressAnimationController;
+  late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _progressAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _progressAnimationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    _progressAnimationController.forward();
 
     // Refresh data when dashboard content is first created
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -445,6 +456,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   @override
   void dispose() {
     _tabController.dispose();
+    _progressAnimationController.dispose();
     super.dispose();
   }
 
@@ -467,7 +479,17 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               children: [
                 // Remove the old _buildHeader() since it's now in sticky header
                 const DateSection(),
-                _buildTodayAttendanceCard(ceoViewModel),
+                InkWell(
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => const StaffAttendanceDetailScreen(),
+                        ),
+                      ),
+                  child: _buildTodayAttendanceCard(ceoViewModel),
+                ),
                 _buildFunctionButtons(context),
                 _buildLeaveManagementTabs(ceoViewModel),
               ],
@@ -483,37 +505,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   // Remove the old _buildProfileAvatar method since it's now in sticky header
 
   Widget _buildTodayAttendanceCard(CeoDashboardViewModel viewModel) {
-    if (viewModel.isLoading) {
-      return Container(
-        margin: const EdgeInsets.all(16),
-        height: 180,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [secondary, secondary.withOpacity(0.8)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: secondary.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ),
-      );
-    }
-
     if (viewModel.errorMessage != null) {
       return Container(
         margin: const EdgeInsets.all(16),
-        height: 220,
+        height: 230,
         decoration: BoxDecoration(
           color: Colors.red.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
@@ -563,7 +558,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
 
     return Container(
       margin: const EdgeInsets.all(16),
-      height: 180,
+      height: 210,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -609,21 +604,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     ),
                   ),
                 ),
-                TextButton(
-                  onPressed:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const StaffAttendanceDetailScreen(
-                                isGettingTodayAttendance: true,
-                              ),
-                        ),
-                      ),
-                  child: const Text(
-                    'View Details >',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
+                Text(
+                  'View Details >',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
             ),
@@ -634,13 +617,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Expanded(
-                    child: _buildSimpleAttendanceStatItem(
-                      'Present',
-                      viewModel.presentCount.toString(),
-                      Colors.green[100]!,
-                    ),
+                    flex: 2,
+                    child: _buildPresentWithProgress(viewModel),
                   ),
-                  _buildSeparator(),
                   Expanded(
                     child: _buildSimpleAttendanceStatItem(
                       'Late',
@@ -749,6 +728,89 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPresentWithProgress(CeoDashboardViewModel viewModel) {
+    final totalStaff =
+        viewModel.presentCount + viewModel.onLeaveCount + viewModel.absentCount;
+    final progress = totalStaff > 0 ? viewModel.presentCount / totalStaff : 0.0;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 100,
+          height: 100,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 100,
+                height: 100,
+                child: AnimatedBuilder(
+                  animation: _progressAnimation,
+                  builder: (context, child) {
+                    return CircularProgressIndicator(
+                      value: progress * _progressAnimation.value,
+                      strokeWidth: 10,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    );
+                  },
+                ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${viewModel.presentCount}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '/',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                        TextSpan(
+                          text: '$totalStaff',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Present',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1343,12 +1405,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   }
 
   Widget _buildCompactLeaveItem(LeaveRequest leave, bool isPending) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Sort the approval list by priority
-    final sortedPrioList = [...leave.prioList]
-      ..sort((a, b) => a.prio.compareTo(b.prio));
-
     return GestureDetector(
       onTap: () async {
         final result = await Navigator.push(
@@ -1367,35 +1423,22 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        child: LeaveRequestWidget(
+        margin: const EdgeInsets.only(bottom: 1),
+        child: CeoLeaveRequestWidget(
           reason: leave.reason,
           status: leave.statuText,
           fromDate: leave.fromDate.toString(),
           toDate: leave.toDate.toString(),
           requesterName: leave.requesterName,
+          position: leave.position,
+          leaveType: leave.ltyp,
           totalDays: leave.numLeaveDays.toString(),
           currentUserName: widget.dashboardViewModel.username,
           currentUserProfileImageUrl: widget.dashboardViewModel.profileImageUrl,
-          lineWidth:
-              sortedPrioList.length == 3
-                  ? screenWidth / 2 * 0.58
-                  : screenWidth / 2 * 1.2,
-          prioList:
-              sortedPrioList
-                  .map(
-                    (p) => {
-                      'prio': p.prio,
-                      'apstatu': p.apstatu,
-                      'apstatu_text': p.apstatuText,
-                      'prio_text': p.prioText,
-                      'approver_name': p.approverName,
-                      'remark': p.remark,
-                    },
-                  )
-                  .toList(),
+          empProfileImage: leave.requesterProfileImage,
         ),
       ),
     );
   }
+
 }

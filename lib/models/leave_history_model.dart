@@ -21,6 +21,7 @@ class LeaveHistoryModel {
   final List<PriorityModel> prioList;
   final String statusText;
   final String? documentUrl;
+  final String? empProfileImage;
   final bool? hasDocument;
   final String? leaveSupportDoc;
 
@@ -47,6 +48,7 @@ class LeaveHistoryModel {
     required this.prioList,
     required this.statusText,
     this.documentUrl,
+    this.empProfileImage,
     this.hasDocument,
     this.leaveSupportDoc,
   });
@@ -78,6 +80,7 @@ class LeaveHistoryModel {
               .toList(),
       statusText: json['statu_text'],
       documentUrl: json['document_url'],
+      empProfileImage: json['emp_profile_image'],
       hasDocument: json['has_document'] ?? false,
       leaveSupportDoc: json['leave_support_doc'],
     );

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
+import '../menu/menu_screen.dart';
 import 'login-screen.dart';
 
+// ignore: must_be_immutable
 class ConfirmPasswordScreen extends StatefulWidget {
-  const ConfirmPasswordScreen({super.key, this.eCard});
+  bool isChangePassword;
+  ConfirmPasswordScreen({super.key, this.eCard, this.isChangePassword = false});
   final String? eCard; // Pass eCard from previous screen
 
   @override
@@ -60,7 +63,13 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
           const SnackBar(content: Text("Password reset successful!")),
         );
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(
+            builder:
+                (_) =>
+                    widget.isChangePassword
+                        ? const MenuScreen()
+                        : LoginScreen(),
+          ),
           (route) => false,
         );
       } else {
@@ -86,16 +95,6 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed:
-              () => {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-                ),
-              },
-        ),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
