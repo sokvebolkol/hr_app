@@ -5,16 +5,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' as convert;
 import '../../constants/constant.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import '../../services/global_service.dart';
-import '../auth/welcome.dart';
-import '../../widgets/custom_alert_dialog.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final int currentIndex;
+  const ProfilePage({super.key, this.currentIndex = 0});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -80,9 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   children: [
                     _buildProfileHeader(viewModel),
-                    const SizedBox(height: 24),
                     _buildProfileDetails(viewModel),
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -96,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildProfileHeader(ProfileViewModel viewModel) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 48, bottom: 24, left: 16, right: 16),
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 32),
       decoration: BoxDecoration(
         color: themeColor,
         borderRadius: const BorderRadius.only(
@@ -106,16 +100,22 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white, size: 28),
-                tooltip: "Logout",
-                onPressed: () => _handleLogout(viewModel),
-              ),
-            ],
-          ),
+          SizedBox(height: MediaQuery.of(context).padding.top / 1.5),
+          widget.currentIndex == 0
+              ? Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              )
+              : SizedBox(height: 16),
           Stack(
             alignment: Alignment.bottomRight,
             children: [
@@ -123,12 +123,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 alignment: Alignment.center,
                 children: [
                   CircleAvatar(
-                    radius: 60,
+                    radius: 55,
                     backgroundColor: Colors.white,
-                    backgroundImage: _getProfileImage(
-                      viewModel.profileImagePath,
-                    ),
+                    backgroundImage:
+                        viewModel.profileImagePath.isNotEmpty
+                            ? _getProfileImage(viewModel.profileImagePath)
+                            : const AssetImage('assets/images/profile.png'),
                   ),
+
                   if (viewModel.isUploadingImage)
                     Container(
                       width: 120,
@@ -167,7 +169,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             viewModel.username,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -176,7 +178,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             viewModel.position,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               color: Colors.white.withOpacity(0.85),
               fontWeight: FontWeight.w500,
             ),
@@ -188,51 +190,47 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfileDetails(ProfileViewModel viewModel) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-          child: Column(
-            children: [
-              for (int i = 0; i < viewModel.profileItems.length; i++) ...[
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: themeColor.withOpacity(0.13),
-                    child: Icon(
-                      viewModel.profileItems[i].icon,
-                      color: themeColor,
-                    ),
-                  ),
-                  title: Text(
-                    viewModel.profileItems[i].label,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(viewModel.profileItems[i].value),
-                  trailing:
-                      viewModel.profileItems[i].isClickable
-                          ? Icon(Icons.chevron_right, color: Colors.grey[600])
-                          : null,
-                  onTap:
-                      viewModel.profileItems[i].isClickable
-                          ? () => _handleItemTap(
-                            viewModel,
-                            viewModel.profileItems[i],
-                          )
-                          : null,
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      child: Column(
+        children: [
+          for (int i = 0; i < viewModel.profileItems.length; i++) ...[
+            ListTile(
+              minTileHeight: 70,
+              leading: CircleAvatar(
+                backgroundColor: themeColor.withOpacity(0.13),
+                child: Icon(
+                  viewModel.profileItems[i].icon,
+                  color: themeColor,
+                  size: 20,
                 ),
-                if (i != viewModel.profileItems.length - 1)
-                  const Divider(
-                    indent: 16,
-                    endIndent: 16,
-                    height: 0,
-                    thickness: 0.7,
-                  ),
-              ],
-            ],
-          ),
-        ),
+              ),
+              title: Text(
+                viewModel.profileItems[i].label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              subtitle: Text(viewModel.profileItems[i].value),
+              trailing:
+                  viewModel.profileItems[i].isClickable
+                      ? Icon(Icons.chevron_right, color: Colors.grey[600])
+                      : null,
+              onTap:
+                  viewModel.profileItems[i].isClickable
+                      ? () =>
+                          _handleItemTap(viewModel, viewModel.profileItems[i])
+                      : null,
+            ),
+            if (i != viewModel.profileItems.length - 1)
+              const Divider(
+                indent: 16,
+                endIndent: 16,
+                height: 0,
+                thickness: 0.2,
+              ),
+          ],
+        ],
       ),
     );
   }
@@ -371,184 +369,6 @@ class _ProfilePageState extends State<ProfilePage> {
           duration: Duration(seconds: isSuccess ? 3 : 4),
         ),
       );
-    }
-  }
-
-  // ✅ Updated Logout Function
-  void _handleLogout(ProfileViewModel viewModel) async {
-    final shouldLogout = await CustomAlertDialog.showConfirmation(
-      context,
-      title: "Logout",
-      message: "Are you sure you want to logout?",
-      icon: Icons.logout_rounded,
-      iconColor: themeColor,
-      yesButtonText: "Logout",
-      noButtonText: "Cancel",
-    );
-
-    if (shouldLogout == true) {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder:
-            (context) => WillPopScope(
-              onWillPop: () async => false,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SpinKitFadingCircle(color: themeColor, size: 50),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Logging out...',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-      );
-
-      try {
-        // Get token from SharedPreferences
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('token') ?? '';
-
-        if (token.isEmpty) {
-          // If no token, just clear local data and navigate
-          if (mounted) {
-            Navigator.of(context).pop(); // Close loading dialog
-          }
-          await _clearLocalDataAndNavigate();
-          return;
-        }
-
-        // Call logout API
-        final response = await http
-            .post(
-              Uri.parse('${ServerService().baseUrl}logout'),
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer $token',
-              },
-              body: convert.jsonEncode({'token': token}),
-            )
-            .timeout(
-              const Duration(seconds: 15),
-              onTimeout: () {
-                throw Exception('Request timeout');
-              },
-            );
-
-        if (mounted) {
-          Navigator.of(context).pop(); // Close loading dialog
-        }
-        // Handle response
-        if (response.statusCode == 200) {
-          final data = convert.jsonDecode(response.body);
-
-          if (data['success'] == true) {
-            // Successful logout
-            await _clearLocalDataAndNavigate();
-
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(data['message'] ?? 'Logged out successfully'),
-                  backgroundColor: Colors.green,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          } else {
-            // API returned success: false
-            await _clearLocalDataAndNavigate();
-          }
-        } else if (response.statusCode == 401) {
-          // Token invalid or expired - still logout locally
-          await _clearLocalDataAndNavigate();
-        } else {
-          // Other error - still logout locally
-          await _clearLocalDataAndNavigate();
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Logged out locally'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        print('❌ Logout Error: $e');
-
-        if (mounted) {
-          Navigator.of(context).pop(); // Close loading dialog
-        }
-
-        // Even on error, clear local data and logout
-        await _clearLocalDataAndNavigate();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                e.toString().contains('timeout')
-                    ? 'Connection timeout. Logged out locally.'
-                    : 'Network error. Logged out locally.',
-              ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  // ✅ Clear local data and navigate to welcome screen
-  Future<void> _clearLocalDataAndNavigate() async {
-    try {
-      // Call ViewModel logout to clear local data
-      await _viewModel.logout();
-
-      // Clear all SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-
-      if (mounted) {
-        // Navigate to Welcome Screen and remove all previous routes
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) => const WelcomeScreen(),
-          ),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        // Still navigate even if clearing fails
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) => const WelcomeScreen(),
-          ),
-          (route) => false,
-        );
-      }
     }
   }
 
