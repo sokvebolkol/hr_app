@@ -5,7 +5,6 @@ import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../repositories/approver_dashboard_repository.dart';
@@ -600,7 +599,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                   ),
                                 ),
                               ),
-                              if (viewModel.filteredPendingLeavesCount > 0) ...[
+                              if (viewModel.pendingLeavesCount > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.all(4),
@@ -616,9 +615,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                     minHeight: 20,
                                   ),
                                   child: Text(
-                                    viewModel.filteredPendingLeavesCount > 99
+                                    viewModel.pendingLeavesCount > 99
                                         ? '99+'
-                                        : viewModel.filteredPendingLeavesCount
+                                        : viewModel.pendingLeavesCount
                                             .toString(),
                                     style: TextStyle(
                                       color:
@@ -683,7 +682,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                   ),
                                 ),
                               ),
-                              if (viewModel.filteredOwnLeavesCount > 0) ...[
+                              if (viewModel.ownLeavesCount > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.all(4),
@@ -699,10 +698,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                                     minHeight: 20,
                                   ),
                                   child: Text(
-                                    viewModel.filteredOwnLeavesCount > 99
+                                    viewModel.ownLeavesCount > 99
                                         ? '99+'
-                                        : viewModel.filteredOwnLeavesCount
-                                            .toString(),
+                                        : viewModel.ownLeavesCount.toString(),
                                     style: TextStyle(
                                       color:
                                           isSelected ? primary : Colors.white,
@@ -724,9 +722,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
           ),
 
-          // Month Filter Section
-          _buildMonthFilter(viewModel),
-
           // Tab Content
           SizedBox(
             height: 400,
@@ -743,233 +738,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     );
   }
 
-  Widget _buildMonthFilter(ApproverDashboardViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(
-          top: BorderSide(color: Colors.grey[200]!),
-          bottom: BorderSide(color: Colors.grey[200]!),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.calendar_month, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 8),
-          Text(
-            'Filter by Month:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _showMonthPicker(viewModel),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _getSelectedMonthDisplay(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Icon(Icons.keyboard_arrow_down, color: primary, size: 20),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getSelectedMonthDisplay() {
-    final viewModel = Provider.of<ApproverDashboardViewModel>(
-      context,
-      listen: false,
-    );
-    return DateFormat('MMMM yyyy').format(viewModel.selectedMonth);
-  }
-
-  void _showMonthPicker(ApproverDashboardViewModel viewModel) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Select Month - ${DateTime.now().year}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _getCurrentYearMonths().length,
-                    itemBuilder: (context, index) {
-                      final month = _getCurrentYearMonths()[index];
-                      final monthDate = DateFormat(
-                        'yyyy-MM',
-                      ).parse(month['value']!);
-                      final isSelected =
-                          viewModel.selectedMonth.year == monthDate.year &&
-                          viewModel.selectedMonth.month == monthDate.month;
-
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 2),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () {
-                              viewModel.setSelectedMonth(monthDate);
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient:
-                                    isSelected
-                                        ? LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            primary.withOpacity(0.1),
-                                            primary.withOpacity(0.05),
-                                          ],
-                                        )
-                                        : null,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? primary.withOpacity(0.3)
-                                          : Colors.grey[200]!,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isSelected
-                                              ? primary.withOpacity(0.1)
-                                              : Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.calendar_month,
-                                      color:
-                                          isSelected
-                                              ? primary
-                                              : Colors.grey[600],
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Text(
-                                      month['display']!,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight:
-                                            isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.w500,
-                                        color:
-                                            isSelected
-                                                ? primary
-                                                : Colors.black87,
-                                      ),
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  List<Map<String, String>> _getCurrentYearMonths() {
-    List<Map<String, String>> months = [];
-    DateTime now = DateTime.now();
-    int currentYear = now.year;
-    int currentMonth = now.month;
-
-    // Generate months from January to current month of current year
-    for (int month = 1; month <= currentMonth; month++) {
-      DateTime monthDate = DateTime(currentYear, month, 1);
-      months.add({
-        'value': DateFormat('yyyy-MM').format(monthDate),
-        'display': DateFormat('MMMM yyyy').format(monthDate),
-      });
-    }
-
-    return months.reversed.toList();
-  }
-
   Widget _buildPendingApprovalsTab(ApproverDashboardViewModel viewModel) {
-    if (viewModel.filteredPendingLeaveRequests.isEmpty) {
+    if (viewModel.pendingLeaveRequests.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         child: Column(
@@ -991,7 +761,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 8),
             Text(
-              'No leave requests found for ${DateFormat('MMMM yyyy').format(viewModel.selectedMonth)}',
+              'No leave requests found',
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -1002,9 +772,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: viewModel.filteredPendingLeaveRequests.length,
+      itemCount: viewModel.pendingLeaveRequests.length,
       itemBuilder: (context, index) {
-        final leave = viewModel.filteredPendingLeaveRequests[index];
+        final leave = viewModel.pendingLeaveRequests[index];
         final screenWidth = MediaQuery.of(context).size.width;
 
         // Sort the approval list by priority
@@ -1049,9 +819,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   }
 
   Widget _buildMyLeaveRequestsTab(ApproverDashboardViewModel viewModel) {
-    final filteredLeaves = viewModel.filteredOwnLeaves;
+    final leaves = viewModel.myLeaveRequests;
     final screenWidth = MediaQuery.of(context).size.width;
-    if (filteredLeaves.isEmpty) {
+    if (leaves.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         child: Column(
@@ -1069,7 +839,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 8),
             Text(
-              'No leave requests found for ${DateFormat('MMMM yyyy').format(viewModel.selectedMonth)}',
+              'No leave requests found',
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -1080,9 +850,9 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
-      itemCount: filteredLeaves.length,
+      itemCount: leaves.length,
       itemBuilder: (context, index) {
-        final leave = filteredLeaves[index];
+        final leave = leaves[index];
         final sortedPrioList = [...leave.prioList]
           ..sort((a, b) => a.prio.compareTo(b.prio));
 

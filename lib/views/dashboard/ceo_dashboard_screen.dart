@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:chokchey_hr_app/widgets/function_card.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constant.dart';
@@ -15,17 +15,17 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
-import '../../widgets/ceo_leave_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
-import '../../widgets/function_card.dart';
+import '../../widgets/leave_request.dart';
 import '../attendance/staff_attendance_detail_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
-import '../menu/menu_screen.dart';
 import '../notifications/ceo_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
+import '../memo/memo_screen.dart';
+import '../holidays/holiday_calendar_screen.dart';
 
 class CeoDashboardScreen extends StatefulWidget {
   const CeoDashboardScreen({super.key});
@@ -41,8 +41,9 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
 
   final List<Widget> _screens = [
     const CeoDashboardScreen(),
-    ProfilePage(),
-    const MenuScreen(),
+    const HolidayCalendarScreen(),
+    const MemoScreen(),
+    const ProfilePage(),
   ];
 
   double screenWidth = 0.0;
@@ -155,7 +156,6 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                             : dashboardViewModel.appVersion!.iosUrl;
 
                     CustomAlertDialog.show(
-                      // ignore: use_build_context_synchronously
                       context,
                       title: 'Update Required',
                       message:
@@ -205,15 +205,16 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
         ),
         bottomNavigationBar: ConvexAppBar(
           key: ValueKey(_currentIndex),
-          color: Colors.black,
+          color: Colors.black87,
           backgroundColor: Colors.white,
           activeColor: secondary,
           shadowColor: Colors.grey[200],
-          style: TabStyle.fixedCircle,
+          style: TabStyle.react,
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.person, title: 'Profile'),
-            TabItem(icon: Icons.menu, title: 'Menu'),
+            TabItem(icon: Icons.calendar_month, title: 'Holiday'),
+            TabItem(icon: Icons.campaign, title: 'Memo'),
+            TabItem(icon: Icons.more_horiz_sharp, title: 'More'),
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
@@ -427,24 +428,11 @@ class _CeoDashboardHomeContent extends StatefulWidget {
 class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  late AnimationController _progressAnimationController;
-  late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _progressAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _progressAnimationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
-    _progressAnimationController.forward();
 
     // Refresh data when dashboard content is first created
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -456,7 +444,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   @override
   void dispose() {
     _tabController.dispose();
-    _progressAnimationController.dispose();
     super.dispose();
   }
 
@@ -479,17 +466,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               children: [
                 // Remove the old _buildHeader() since it's now in sticky header
                 const DateSection(),
-                InkWell(
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const StaffAttendanceDetailScreen(),
-                        ),
-                      ),
-                  child: _buildTodayAttendanceCard(ceoViewModel),
-                ),
+                _buildTodayAttendanceCard(ceoViewModel),
                 _buildFunctionButtons(context),
                 _buildLeaveManagementTabs(ceoViewModel),
               ],
@@ -505,10 +482,37 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   // Remove the old _buildProfileAvatar method since it's now in sticky header
 
   Widget _buildTodayAttendanceCard(CeoDashboardViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return Container(
+        margin: const EdgeInsets.all(16),
+        height: 180,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [secondary, secondary.withOpacity(0.8)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: secondary.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+    }
+
     if (viewModel.errorMessage != null) {
       return Container(
         margin: const EdgeInsets.all(16),
-        height: 230,
+        height: 220,
         decoration: BoxDecoration(
           color: Colors.red.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
@@ -558,7 +562,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
 
     return Container(
       margin: const EdgeInsets.all(16),
-      height: 210,
+      height: 180,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -604,9 +608,21 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     ),
                   ),
                 ),
-                Text(
-                  'View Details >',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                TextButton(
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => const StaffAttendanceDetailScreen(
+                                isGettingTodayAttendance: true,
+                              ),
+                        ),
+                      ),
+                  child: const Text(
+                    'View Details >',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
                 ),
               ],
             ),
@@ -617,9 +633,13 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Expanded(
-                    flex: 2,
-                    child: _buildPresentWithProgress(viewModel),
+                    child: _buildSimpleAttendanceStatItem(
+                      'Present',
+                      viewModel.presentCount.toString(),
+                      Colors.green[100]!,
+                    ),
                   ),
+                  _buildSeparator(),
                   Expanded(
                     child: _buildSimpleAttendanceStatItem(
                       'Late',
@@ -728,89 +748,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPresentWithProgress(CeoDashboardViewModel viewModel) {
-    final totalStaff =
-        viewModel.presentCount + viewModel.onLeaveCount + viewModel.absentCount;
-    final progress = totalStaff > 0 ? viewModel.presentCount / totalStaff : 0.0;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 100,
-          height: 100,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: AnimatedBuilder(
-                  animation: _progressAnimation,
-                  builder: (context, child) {
-                    return CircularProgressIndicator(
-                      value: progress * _progressAnimation.value,
-                      strokeWidth: 10,
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    );
-                  },
-                ),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${viewModel.presentCount}',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '/',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
-                        TextSpan(
-                          text: '$totalStaff',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Present',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -1022,9 +959,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             ),
           ),
 
-          // Month Filter Section
-          _buildMonthFilter(viewModel),
-
           // Tab Content
           SizedBox(
             height: 400, // Fixed height for the tab content
@@ -1039,293 +973,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         ],
       ),
     );
-  }
-
-  Widget _buildMonthFilter(CeoDashboardViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        border: Border(
-          top: BorderSide(color: Colors.grey[200]!),
-          bottom: BorderSide(color: Colors.grey[200]!),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.calendar_month, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 8),
-          Text(
-            'Filter by Month:',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _showMonthPicker(viewModel),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      viewModel.selectedMonthDisplay,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Icon(Icons.keyboard_arrow_down, color: secondary, size: 20),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showMonthPicker(CeoDashboardViewModel viewModel) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Select Month - ${DateTime.now().year}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _getCurrentYearMonths().length,
-                    itemBuilder: (context, index) {
-                      final month = _getCurrentYearMonths()[index];
-                      final isSelected =
-                          viewModel.selectedMonth == month['value'];
-
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 2,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () {
-                              viewModel.setSelectedMonth(month['value']);
-                              Navigator.pop(context);
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                gradient:
-                                    isSelected
-                                        ? LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            secondary.withOpacity(0.1),
-                                            secondary.withOpacity(0.05),
-                                          ],
-                                        )
-                                        : null,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? secondary.withOpacity(0.3)
-                                          : Colors.grey[200]!,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                                boxShadow:
-                                    isSelected
-                                        ? [
-                                          BoxShadow(
-                                            color: secondary.withOpacity(0.1),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                        : null,
-                              ),
-                              child: Row(
-                                children: [
-                                  // Month icon with animation
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isSelected
-                                              ? secondary.withOpacity(0.1)
-                                              : Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.calendar_month,
-                                      color:
-                                          isSelected
-                                              ? secondary
-                                              : Colors.grey[600],
-                                      size: 20,
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 16),
-
-                                  // Month text with improved typography
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          month['display']!,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight:
-                                                isSelected
-                                                    ? FontWeight.bold
-                                                    : FontWeight.w500,
-                                            color:
-                                                isSelected
-                                                    ? secondary
-                                                    : Colors.black87,
-                                            letterSpacing: 0.2,
-                                          ),
-                                        ),
-                                        if (isSelected) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            'Selected month',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: secondary.withOpacity(0.7),
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Animated check icon
-                                  AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 300),
-                                    transitionBuilder: (
-                                      Widget child,
-                                      Animation<double> animation,
-                                    ) {
-                                      return ScaleTransition(
-                                        scale: animation,
-                                        child: child,
-                                      );
-                                    },
-                                    child:
-                                        isSelected
-                                            ? Container(
-                                              key: const ValueKey('selected'),
-                                              padding: const EdgeInsets.all(6),
-                                              decoration: BoxDecoration(
-                                                color: secondary,
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: secondary
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 6,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: const Icon(
-                                                Icons.check,
-                                                color: Colors.white,
-                                                size: 16,
-                                              ),
-                                            )
-                                            : Container(
-                                              key: const ValueKey('unselected'),
-                                              width: 28,
-                                              height: 28,
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: Colors.grey[300]!,
-                                                  width: 1.5,
-                                                ),
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
-  List<Map<String, String>> _getCurrentYearMonths() {
-    List<Map<String, String>> months = [];
-    DateTime now = DateTime.now();
-    int currentYear = now.year;
-    int currentMonth = now.month;
-
-    // Generate months from January to current month of current year
-    for (int month = 1; month <= currentMonth; month++) {
-      DateTime monthDate = DateTime(currentYear, month, 1);
-      months.add({
-        'value': DateFormat('yyyy-MM').format(monthDate), // "2025-01"
-        'display': DateFormat('MMMM yyyy').format(monthDate), // "January 2025"
-      });
-    }
-
-    // Reverse the list to show most recent months first
-    return months.reversed.toList();
   }
 
   Widget _buildPendingLeavesTab(List<LeaveRequest> leaves) {
@@ -1405,6 +1052,12 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   }
 
   Widget _buildCompactLeaveItem(LeaveRequest leave, bool isPending) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Sort the approval list by priority
+    final sortedPrioList = [...leave.prioList]
+      ..sort((a, b) => a.prio.compareTo(b.prio));
+
     return GestureDetector(
       onTap: () async {
         final result = await Navigator.push(
@@ -1423,22 +1076,35 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 1),
-        child: CeoLeaveRequestWidget(
+        margin: const EdgeInsets.only(bottom: 16),
+        child: LeaveRequestWidget(
           reason: leave.reason,
           status: leave.statuText,
           fromDate: leave.fromDate.toString(),
           toDate: leave.toDate.toString(),
           requesterName: leave.requesterName,
-          position: leave.position,
-          leaveType: leave.ltyp,
           totalDays: leave.numLeaveDays.toString(),
           currentUserName: widget.dashboardViewModel.username,
           currentUserProfileImageUrl: widget.dashboardViewModel.profileImageUrl,
-          empProfileImage: leave.requesterProfileImage,
+          lineWidth:
+              sortedPrioList.length == 3
+                  ? screenWidth / 2 * 0.58
+                  : screenWidth / 2 * 1.2,
+          prioList:
+              sortedPrioList
+                  .map(
+                    (p) => {
+                      'prio': p.prio,
+                      'apstatu': p.apstatu,
+                      'apstatu_text': p.apstatuText,
+                      'prio_text': p.prioText,
+                      'approver_name': p.approverName,
+                      'remark': p.remark,
+                    },
+                  )
+                  .toList(),
         ),
       ),
     );
   }
-
 }

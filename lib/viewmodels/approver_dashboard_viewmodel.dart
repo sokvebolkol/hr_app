@@ -18,9 +18,6 @@ class ApproverDashboardViewModel extends ChangeNotifier {
   int _pendingLeavesCount = 0;
   int _ownLeavesCount = 0;
 
-  // Month filtering
-  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
-
   // Getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -30,7 +27,6 @@ class ApproverDashboardViewModel extends ChangeNotifier {
   LeaveBalanceModel? get leaveBalance => _leaveBalance;
   int get pendingLeavesCount => _pendingLeavesCount;
   int get ownLeavesCount => _ownLeavesCount;
-  DateTime get selectedMonth => _selectedMonth;
 
   // Computed properties
   String get username => _user?.uname ?? 'User';
@@ -45,51 +41,6 @@ class ApproverDashboardViewModel extends ChangeNotifier {
     sorted.sort((a, b) => b.createdate.compareTo(a.createdate));
     return sorted.take(5).toList(); // Show only recent 5 leaves
   }
-
-  // Set selected month
-  void setSelectedMonth(DateTime month) {
-    _selectedMonth = DateTime(month.year, month.month);
-    notifyListeners();
-    // Note: Don't call fetchDashboardData() here as it will reload all data
-    // The filtering is done on existing data
-  }
-
-  // Helper method to safely parse date strings
-  DateTime? _parseDate(String? dateString) {
-    if (dateString == null || dateString.isEmpty) return null;
-    try {
-      return DateTime.parse(dateString);
-    } catch (e) {
-      // If parsing fails, return null
-      return null;
-    }
-  }
-
-  // Get filtered pending leaves
-  List<PendingLeaveRequest> get filteredPendingLeaveRequests {
-    return _pendingLeaveRequests.where((leave) {
-      final requestDate = _parseDate(leave.requestDate.toString());
-      if (requestDate == null) return false;
-
-      return requestDate.year == _selectedMonth.year &&
-          requestDate.month == _selectedMonth.month;
-    }).toList();
-  }
-
-  // Get filtered own leaves
-  List<LeaveModel> get filteredOwnLeaves {
-    return _myLeaveRequests.where((leave) {
-      final createDate = _parseDate(leave.createdate);
-      if (createDate == null) return false;
-
-      return createDate.year == _selectedMonth.year &&
-          createDate.month == _selectedMonth.month;
-    }).toList();
-  }
-
-  // Update counts based on filtered data
-  int get filteredPendingLeavesCount => filteredPendingLeaveRequests.length;
-  int get filteredOwnLeavesCount => filteredOwnLeaves.length;
 
   // Initialize
   Future<void> initialize() async {
