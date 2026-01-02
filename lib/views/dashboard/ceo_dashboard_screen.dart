@@ -41,7 +41,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
 
   final List<Widget> _screens = [
     const CeoDashboardScreen(),
-    ProfilePage(currentIndex: 1),
+    ProfilePage(),
     const MenuScreen(),
   ];
 

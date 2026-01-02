@@ -568,8 +568,8 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       children: [
         Container(
-          width: 140,
-          height: 140,
+          width: 110,
+          height: 110,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
@@ -581,10 +581,12 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ],
           ),
-          padding: const EdgeInsets.all(20),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+            child: Image.asset(
+              'assets/images/logo_256x256.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
       ],

@@ -1,3 +1,4 @@
+import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -192,7 +193,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade100,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -208,16 +209,16 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       child: Image.asset(
-                        'assets/images/logo.png',
-                        width: 120,
-                        height: 120,
+                        'assets/images/logo_256x256.png',
+                        width: 150,
+                        height: 150,
                       ),
                     ),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             // Animated title
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
@@ -230,8 +231,8 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: Text(
                       "Chokchey HR",
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
+                        color: secondary,
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 2.0,
                       ),

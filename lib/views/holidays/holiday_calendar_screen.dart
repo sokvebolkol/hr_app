@@ -1,4 +1,3 @@
-import 'package:chokchey_hr_app/views/dashboard/ceo_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -126,8 +125,8 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                 children: [
                   TableCalendar(
                     focusedDay: _focusedDay,
-                    firstDay: DateTime(2023, 1, 1),
-                    lastDay: DateTime(2025, 12, 31),
+                    firstDay: DateTime(DateTime.now().year, 1, 1),
+                    lastDay: DateTime(DateTime.now().year, 12, 31),
                     calendarFormat: CalendarFormat.month,
                     selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     eventLoader: _getHolidaysForDay,

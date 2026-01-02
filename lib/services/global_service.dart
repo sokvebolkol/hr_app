@@ -9,9 +9,9 @@ class ServerService {
       'https://hr-api.chokchey.com.kh:6070/api/'; // prod running
   static const String uatUrl = 'http://192.168.111.23:8080/api/'; // uat running
   static const String devUrl =
-      'http://192.168.53.199:8000/api/'; // local running
+      'http://192.168.53.229:8000/api/'; // local running
 
-  String _baseUrl = devUrl;
+  String _baseUrl = prodUrl;
   String _baseUrlName = "";
   String get baseUrl => _baseUrl;
   String get baseUrlName => _baseUrlName;
