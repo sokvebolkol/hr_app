@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:chokchey_hr_app/widgets/custom_alert_dialog.dart';
+import '../../widgets/custom_alert_dialog.dart';
+import '../../widgets/error_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -10,6 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
+import '../../constants/responsive.dart';
+import '../../utils/error_handler.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/leave_balance_viewmodel.dart';
@@ -164,13 +167,16 @@ class _DashboardScreenState extends State<DashboardScreen>
 
               if (viewModel.errorMessage != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(viewModel.errorMessage!),
-                      backgroundColor: Colors.red,
-                    ),
+                  ErrorHandler.showErrorDialog(
+                    context,
+                    message: viewModel.errorMessage!,
+                    onRetry: () {
+                      _dashboardViewModel.fetchDashboard();
+                    },
+                    onDismiss: () {
+                      viewModel.clearError();
+                    },
                   );
-                  viewModel.clearError();
                 });
               }
 

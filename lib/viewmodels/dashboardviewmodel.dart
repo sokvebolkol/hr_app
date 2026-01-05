@@ -7,6 +7,9 @@ import '../models/user_model.dart';
 import '../models/user_profile_model.dart';
 import '../repositories/dashboard_repository.dart';
 import '../repositories/profile_repository.dart';
+import '../utils/error_handler.dart';
+import '../utils/exceptions.dart';
+import '../utils/network_checker.dart';
 
 class DashboardViewModel extends ChangeNotifier {
   final DashboardRepository _repository = DashboardRepository();
@@ -60,6 +63,15 @@ class DashboardViewModel extends ChangeNotifier {
       _setLoading(true);
       _setError(null);
 
+      // Check internet connection FIRST before making any API calls
+      final hasInternet = await NetworkChecker.hasConnection();
+      if (!hasInternet) {
+        throw NetworkException(
+          message:
+              'No internet connection. Please access google.com to check your connection.',
+        );
+      }
+
       // Fetch dashboard data and user profile in parallel
       final results = await Future.wait([
         _repository.getDashboardData(),
@@ -75,8 +87,9 @@ class DashboardViewModel extends ChangeNotifier {
       _appVersion = dashboardData.appVersion;
       _userProfile = userProfile;
       _setLoading(false);
-    } catch (e) {
-      _setError(e.toString());
+    } catch (e, stackTrace) {
+      ErrorHandler.logError(e, stackTrace);
+      _setError(ErrorHandler.getErrorMessage(e));
       _setLoading(false);
     }
   }

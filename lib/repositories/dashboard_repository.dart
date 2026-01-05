@@ -1,11 +1,13 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_version.dart';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
 import '../models/user_model.dart';
 import '../services/global_service.dart';
+import '../services/http_service.dart';
+import '../utils/exceptions.dart';
+import '../utils/error_handler.dart';
 
 class DashboardRepository {
   final ServerService _serverService = ServerService();
@@ -17,16 +19,14 @@ class DashboardRepository {
       final userId = pref.getString("userId");
       final token = pref.getString("token");
 
-      if (userId == null) {
-        throw Exception('User ID not found in local storage');
+      if (userId == null || token == null) {
+        throw UnauthorizedException(
+          message: 'Session expired. Please login again.',
+        );
       }
 
-      if (token == null) {
-        throw Exception('Token not found in local storage');
-      }
-
-      final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}home/$userId'),
+      final response = await HttpService.get(
+        url: '${_serverService.baseUrl}home/$userId',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -34,102 +34,75 @@ class DashboardRepository {
         },
       );
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
+      final responseData = json.decode(response.body);
 
-        // Check if the response is successful
-        if (responseData['success'] != true) {
-          throw Exception('API returned unsuccessful response');
-        }
+      // Check if the response is successful
+      if (responseData['success'] != true) {
+        throw ServerException(message: 'Failed to fetch dashboard data');
+      }
 
-        // Extract the data object
-        final data = responseData['data'];
-        if (data == null) {
-          throw Exception('Data object is null in API response');
-        }
+      // Extract the data object
+      final data = responseData['data'];
+      if (data == null) {
+        throw DataParseException(message: 'Invalid response from server');
+      }
 
-        // Safely parse user data
-        final userData = data['user'];
-        if (userData == null) {
-          throw Exception('User data is null in API response');
-        }
+      // Safely parse user data
+      final userData = data['user'];
+      if (userData == null) {
+        throw DataParseException(message: 'User data not found in response');
+      }
 
-        // Safely parse leaves data
-        final leavesData = data['leaves'];
-        List<LeaveModel> leaves = [];
-        if (leavesData != null && leavesData is List) {
-          leaves =
-              leavesData
-                  .where((e) => e != null)
-                  .map((e) {
-                    try {
-                      return LeaveModel.fromJson(e as Map<String, dynamic>);
-                    } catch (error) {
-                      print('Error parsing leave item: $e, Error: $error');
-                      return null;
-                    }
-                  })
-                  .where((e) => e != null) // Filter out failed parsing attempts
-                  .cast<LeaveModel>()
-                  .toList();
-        }
+      // Safely parse leaves data
+      final leavesData = data['leaves'];
+      List<LeaveModel> leaves = [];
+      if (leavesData != null && leavesData is List) {
+        leaves =
+            leavesData
+                .where((e) => e != null)
+                .map((e) {
+                  try {
+                    return LeaveModel.fromJson(e as Map<String, dynamic>);
+                  } catch (error) {
+                    ErrorHandler.logError(error, StackTrace.current);
+                    return null;
+                  }
+                })
+                .where((e) => e != null) // Filter out failed parsing attempts
+                .cast<LeaveModel>()
+                .toList();
+      }
 
-        // Safely parse leave balance data
-        final leaveBalancesData = data['leaveBalances'];
-        LeaveBalanceModel? leaveBalance;
+      // Safely parse leave balance data
+      final leaveBalancesData = data['leaveBalances'];
+      LeaveBalanceModel? leaveBalance;
 
-        if (leaveBalancesData != null &&
-            leaveBalancesData is List &&
-            leaveBalancesData.isNotEmpty &&
-            leaveBalancesData[0] != null) {
-          try {
-            leaveBalance = LeaveBalanceModel.fromJson(
-              leaveBalancesData[0] as Map<String, dynamic>,
-            );
-          } catch (error) {
-            print(
-              'Error parsing leave balance: ${leaveBalancesData[0]}, Error: $error',
-            );
-            // Create a default leave balance if parsing fails
-            leaveBalance = _createDefaultLeaveBalance();
-          }
-        } else {
-          // Create a default leave balance if data is missing
+      if (leaveBalancesData != null &&
+          leaveBalancesData is List &&
+          leaveBalancesData.isNotEmpty &&
+          leaveBalancesData[0] != null) {
+        try {
+          leaveBalance = LeaveBalanceModel.fromJson(
+            leaveBalancesData[0] as Map<String, dynamic>,
+          );
+        } catch (error) {
+          ErrorHandler.logError(error, StackTrace.current);
+          // Create a default leave balance if parsing fails
           leaveBalance = _createDefaultLeaveBalance();
         }
-
-        // Safely parse app version data
-        final appVersionData = data['app_version'];
-        AppVersion? appVersion;
-
-        if (appVersionData != null &&
-            appVersionData is List &&
-            appVersionData.isNotEmpty &&
-            appVersionData[0] != null) {
-          try {
-            appVersion = AppVersion.fromJson(
-              appVersionData[0] as Map<String, dynamic>,
-            );
-          } catch (error) {
-            print(
-              'Error parsing app version: ${appVersionData[0]}, Error: $error',
-            );
-          }
-        }
-
-        return DashboardData(
-          user: UserModel.fromJson(userData as Map<String, dynamic>),
-          leaves: leaves,
-          leaveBalance: leaveBalance,
-          appVersion: appVersion,
-        );
       } else {
-        throw Exception(
-          'Failed to fetch dashboard data: ${response.statusCode}. Response: ${response.body}',
-        );
+        // Create a default leave balance if data is missing
+        leaveBalance = _createDefaultLeaveBalance();
       }
-    } catch (e) {
-      throw Exception('Error fetching dashboard data');
+
+      return DashboardData(
+        user: UserModel.fromJson(userData as Map<String, dynamic>),
+        leaves: leaves,
+        leaveBalance: leaveBalance,
+      );
+    } catch (e, stackTrace) {
+      ErrorHandler.logError(e, stackTrace);
+      rethrow; // Rethrow to let ViewModel handle it
     }
   }
 

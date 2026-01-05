@@ -780,8 +780,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
   void _showFollowUpDialog(PriorityModel priority) {
     final messageController = TextEditingController();
     bool isSending = false;
-    print(widget.leaveRequest.lreid);
-    print(priority.approverName);
     showDialog(
       context: context,
       builder:

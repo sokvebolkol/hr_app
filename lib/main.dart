@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -8,7 +9,25 @@ import 'viewmodels/notification_viewmodel.dart';
 import 'views/auth/splash-screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
+import 'services/internet_connection_service.dart';
 import 'firebase_options.dart';
+
+/// Check if device has internet connection
+/// Returns true if connected, false otherwise
+Future<bool> checkInternetConnection() async {
+  try {
+    final result = await InternetAddress.lookup(
+      'google.com',
+    ).timeout(const Duration(seconds: 5));
+    return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+  } on SocketException catch (_) {
+    return false;
+  } on TimeoutException catch (_) {
+    return false;
+  } catch (_) {
+    return false;
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +36,14 @@ void main() async {
     final languageLogic = LanguageLogic();
     await languageLogic.initialize();
     HttpOverrides.global = MyHttpOverrides();
+
+    // Check internet connection before Firebase initialization
+    final hasInternet = await checkInternetConnection();
+    if (hasInternet) {
+      print('✅ Internet connection available');
+    } else {
+      print('⚠️ No internet connection - app will run in offline mode');
+    }
 
     // Initialize Firebase with timeout
     await _initializeFirebaseWithTimeout();
@@ -70,8 +97,41 @@ Future<void> _initializeFirebaseWithTimeout() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final InternetConnectionService _connectionService =
+      InternetConnectionService();
+
+  @override
+  void initState() {
+    super.initState();
+    _setupConnectionListener();
+  }
+
+  void _setupConnectionListener() {
+    _connectionService.onConnectionChanged = (bool isConnected) {
+      if (!isConnected && mounted) {
+        // Show no internet dialog when connection is lost
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            InternetConnectionService.showNoInternetDialog(context);
+          }
+        });
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    _connectionService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
