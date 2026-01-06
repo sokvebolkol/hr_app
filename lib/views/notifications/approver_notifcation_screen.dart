@@ -68,22 +68,20 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
         allNotifications
             .where(
               (n) =>
-                  !n.isRead &&
-                  n.type == 'leave' &&
-                  n.data['action'] == 'new_request',
-            ) // Only new leave requests
+                  n.type == 'leave' && n.data['action'] == 'new_request' ||
+                  n.type == 'leave' && n.data['action'] == 'reminder',
+            ) // All leave requests
             .toList();
 
     _leaveApprovalNotifications =
         allNotifications
             .where(
               (n) =>
-                  !n.isRead &&
                   n.type == 'leave' &&
                   (n.data['action'] == 'approved' ||
                       n.data['action'] == 'rejected' ||
                       n.data['action'] == 'submitted'),
-            ) // Approved/rejected/ leaves
+            ) // All approved/rejected/submitted leaves
             .toList();
 
     if (mounted) {
@@ -253,36 +251,6 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
                         const Text('Mark all as read'),
-                        // Show count badge if there are unread notifications
-                        Consumer<NotificationViewModel>(
-                          builder: (context, viewModel, child) {
-                            final unreadCount =
-                                _leaveRequestNotifications.length +
-                                _leaveApprovalNotifications.length;
-                            if (unreadCount > 0) {
-                              return Container(
-                                margin: const EdgeInsets.only(left: 8),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '$unreadCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
                       ],
                     ),
                   ),
@@ -335,29 +303,10 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         const Flexible(
                           child: Text(
                             'Leave Request',
+                            style: TextStyle(fontSize: 14, color: Colors.white),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (_leaveRequestNotifications.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_leaveRequestNotifications.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -373,6 +322,7 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         const Flexible(
                           child: Text(
                             'Leave Approval',
+                            style: TextStyle(fontSize: 14, color: Colors.white),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -498,14 +448,15 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                 ),
               ),
             ),
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+            if (!notification.isRead)
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
           ],
         ),
         subtitle: Column(

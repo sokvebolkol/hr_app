@@ -18,6 +18,7 @@ import '../../models/ceo_dashboard_model.dart';
 import '../../widgets/ceo_leave_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
+import '../../widgets/statistics_card.dart';
 import '../attendance/staff_attendance_detail_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
@@ -428,6 +429,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   late TabController _tabController;
   late AnimationController _progressAnimationController;
   late Animation<double> _progressAnimation;
+  String _selectedMonth = 'All'; // Default filter
 
   @override
   void initState() {
@@ -883,7 +885,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Pending Leave Approval',
+                                  'Pending Approval',
                                   style: TextStyle(
                                     color:
                                         isSelected
@@ -966,7 +968,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Leave Approval History',
+                                  'Approval History',
                                   style: TextStyle(
                                     color:
                                         isSelected
@@ -1028,7 +1030,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               controller: _tabController,
               children: [
                 _buildPendingLeavesTab(viewModel.pendingLeaves),
-                _buildApprovedLeavesTab(viewModel.approvedLeaves),
+                _buildApprovedLeavesTab(viewModel),
               ],
             ),
           ),
@@ -1077,40 +1079,188 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildApprovedLeavesTab(List<LeaveRequest> leaves) {
-    if (leaves.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.approval_rounded, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'No Recent Approvals',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+  Widget _buildApprovedLeavesTab(CeoDashboardViewModel viewModel) {
+    // Get data from viewmodel
+    final approvedLeaves = viewModel.approvedLeaves;
+    final rejectedLeaves = viewModel.rejectedLeaves;
+    final allLeaves = [...approvedLeaves, ...rejectedLeaves];
+
+    // Filter by month
+    List<LeaveRequest> filteredLeaves =
+        _selectedMonth == 'All'
+            ? allLeaves
+            : allLeaves.where((leave) {
+              // Try multiple date fields
+              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+
+              // If createdate doesn't work, try frdat (from date)
+              if (leaveDate == null && leave.frdat.isNotEmpty) {
+                leaveDate = DateTime.tryParse(leave.frdat);
+              }
+
+              if (leaveDate == null) return false;
+              final monthYear =
+                  '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+              return monthYear == _selectedMonth;
+            }).toList();
+
+    // Calculate approved and rejected counts from filtered data
+    final approvedCount =
+        filteredLeaves.where((l) => approvedLeaves.contains(l)).length;
+    final rejectedCount =
+        filteredLeaves.where((l) => rejectedLeaves.contains(l)).length;
+
+    // Generate month options
+    final monthOptions = _generateMonthOptions(allLeaves);
+
+    return Column(
+      children: [
+        // Month Filter Dropdown
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_month, size: 20, color: secondary),
+              const SizedBox(width: 8),
+              const Text(
+                'Filter by Month:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: secondary,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Recently approved leaves will appear here',
-              style: TextStyle(color: Colors.grey[500], fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedMonth,
+                      isExpanded: true,
+                      icon: const Icon(Icons.arrow_drop_down, color: secondary),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: secondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      items:
+                          monthOptions.map((String month) {
+                            return DropdownMenuItem<String>(
+                              value: month,
+                              child: Text(month),
+                            );
+                          }).toList(),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedMonth = newValue;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      );
+
+        // Statistics Cards
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              StatisticsCard(
+                title: 'Approved',
+                count: approvedCount,
+                color: Colors.green,
+                onTap: () {
+                  // Optional: Filter to show only approved
+                },
+              ),
+              const SizedBox(width: 16),
+              StatisticsCard(
+                title: 'Rejected',
+                count: rejectedCount,
+                color: Colors.red,
+                onTap: () {
+                  // Optional: Filter to show only rejected
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // List of leaves
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: filteredLeaves.length,
+            itemBuilder:
+                (context, index) =>
+                    _buildCompactLeaveItem(filteredLeaves[index], false),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to generate month options from leaves
+  List<String> _generateMonthOptions(List<LeaveRequest> leaves) {
+    final Map<DateTime, String> monthMap = {};
+
+    for (var leave in leaves) {
+      // Try multiple date fields
+      DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+
+      // If createdate doesn't work, try frdat (from date)
+      if (leaveDate == null && leave.frdat.isNotEmpty) {
+        leaveDate = DateTime.tryParse(leave.frdat);
+      }
+
+      if (leaveDate != null) {
+        // Create a key for the month (first day of the month)
+        final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
+        final monthYear = '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+        monthMap[monthKey] = monthYear;
+      }
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: leaves.length,
-      itemBuilder:
-          (context, index) => _buildCompactLeaveItem(leaves[index], false),
-    );
+    // Sort months in descending order (most recent first)
+    final sortedMonths = monthMap.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    // Build the result with 'All' first, then sorted months
+    final result = <String>['All'];
+    for (var monthKey in sortedMonths) {
+      result.add(monthMap[monthKey]!);
+    }
+
+    return result;
+  }
+
+  // Helper method to get month name
+  String _getMonthName(int month) {
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return monthNames[month - 1];
   }
 
   Widget _buildCompactLeaveItem(LeaveRequest leave, bool isPending) {
@@ -1149,5 +1299,4 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       ),
     );
   }
-
 }

@@ -56,9 +56,8 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
         allNotifications
             .where(
               (n) =>
-                  !n.isRead &&
-                  n.type == 'leave' &&
-                  n.data['action'] == 'new_request',
+                  n.type == 'leave' && n.data['action'] == 'new_request' ||
+                  n.type == 'leave' && n.data['action'] == 'reminder',
             ) // Only new leave requests
             .toList();
 
@@ -105,30 +104,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('Notifications'),
-            // Show count badge in title
-            if (_leaveRequestNotifications.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_leaveRequestNotifications.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+        title: Row(children: [const Text('Notifications')]),
         backgroundColor: secondary, // CEO uses secondary color
         foregroundColor: Colors.white,
         elevation: 0,
@@ -256,27 +232,6 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
                         const Text('Mark all as read'),
-                        // Show count badge if there are unread notifications
-                        if (_leaveRequestNotifications.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(left: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_leaveRequestNotifications.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -401,14 +356,15 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                 ),
               ),
             ),
-            Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+            if (!notification.isRead)
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
           ],
         ),
         subtitle: Column(
@@ -510,11 +466,11 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
   void _handleLeaveRequestTap(NotificationModel notification) {
     try {
       if (notification.staffLeaveRequest == null) {
-        _showErrorDialog('No leave information available');
+        _showErrorDialog('No information available');
         return;
       }
 
-      print("🔔 CEO - Opening leave request for approval");
+      print("🔔 CEO - Opening request for approval");
 
       // Convert to PendingLeaveRequest for ApproverLeaveDetailScreen
       final leaveRequest = notification.toPendingLeaveRequest();

@@ -58,7 +58,7 @@ class LeaveActionButtons extends StatelessWidget {
           );
         }
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: const Color(0xFFECECEC),

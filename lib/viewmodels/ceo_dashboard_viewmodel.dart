@@ -23,12 +23,15 @@ class CeoDashboardViewModel extends ChangeNotifier {
   int get onLeaveCount => _attendanceSummary?.todayStaffLeaves ?? 0;
   int get pendingLeavesCount => _attendanceSummary?.pendingLeavesCount ?? 0;
   int get approvedLeavesCount => _attendanceSummary?.approvedLeavesCount ?? 0;
+  int get rejectedLeavesCount => _attendanceSummary?.rejectedLeavesCount ?? 0;
   double get attendanceRate => _attendanceSummary?.attendanceRate ?? 0;
 
   List<LeaveRequest> get pendingLeaves =>
       _attendanceSummary?.leaveNeedToApprove ?? [];
   List<LeaveRequest> get approvedLeaves =>
       _attendanceSummary?.approvedLeaves ?? [];
+  List<LeaveRequest> get rejectedLeaves =>
+      _attendanceSummary?.rejectedLeaves ?? [];
 
   // Initialize
   void initialize() {
@@ -52,7 +55,7 @@ class CeoDashboardViewModel extends ChangeNotifier {
           'Present: $presentCount, Late: $lateCount, Absent: $absentCount, On Leave: $onLeaveCount',
         );
         print(
-          'Pending leaves: ${pendingLeaves.length}, Approved leaves: ${approvedLeaves.length}',
+          'Pending leaves: ${pendingLeaves.length}, Approved leaves: ${approvedLeaves.length}, Rejected leaves: ${rejectedLeaves.length}',
         );
       } else {
         throw Exception('API returned success: false');
@@ -102,6 +105,7 @@ class CeoDashboardViewModel extends ChangeNotifier {
     return {
       'Pending': pendingLeavesCount,
       'Approved': approvedLeavesCount,
+      'Rejected': rejectedLeavesCount,
       'Today': onLeaveCount,
     };
   }

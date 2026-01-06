@@ -34,8 +34,10 @@ class AttendanceSummary {
   final int todayStaffLeaves;
   final int pendingLeavesCount;
   final int approvedLeavesCount;
+  final int rejectedLeavesCount;
   final List<LeaveRequest> leaveNeedToApprove;
   final List<LeaveRequest> approvedLeaves;
+  final List<LeaveRequest> rejectedLeaves;
 
   AttendanceSummary({
     required this.date,
@@ -47,8 +49,10 @@ class AttendanceSummary {
     required this.todayStaffLeaves,
     required this.pendingLeavesCount,
     required this.approvedLeavesCount,
+    required this.rejectedLeavesCount,
     required this.leaveNeedToApprove,
     required this.approvedLeaves,
+    required this.rejectedLeaves,
   });
 
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
@@ -62,12 +66,17 @@ class AttendanceSummary {
       todayStaffLeaves: _parseToInt(json['today_staff_leaves']),
       pendingLeavesCount: _parseToInt(json['pending_leaves_count']),
       approvedLeavesCount: _parseToInt(json['approved_leaves_count']),
+      rejectedLeavesCount: _parseToInt(json['rejected_leaves_count']),
       leaveNeedToApprove:
           (json['leave_need_to_approve'] as List? ?? [])
               .map((e) => LeaveRequest.fromJson(e))
               .toList(),
       approvedLeaves:
           (json['approved_leaves'] as List? ?? [])
+              .map((e) => LeaveRequest.fromJson(e))
+              .toList(),
+      rejectedLeaves:
+          (json['rejected_leaves'] as List? ?? [])
               .map((e) => LeaveRequest.fromJson(e))
               .toList(),
     );
