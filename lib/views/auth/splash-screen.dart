@@ -229,7 +229,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Transform.translate(
                     offset: Offset(0, 20 * (1 - value)),
                     child: Text(
-                      "Chokchey HR",
+                      "CHOKCHEY",
                       style: TextStyle(
                         color: secondary,
                         fontSize: 26,
