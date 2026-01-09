@@ -843,7 +843,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       children: [
         Text(
-          'Chokchey HR v$_appVersion',
+          'CHOKCHEY v$_appVersion',
           style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
         ),
         const SizedBox(height: 8),

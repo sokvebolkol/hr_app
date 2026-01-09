@@ -13,7 +13,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Chokchey HR</string>
+	<string>CHOKCHEY</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIcons</key>
@@ -49,9 +49,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to take profile photos.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Chokchey HR requires location access to accurately record your attendance and verify your workplace location when clocking in or out, even when the app is in the background. Your location data is only used for attendance verification and is never shared with third parties.</string>
+	<string>CHOKCHEY requires location access to accurately record your attendance and verify your workplace location when clocking in or out, even when the app is in the background. Your location data is only used for attendance verification and is never shared with third parties.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Chokchey HR needs your location to verify your attendance when you clock in or out. This ensures you are at the designated workplace location during attendance marking.</string>
+	<string>CHOKCHEY needs your location to verify your attendance when you clock in or out. This ensures you are at the designated workplace location during attendance marking.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs photo library access to save profile photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
