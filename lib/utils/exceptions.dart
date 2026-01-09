@@ -1,3 +1,4 @@
+/// Custom exceptions for better error handling
 class AppException implements Exception {
   final String message;
   final String? prefix;
