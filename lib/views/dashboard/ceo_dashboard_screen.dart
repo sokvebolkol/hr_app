@@ -20,6 +20,7 @@ import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/statistics_card.dart';
 import '../attendance/staff_attendance_detail_screen.dart';
+import '../attendance/staff_attendance_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
 import '../leaves/approval_history_screen.dart';
@@ -32,6 +33,7 @@ class CeoDashboardScreen extends StatefulWidget {
   const CeoDashboardScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _CeoDashboardScreenState createState() => _CeoDashboardScreenState();
 }
 
@@ -488,8 +490,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) => const StaffAttendanceDetailScreen(),
+                          builder: (context) => const StaffAttendanceScreen(),
                         ),
                       ),
                   child: _buildTodayAttendanceCard(ceoViewModel),
