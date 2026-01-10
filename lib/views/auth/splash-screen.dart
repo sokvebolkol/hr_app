@@ -6,12 +6,11 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import '../dashboard/requester_dashboard.dart';
-import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../utils/internet_helper.dart';
 
-import 'welcome.dart';
+import '../public/landing_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -173,18 +172,18 @@ class _SplashScreenState extends State<SplashScreen> {
           MaterialPageRoute(builder: (_) => targetScreen),
         );
       } else {
-        print('🔓 No valid token - redirecting to login');
+        print('🔓 No valid token - redirecting to landing screen');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+          MaterialPageRoute(builder: (_) => const LandingScreen()),
         );
       }
     } catch (e) {
-      // If anything fails, go to login screen
+      // If anything fails, go to landing screen
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const LandingScreen()),
         );
       }
     }
@@ -229,7 +228,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Transform.translate(
                     offset: Offset(0, 20 * (1 - value)),
                     child: Text(
-                      "Chokchey HR",
+                      "CHOKCHEY",
                       style: TextStyle(
                         color: secondary,
                         fontSize: 26,

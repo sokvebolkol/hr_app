@@ -531,32 +531,58 @@ class _LoginScreenState extends State<LoginScreen>
         return Scaffold(
           backgroundColor: Colors.grey.shade50,
           body: SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Container(
-                height:
-                    MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 60),
-                        _buildHeader(),
-                        const SizedBox(height: 60),
-                        _buildLoginCard(),
-                        // _buildLanguageSelector(),
-                        const Spacer(),
-                        _buildFooter(),
-                        const SizedBox(height: 40),
-                      ],
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Container(
+                    height:
+                        MediaQuery.of(context).size.height -
+                        MediaQuery.of(context).padding.top,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 60),
+                            _buildHeader(),
+                            const SizedBox(height: 60),
+                            _buildLoginCard(),
+                            // _buildLanguageSelector(),
+                            const Spacer(),
+                            _buildFooter(),
+                            const SizedBox(height: 40),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: primary),
+                      onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'Back to Landing',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -843,7 +869,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       children: [
         Text(
-          'Chokchey HR v$_appVersion',
+          'CHOKCHEY v$_appVersion',
           style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
         ),
         const SizedBox(height: 8),

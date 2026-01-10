@@ -1,10 +1,10 @@
-# Chokchey HR App 📱
+# CHOKCHEY App 📱
 
 A comprehensive Human Resources mobile application built with Flutter, designed to streamline HR processes and enhance employee engagement.
 
 ## 🎯 Overview
 
-Chokchey HR App is a modern, feature-rich mobile application that provides employees and HR administrators with essential tools for managing workplace operations, from attendance tracking to leave requests and notifications.
+CHOKCHEY App is a modern, feature-rich mobile application that provides employees and HR administrators with essential tools for managing workplace operations, from attendance tracking to leave requests and notifications.
 
 ## ✨ Features
 

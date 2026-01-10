@@ -425,7 +425,7 @@ class FirebaseNotificationService {
       case 'urgent':
         return 'Urgent';
       default:
-        return 'Chokchey HR';
+        return 'CHOKCHEY';
     }
   }
 
@@ -470,7 +470,7 @@ class FirebaseNotificationService {
     final testNotification = NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch,
       title: 'Test Notification',
-      body: 'This is a test notification from Chokchey HR',
+      body: 'This is a test notification from CHOKCHEY',
       type: 'test',
       category: 'info',
       data: {'test': 'true'},
