@@ -386,14 +386,17 @@ class FirebaseNotificationService {
     // iOS notification details - updated to persist in notification center
     final iosDetails = local_notifications.DarwinNotificationDetails(
       presentAlert: true,
-      presentBadge: false,
+      presentBadge: true,
       presentSound: true,
-      sound: 'default',
+      sound: 'default', // Use default iOS notification sound
       // badgeNumber: await getBadgeCount(),
       threadIdentifier: notification.type,
       categoryIdentifier: 'hr_notification',
       subtitle: _getNotificationSubtitle(notification.type),
-      interruptionLevel: local_notifications.InterruptionLevel.active,
+      interruptionLevel:
+          local_notifications
+              .InterruptionLevel
+              .timeSensitive, // Higher priority
     );
 
     final details = local_notifications.NotificationDetails(
