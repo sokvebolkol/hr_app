@@ -11,7 +11,7 @@ class ServerService {
   static const String devUrl =
       'http://192.168.53.69:8000/api/'; // local running
 
-  String _baseUrl = devUrl;
+  String _baseUrl = prodUrl;
   String _baseUrlName = "";
   String get baseUrl => _baseUrl;
   String get baseUrlName => _baseUrlName;

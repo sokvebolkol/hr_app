@@ -9,10 +9,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../constants/constant.dart';
-// import '../../localization/language.dart';
-import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
-import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
@@ -576,9 +573,12 @@ class _LoginScreenState extends State<LoginScreen>
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: primary),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: primary,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
-                      tooltip: 'Back to Landing',
+                      tooltip: 'Back to Welcome Screen',
                     ),
                   ),
                 ),

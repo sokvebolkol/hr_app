@@ -6,11 +6,12 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import '../dashboard/requester_dashboard.dart';
+import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../utils/internet_helper.dart';
 
-import '../public/landing_screen.dart';
+import 'welcome.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -172,18 +173,18 @@ class _SplashScreenState extends State<SplashScreen> {
           MaterialPageRoute(builder: (_) => targetScreen),
         );
       } else {
-        print('🔓 No valid token - redirecting to landing screen');
+        print('🔓 No valid token - redirecting to login');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LandingScreen()),
+          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
         );
       }
     } catch (e) {
-      // If anything fails, go to landing screen
+      // If anything fails, go to login screen
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LandingScreen()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
       }
     }

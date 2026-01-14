@@ -817,7 +817,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                         maxLines: 3,
                         enabled: !isSending,
                         decoration: InputDecoration(
-                          hintText: 'Enter your message...',
+                          hintText: 'Enter your message (optional)...',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -837,57 +837,51 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                           isSending
                               ? null
                               : () async {
-                                if (messageController.text.trim().isNotEmpty) {
-                                  setDialogState(() {
-                                    isSending = true;
-                                  });
+                                setDialogState(() {
+                                  isSending = true;
+                                });
 
-                                  try {
-                                    final success = await _repository
-                                        .sendFollowUpMessage(
-                                          priority.approverId,
-                                          widget.leaveRequest.lreid,
-                                          messageController.text.trim(),
-                                        );
-
-                                    if (!mounted) return;
-
-                                    Navigator.pop(context);
-
-                                    if (success) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Follow-up sent to ${priority.approverName}',
-                                          ),
-                                          backgroundColor: Colors.green,
-                                        ),
+                                try {
+                                  final success = await _repository
+                                      .sendFollowUpMessage(
+                                        priority.approverId,
+                                        widget.leaveRequest.lreid,
+                                        messageController.text.trim(),
                                       );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Failed to send follow-up. Please try again.',
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    if (!mounted) return;
 
-                                    Navigator.pop(context);
+                                  if (!mounted) return;
+
+                                  Navigator.pop(context);
+
+                                  if (success) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: Text('Error: ${e.toString()}'),
+                                        content: Text(
+                                          'Follow-up sent to ${priority.approverName}',
+                                        ),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Failed to send follow-up. Please try again.',
+                                        ),
                                         backgroundColor: Colors.red,
                                       ),
                                     );
                                   }
+                                } catch (e) {
+                                  if (!mounted) return;
+
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
                                 }
                               },
                       style: ElevatedButton.styleFrom(backgroundColor: primary),

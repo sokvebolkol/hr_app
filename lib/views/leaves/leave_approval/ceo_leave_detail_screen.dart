@@ -79,7 +79,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                           leaveId: widget.leave.lreid.toString(),
                           employeeName: widget.leave.requesterName,
                           leaveType: widget.leave.ltyp,
-                          numLeaveDays: widget.leave.numLeaveDays.toInt(),
+                          numLeaveDays: widget.leave.numLeaveDays,
                           fromDate: widget.leave.fromDate,
                           toDate: widget.leave.toDate,
                           onAction: _handleLeaveAction,

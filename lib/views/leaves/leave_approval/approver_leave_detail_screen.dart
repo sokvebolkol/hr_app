@@ -4,6 +4,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
 import '../../../repositories/approver_dashboard_repository.dart';
+import '../../../utils/file_helper.dart';
 import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../widgets/leave_action_widget.dart';
 import '../../../viewmodels/leave_action_viewmodel.dart';
@@ -70,7 +71,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   leaveId: widget.leave.lreid,
                   employeeName: widget.leave.requesterName,
                   leaveType: widget.leave.ltyp,
-                  numLeaveDays: widget.leave.numLeaveDays.toInt(),
+                  numLeaveDays: widget.leave.numLeaveDays,
                   fromDate: widget.leave.fromDate,
                   toDate: widget.leave.toDate,
                   onAction: _handleLeaveAction,
@@ -102,11 +103,13 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
 
   Widget _buildEmployeeCard(LeaveActionViewModel viewModel) {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -117,20 +120,20 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
           children: [
             // Header Section with Avatar and Status
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
                   Stack(
                     children: [
                       CircleAvatar(
-                        radius: 35,
+                        radius: 30,
                         backgroundColor: Colors.white,
                         child: Text(
                           widget.leave.requesterName.isNotEmpty
                               ? widget.leave.requesterName[0].toUpperCase()
                               : 'U',
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: primary,
                           ),
@@ -144,15 +147,17 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                           decoration: BoxDecoration(
                             color:
                                 viewModel.hasActionTaken
-                                    ? Colors.green
-                                    : Colors.orange, // Status color
+                                    ? Colors.orange
+                                    : FileHelper.getStatusColor(
+                                      widget.leave.statu,
+                                    ),
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                           ),
                           child: Icon(
                             viewModel.hasActionTaken
                                 ? Icons.check
-                                : Icons.access_time,
+                                : _getStatusIcon(),
                             color: Colors.white,
                             size: 16,
                           ),
@@ -168,7 +173,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         Text(
                           widget.leave.requesterName,
                           style: const TextStyle(
-                            fontSize: 20,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -177,7 +182,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         Text(
                           'Staff ID: ${widget.leave.staffId}',
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             color: Colors.white70,
                             fontWeight: FontWeight.w500,
                           ),
@@ -186,7 +191,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
-                            vertical: 6,
+                            vertical: 2,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
@@ -214,10 +219,10 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: (viewModel.hasActionTaken
-                              ? Colors.green
-                              : Colors.orange)
-                          .withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
+                              ? Colors.orange
+                              : FileHelper.getStatusColor(widget.leave.statu))
+                          .withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
                     child: Column(
@@ -225,13 +230,15 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         Icon(
                           viewModel.hasActionTaken
                               ? Icons.check_circle
-                              : Icons.access_time,
+                              : _getStatusIcon(),
                           color: Colors.white,
                           size: 16,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          viewModel.hasActionTaken ? 'PROCESSED' : 'PENDING',
+                          viewModel.hasActionTaken
+                              ? 'PROCESSED'
+                              : widget.leave.statuText,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -248,7 +255,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
             // Employee Details Section
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: const BorderRadius.only(
@@ -262,50 +269,34 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   const Text(
                     'Employee Information',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.work_outline,
-                          'Position',
-                          widget.leave.positionName,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.business_outlined,
-                          'Department',
-                          widget.leave.departmentName,
-                        ),
-                      ),
-                    ],
+                  _buildInfoItem(
+                    Icons.location_on_outlined,
+                    'Branch',
+                    widget.leave.branchFullName,
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.location_on_outlined,
-                          'Branch',
-                          widget.leave.branchShortName,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildInfoItem(
-                          Icons.email_outlined,
-                          'Email',
-                          widget.leave.email,
-                        ),
-                      ),
-                    ],
+                  _buildInfoItem(
+                    Icons.work_outline,
+                    'Position',
+                    widget.leave.positionName,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoItem(
+                    Icons.business_outlined,
+                    'Department',
+                    widget.leave.departmentName,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoItem(
+                    Icons.email_outlined,
+                    'Email',
+                    widget.leave.email,
                   ),
                 ],
               ),
@@ -361,35 +352,19 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
 
   Widget _buildLeaveDetailsCard() {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.info_outline, color: primary, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Leave Information',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            _buildDetailRow('Leave Type', widget.leave.ltyp, Icons.category),
-            _buildDetailRow(
-              'Duration',
-              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
-              Icons.schedule,
-            ),
             _buildDetailRow(
               'From Date',
               DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.fromDate),
@@ -401,14 +376,24 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               Icons.date_range,
             ),
             _buildDetailRow(
+              'Duration',
+              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
+              Icons.schedule,
+            ),
+            _buildDetailRow(
+              'Leave Note',
+              widget.leave.leaveNote,
+              Icons.note_outlined,
+            ),
+            _buildDetailRow(
               'Applied On',
               DateFormat(
                 'MMMM dd, yyyy at hh:mm a',
               ).format(widget.leave.requestDate),
               Icons.access_time,
             ),
+
             if (widget.leave.reason.isNotEmpty) ...[
-              const SizedBox(height: 20),
               const Text(
                 'Reason',
                 style: TextStyle(
@@ -612,6 +597,19 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
   bool _isImageFile(String fileName) {
     final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
     return imageExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
+  }
+
+  IconData _getStatusIcon() {
+    switch (widget.leave.statu.toLowerCase()) {
+      case '1':
+        return Icons.check_circle;
+      case '0':
+        return Icons.cancel;
+      case '2':
+        return Icons.access_time;
+      default:
+        return Icons.help_outline;
+    }
   }
 
   String _getFileName(String filePath) {

@@ -57,9 +57,12 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             .where(
               (n) =>
                   !n.isRead &&
-                  n.type == 'leave' &&
-                  n.data['action'] == 'new_request',
-            ) // Only new leave requests
+                      n.type == 'leave' &&
+                      n.data['action'] == 'new_request' ||
+                  !n.isRead &&
+                      n.type == 'leave' &&
+                      n.data['action'] == 'reminder',
+            ) // Only new leave requests or reminders
             .toList();
 
     if (mounted) {
