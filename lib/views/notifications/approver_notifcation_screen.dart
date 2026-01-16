@@ -4,7 +4,7 @@ import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
-import '../leaves/leave_detail/my_leave_detail_screen.dart';
+import '../leaves/leave_detail/employee_leave_detail_screen.dart';
 
 class ApproverNotificationScreen extends StatefulWidget {
   const ApproverNotificationScreen({super.key});
@@ -68,20 +68,24 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
         allNotifications
             .where(
               (n) =>
-                  n.type == 'leave' && n.data['action'] == 'new_request' ||
-                  n.type == 'leave' && n.data['action'] == 'reminder',
-            ) // All leave requests
+                  !n.isRead &&
+                      n.type == 'leave' &&
+                      n.data['action'] == 'new_request' ||
+                  !n.isRead &&
+                      n.type == 'leave' &&
+                      n.data['action'] == 'reminder',
+            ) // Only new leave requests
             .toList();
 
     _leaveApprovalNotifications =
         allNotifications
             .where(
               (n) =>
+                  !n.isRead &&
                   n.type == 'leave' &&
                   (n.data['action'] == 'approved' ||
-                      n.data['action'] == 'rejected' ||
-                      n.data['action'] == 'submitted'),
-            ) // All approved/rejected/submitted leaves
+                      n.data['action'] == 'rejected'),
+            ) // Approved/rejected/ leaves
             .toList();
 
     if (mounted) {
@@ -251,6 +255,36 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
                         const Text('Mark all as read'),
+                        // Show count badge if there are unread notifications
+                        Consumer<NotificationViewModel>(
+                          builder: (context, viewModel, child) {
+                            final unreadCount =
+                                _leaveRequestNotifications.length +
+                                _leaveApprovalNotifications.length;
+                            if (unreadCount > 0) {
+                              return Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$unreadCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -303,10 +337,29 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         const Flexible(
                           child: Text(
                             'Leave Request',
-                            style: TextStyle(fontSize: 14, color: Colors.white),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (_leaveRequestNotifications.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(left: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${_leaveRequestNotifications.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -322,7 +375,6 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         const Flexible(
                           child: Text(
                             'Leave Approval',
-                            style: TextStyle(fontSize: 14, color: Colors.white),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -448,15 +500,14 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                 ),
               ),
             ),
-            if (!notification.isRead)
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
               ),
+            ),
           ],
         ),
         subtitle: Column(
@@ -563,11 +614,9 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
             _refreshNotifications();
           }
         });
-      } else if (action == 'approved' ||
-          action == 'rejected' ||
-          action == 'submitted') {
-        // For approved/rejected/submitted leaves, use MyLeaveDetailScreen with LeaveHistoryModel
-        print("➡️ Navigating to MyLeaveDetailScreen (LeaveHistoryModel)");
+      } else if (action == 'approved' || action == 'rejected') {
+        // For approved/rejected leaves, use EmployeeLeaveDetailScreen with LeaveHistoryModel
+        print("➡️ Navigating to EmployeeLeaveDetailScreen (LeaveHistoryModel)");
 
         if (notification.leaveData == null) {
           _showErrorDialog(
@@ -582,7 +631,8 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
             context,
             MaterialPageRoute(
               builder:
-                  (context) => MyLeaveDetailScreen(leaveRequest: leaveInfo),
+                  (context) =>
+                      EmployeeLeaveDetailScreen(leaveRequest: leaveInfo),
             ),
           ).then((result) {
             if (result == true) {
@@ -592,6 +642,33 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
         } catch (e) {
           print("❌ Error converting to LeaveHistoryModel: $e");
           _showErrorDialog('Error processing leave data: ${e.toString()}');
+        }
+      } else if (action == 'reminder') {
+        // For reminder notifications, also navigate to appropriate screen
+        print("➡️ Navigating for reminder notification");
+
+        if (notification.leaveData == null) {
+          _showErrorDialog('No leave information available for this reminder');
+          return;
+        }
+
+        try {
+          // Check if it's a pending request that needs approval
+          final leaveRequest = notification.toPendingLeaveRequest();
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
+            ),
+          ).then((result) {
+            if (result == true) {
+              _refreshNotifications();
+            }
+          });
+        } catch (e) {
+          print("❌ Error processing reminder: $e");
+          _showErrorDialog('Error processing reminder data: ${e.toString()}');
         }
       } else {
         // Fallback: show notification details modal

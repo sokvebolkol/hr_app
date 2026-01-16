@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
@@ -201,10 +202,7 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
                           ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
+                            child: SpinKitCircle(color: Colors.white, size: 20),
                           )
                           : const Icon(Icons.check_circle_outline),
                   label: Text(_isLoading ? "Resetting..." : "Reset Password"),

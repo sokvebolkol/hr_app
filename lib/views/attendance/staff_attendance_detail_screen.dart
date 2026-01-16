@@ -427,7 +427,7 @@ class _StaffAttendanceDetailScreenState
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(16),
-                      child: CircularProgressIndicator(color: secondary),
+                      child: SpinKitCircle(color: secondary, size: 50.0),
                     ),
                   );
                 }

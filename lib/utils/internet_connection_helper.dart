@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../constants/constant.dart';
 import '../services/internet_connection_service.dart';
 
 /// A helper class for internet connection utilities
@@ -58,7 +60,9 @@ class InternetAwareWidget extends StatelessWidget {
       future: InternetConnectionHelper.isConnected(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: SpinKitCircle(color: secondary, size: 50.0),
+          );
         }
 
         final bool isConnected = snapshot.data ?? false;

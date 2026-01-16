@@ -490,7 +490,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const StaffAttendanceScreen(),
+                          builder:
+                              (context) => const StaffAttendanceScreen(
+                                isTodayAttendance: false,
+                              ),
                         ),
                       ),
                   child: _buildTodayAttendanceCard(ceoViewModel),
@@ -696,7 +699,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const StaffAttendanceDetailScreen(),
+                      builder:
+                          (context) => const StaffAttendanceScreen(
+                            isTodayAttendance: true,
+                          ),
                     ),
                   );
                 },

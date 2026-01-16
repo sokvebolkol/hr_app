@@ -142,6 +142,22 @@ class UniqueStaffCounts {
   }
 }
 
+class DailyRecord {
+  final String date;
+  final String? clockIn;
+  final String? clockOut;
+
+  DailyRecord({required this.date, this.clockIn, this.clockOut});
+
+  factory DailyRecord.fromJson(Map<String, dynamic> json) {
+    return DailyRecord(
+      date: json['date'] ?? '',
+      clockIn: json['clock_in'],
+      clockOut: json['clock_out'],
+    );
+  }
+}
+
 class StaffMember {
   final String employeeId;
   final String staffId;
@@ -153,6 +169,7 @@ class StaffMember {
   final int lateCount;
   final int leaveCount;
   final int absentCount;
+  final List<DailyRecord> dailyRecords;
 
   StaffMember({
     required this.employeeId,
@@ -165,6 +182,7 @@ class StaffMember {
     required this.lateCount,
     required this.leaveCount,
     required this.absentCount,
+    required this.dailyRecords,
   });
 
   factory StaffMember.fromJson(Map<String, dynamic> json) {
@@ -179,7 +197,24 @@ class StaffMember {
       lateCount: json['late_count'] ?? 0,
       leaveCount: json['leave_count'] ?? 0,
       absentCount: json['absent_count'] ?? 0,
+      dailyRecords:
+          (json['daily_records'] as List<dynamic>?)
+              ?.map((e) => DailyRecord.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
+  }
+
+  // Helper method to get clock in time (returns first available)
+  String? get clockIn {
+    if (dailyRecords.isEmpty) return null;
+    return dailyRecords.first.clockIn;
+  }
+
+  // Helper method to get clock out time (returns first available)
+  String? get clockOut {
+    if (dailyRecords.isEmpty) return null;
+    return dailyRecords.first.clockOut;
   }
 
   bool get hasIssues => lateCount > 0 || leaveCount > 0 || absentCount > 0;
@@ -187,11 +222,13 @@ class StaffMember {
 
 class OverallSummary {
   final int totalDepartments;
+  final int totalPresentOccurrences;
   final int totalLateOccurrences;
   final int totalLeaveOccurrences;
   final int totalAbsentOccurrences;
 
   OverallSummary({
+    required this.totalPresentOccurrences,
     required this.totalDepartments,
     required this.totalLateOccurrences,
     required this.totalLeaveOccurrences,
@@ -201,6 +238,7 @@ class OverallSummary {
   factory OverallSummary.fromJson(Map<String, dynamic> json) {
     return OverallSummary(
       totalDepartments: json['total_departments'] ?? 0,
+      totalPresentOccurrences: json['total_present_occurrences'] ?? 0,
       totalLateOccurrences: json['total_late_occurrences'] ?? 0,
       totalLeaveOccurrences: json['total_leave_occurrences'] ?? 0,
       totalAbsentOccurrences: json['total_absent_occurrences'] ?? 0,

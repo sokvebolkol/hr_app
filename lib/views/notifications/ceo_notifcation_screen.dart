@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
@@ -126,7 +127,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  CircularProgressIndicator(),
+                                  SpinKitCircle(color: secondary, size: 50.0),
                                   SizedBox(height: 16),
                                   Text('Marking all as read...'),
                                 ],
@@ -205,11 +206,9 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
+                            child: SpinKitCircle(
+                              color: Colors.white,
+                              size: 16.0,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -259,7 +258,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: secondary),
+                  SpinKitCircle(color: secondary, size: 50.0),
                   SizedBox(height: 16),
                   Text('Loading leave requests...'),
                 ],
@@ -296,8 +295,9 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                     child: Center(
                       child:
                           viewModel.isLoadingMore
-                              ? const CircularProgressIndicator(
+                              ? const SpinKitCircle(
                                 color: secondary,
+                                size: 50.0,
                               )
                               : const SizedBox.shrink(),
                     ),
@@ -423,7 +423,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                   SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: SpinKitCircle(color: secondary, size: 50.0),
                   ),
                   SizedBox(width: 12),
                   Text('Opening leave request...'),

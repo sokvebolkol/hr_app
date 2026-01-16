@@ -54,7 +54,7 @@ class _RequesterNotificationScreenState
   }
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
-    // Filter notifications for leave status updates only (approved/rejected/submitted)
+    // Filter notifications for leave status updates only (approved/rejected)
     _leaveStatusNotifications =
         allNotifications
             .where(
@@ -62,8 +62,7 @@ class _RequesterNotificationScreenState
                   !n.isRead &&
                   n.type == 'leave' &&
                   (n.data['action'] == 'approved' ||
-                      n.data['action'] == 'rejected' ||
-                      n.data['action'] == 'submitted'),
+                      n.data['action'] == 'rejected'),
             )
             .toList();
 
@@ -378,11 +377,6 @@ class _RequesterNotificationScreenState
         cardColor = Colors.red.shade50;
         borderColor = Colors.red.shade300;
         iconData = Icons.cancel_outlined;
-        break;
-      case 'submitted':
-        cardColor = Colors.blue.shade50;
-        borderColor = Colors.blue.shade300;
-        iconData = Icons.send_outlined;
         break;
       default:
         cardColor = Colors.grey.shade50;

@@ -624,10 +624,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                         ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
+                          child: SpinKitCircle(color: Colors.white, size: 16.0),
                         )
                         : const Icon(Icons.login_rounded, size: 28),
                 label: Text(
@@ -688,10 +685,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                         ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 3,
-                          ),
+                          child: SpinKitCircle(color: Colors.white, size: 16.0),
                         )
                         : Icon(
                           nextClockType == 'In'

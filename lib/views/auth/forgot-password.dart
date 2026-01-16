@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../../constants/constant.dart';
 import 'otp-screen.dart';
 import '../../viewmodels/forgot_password_viewmodel.dart';
@@ -131,10 +132,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
                         ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
+                          child: SpinKitCircle(color: Colors.white, size: 20),
                         )
                         : const Icon(Icons.send, color: Colors.white),
                 label: Text(vm.isLoading ? "Sending..." : "Get OTP"),

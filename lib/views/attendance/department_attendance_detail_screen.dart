@@ -4,18 +4,30 @@ import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
 import '../../models/attendance_by_department_model.dart';
 import '../../viewmodels/attendance_by_department_viewmodel.dart';
-import 'department_attendance_detail_screen.dart';
 
-class StaffAttendanceScreen extends StatefulWidget {
+class DepartmentAttendanceDetailScreen extends StatefulWidget {
+  final Department department;
+  final DateTimeRange? selectedDateRange;
+  final AttendanceByDepartmentViewModel viewModel;
   final bool isTodayAttendance;
-  const StaffAttendanceScreen({super.key, this.isTodayAttendance = false});
+
+  const DepartmentAttendanceDetailScreen({
+    super.key,
+    required this.department,
+    this.selectedDateRange,
+    required this.viewModel,
+    this.isTodayAttendance = false,
+  });
 
   @override
-  State<StaffAttendanceScreen> createState() => _StaffAttendanceScreenState();
+  State<DepartmentAttendanceDetailScreen> createState() =>
+      _DepartmentAttendanceDetailScreenState();
 }
 
-class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
-  late AttendanceByDepartmentViewModel _viewModel;
+class _DepartmentAttendanceDetailScreenState
+    extends State<DepartmentAttendanceDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   DateTimeRange? _selectedDateRange;
   String get _dateRangeText {
     if (_selectedDateRange == null) {
@@ -28,314 +40,271 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   @override
   void initState() {
     super.initState();
-    _viewModel = AttendanceByDepartmentViewModel();
-    _viewModel.initialize();
+    _tabController = TabController(length: 4, vsync: this);
+    _selectedDateRange = widget.selectedDateRange;
+    _tabController.addListener(() {
+      setState(() {}); // Rebuild to update tab colors
+    });
+  }
+
+  // Get the current department data from viewModel (in case it was updated)
+  Department get currentDepartment {
+    final updatedDept = widget.viewModel.departments.firstWhere(
+      (dept) => dept.departmentId == widget.department.departmentId,
+      orElse: () => widget.department,
+    );
+    return updatedDept;
+  }
+
+  // Get tab color based on index
+  Color _getTabColor(int index) {
+    switch (index) {
+      case 0: // Leave
+        return Colors.orange[700]!;
+      case 1: // Absent
+        return Colors.red[700]!;
+      case 2: // Late
+        return Colors.blueGrey[700]!;
+      case 3: // Present
+        return Colors.green[700]!;
+      default:
+        return secondary;
+    }
+  }
+
+  // Get icon based on status
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'Leave':
+        return Icons.beach_access_rounded;
+      case 'Absent':
+        return Icons.person_off_rounded;
+      case 'Late':
+        return Icons.schedule_rounded;
+      case 'Present':
+        return Icons.check_circle_rounded;
+      default:
+        return Icons.people_rounded;
+    }
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     super.dispose();
+  }
+
+  List<StaffMember> _getFilteredStaff(String status) {
+    switch (status) {
+      case 'Leave':
+        return currentDepartment.staffMembers
+            .where((staff) => staff.leaveCount > 0)
+            .toList();
+      case 'Absent':
+        return currentDepartment.staffMembers
+            .where((staff) => staff.absentCount > 0)
+            .toList();
+      case 'Late':
+        return currentDepartment.staffMembers
+            .where((staff) => staff.lateCount > 0)
+            .toList();
+      case 'Present':
+        return currentDepartment.staffMembers
+            .where(
+              (staff) =>
+                  staff.lateCount == 0 &&
+                  staff.leaveCount == 0 &&
+                  staff.absentCount == 0,
+            )
+            .toList();
+      default:
+        return currentDepartment.staffMembers;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: secondary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          !widget.isTodayAttendance
-              ? 'Today\'s Attendance'
-              : 'Staff Attendance',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        centerTitle: false,
-      ),
-      body: AnimatedBuilder(
-        animation: _viewModel,
+    return WillPopScope(
+      onWillPop: () async {
+        // Return the selected date range when navigating back
+        Navigator.pop(context, _selectedDateRange);
+        return false;
+      },
+      child: AnimatedBuilder(
+        animation: widget.viewModel,
         builder: (context, child) {
-          if (_viewModel.isLoading) {
-            return const Center(
-              child: SpinKitCircle(color: secondary, size: 50.0),
-            );
-          }
-
-          if (_viewModel.errorMessage != null) {
-            return _buildErrorState();
-          }
-
-          if (_viewModel.attendanceData == null) {
-            return _buildEmptyState();
-          }
-
-          return Column(
-            children: [
-              _buildOverallSummary(),
-              _buildTableHeader(),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      _selectedDateRange = null;
-                    });
-                    await _viewModel.refresh();
-                  },
-                  color: secondary,
-                  child: _buildDepartmentTable(),
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              backgroundColor: secondary,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context, _selectedDateRange),
+              ),
+              title: Text(
+                currentDepartment.departmentName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
+              centerTitle: false,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(60),
+                child: Container(
+                  color: secondaryAvatarBackground,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        color: _getTabColor(_tabController.index),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.black87,
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Leave'),
+                        Tab(text: 'Absent'),
+                        Tab(text: 'Late'),
+                        Tab(text: 'Present'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            body: Column(
+              children: [
+                if (widget.isTodayAttendance) _buildFilterSection(),
+                Expanded(
+                  child:
+                      widget.viewModel.isLoading
+                          ? const Center(
+                            child: SpinKitCircle(color: secondary, size: 50.0),
+                          )
+                          : TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _buildStaffList('Leave'),
+                              _buildStaffList('Absent'),
+                              _buildStaffList('Late'),
+                              _buildStaffList('Present'),
+                            ],
+                          ),
+                ),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildOverallSummary() {
-    final summary = _viewModel.overallSummary;
-    if (summary == null) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          widget.isTodayAttendance
-              ? Text(
-                'Overall Summary',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              )
-              : Text(
-                DateFormat('EEEE - MMM dd, yyyy').format(DateTime.now()),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: secondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Present',
-                  summary.totalPresentOccurrences,
-                  Colors.green[700]!,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Late',
-                  summary.totalLateOccurrences,
-                  Colors.blueGrey,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Leave',
-                  summary.totalLeaveOccurrences,
-                  Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Absent',
-                  summary.totalAbsentOccurrences,
-                  Colors.red[700]!,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(String label, int count, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: secondary.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            count.toString(),
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableHeader() {
+  Widget _buildFilterSection() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Column(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          widget.isTodayAttendance
-              ? Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+          GestureDetector(
+            onTap: _showDateRangePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: _showDateRangePicker,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]!),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _dateRangeText,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.arrow_drop_down,
-                            size: 20,
-                            color: Colors.grey,
-                          ),
-                        ],
-                      ),
-                    ),
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _dateRangeText,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    size: 20,
+                    color: Colors.grey,
                   ),
                 ],
-              )
-              : const SizedBox(),
-          const SizedBox(height: 12),
-          // Column headers
-          Row(
-            children: [
-              const Expanded(
-                flex: 2,
-                child: Text(
-                  'Dept / Branch',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
               ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Leave',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green[700],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Absent',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red[700],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Late',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.orange[700],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Divider(height: 1, color: Colors.grey[300]),
         ],
       ),
     );
   }
 
-  Widget _buildDepartmentTable() {
-    final departments = _viewModel.departments;
+  Widget _buildStaffList(String status) {
+    final staffList = _getFilteredStaff(status);
 
-    if (departments.isEmpty) {
+    if (staffList.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: _getTabColor(_tabController.index).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getStatusIcon(status),
+                size: 64,
+                color: _getTabColor(_tabController.index).withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
-              'No departments found',
+              'No $status Staff',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'There are no staff members with\n$status status for the selected date range',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
                 color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
+                height: 1.5,
               ),
             ),
           ],
@@ -343,109 +312,217 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: departments.length,
-      separatorBuilder:
-          (context, index) => Divider(height: 1, color: Colors.grey[200]),
-      itemBuilder: (context, index) {
-        final dept = departments[index];
-        return _buildDepartmentRow(dept);
-      },
+    return Column(
+      children: [
+        _buildTableHeader(status),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: staffList.length,
+            separatorBuilder:
+                (context, index) => Divider(height: 1, color: Colors.grey[200]),
+            itemBuilder: (context, index) {
+              final staff = staffList[index];
+              return _buildStaffRow(staff, status);
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildDepartmentRow(Department dept) {
-    return InkWell(
-      onTap: () async {
-        final newDateRange = await Navigator.push<DateTimeRange>(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => DepartmentAttendanceDetailScreen(
-                  department: dept,
-                  selectedDateRange: _selectedDateRange,
-                  viewModel: _viewModel,
-                  isTodayAttendance: widget.isTodayAttendance,
-                ),
-          ),
-        );
+  Widget _buildTableHeader(String status) {
+    final bool showClockColumns = status != 'Leave' && status != 'Absent';
+    final bool showTotalColumn = status != 'Present';
 
-        // If a new date range was returned, update and refetch data
-        if (newDateRange != null && newDateRange != _selectedDateRange) {
-          setState(() {
-            _selectedDateRange = newDateRange;
-          });
-          final formatter = DateFormat('yyyy-MM-dd');
-          await _viewModel.fetchAttendanceByDepartment(
-            startDate: formatter.format(newDateRange.start),
-            endDate: formatter.format(newDateRange.end),
-          );
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
+    return Container(
+      color: Colors.grey[100],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          const Expanded(
+            flex: 2,
+            child: Text(
+              'Name',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          if (showClockColumns)
             Expanded(
-              flex: 2,
+              flex: 1,
+              child: Center(
+                child: Text(
+                  'In',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ),
+          if (showClockColumns)
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  'Out',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            flex: 1,
+            child: Center(
               child: Text(
-                '${dept.departmentName} (${dept.totalEmployees})',
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                'Office',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
               ),
             ),
+          ),
+          if (showTotalColumn)
             Expanded(
               flex: 1,
               child: Center(
                 child: Text(
-                  '${dept.attendanceCounts.leave}',
+                  'Total',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color:
-                        dept.attendanceCounts.leave > 0
-                            ? Colors.green[700]
-                            : Colors.grey[400],
+                    color: Colors.grey[700],
                   ),
                 ),
               ),
             ),
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Text(
-                  '${dept.attendanceCounts.absent}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        dept.attendanceCounts.absent > 0
-                            ? Colors.red[700]
-                            : Colors.grey[400],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Text(
-                  '${dept.attendanceCounts.late}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        dept.attendanceCounts.late > 0
-                            ? Colors.orange[700]
-                            : Colors.grey[400],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
+  }
+
+  Widget _buildStaffRow(StaffMember staff, String status) {
+    Color statusColor = Colors.grey;
+    String displayStatus = status;
+    final bool showClockColumns = status != 'Leave' && status != 'Absent';
+    final bool showTotalColumn = status != 'Present';
+
+    if (status == 'Leave') {
+      statusColor = Colors.green[700]!;
+    } else if (status == 'Absent') {
+      statusColor = Colors.red[700]!;
+      displayStatus = 'Absent';
+    } else if (status == 'Late') {
+      statusColor = Colors.orange[700]!;
+    } else {
+      statusColor = Colors.blue[700]!;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  staff.fullName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  staff.positionName,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          if (showClockColumns)
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  _formatTime(staff.clockIn),
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+              ),
+            ),
+          if (showClockColumns)
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  _formatTime(staff.clockOut),
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+              ),
+            ),
+          Expanded(
+            flex: 1,
+            child: Center(
+              child: Text(
+                staff.branchShortName,
+                style: const TextStyle(fontSize: 13, color: Colors.black87),
+              ),
+            ),
+          ),
+          if (showTotalColumn)
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  _getTotalCount(staff, status).toString(),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  int _getTotalCount(StaffMember staff, String status) {
+    switch (status) {
+      case 'Leave':
+        return staff.leaveCount;
+      case 'Absent':
+        return staff.absentCount;
+      case 'Late':
+        return staff.lateCount;
+      default:
+        return 1;
+    }
+  }
+
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return '--:--';
+    try {
+      // API returns HH:mm format, convertToAmPm expects HH:mm:ss
+      String timeWithSeconds = time.length == 5 ? '$time:00' : time;
+      return convertToAmPm(timeWithSeconds);
+    } catch (e) {
+      return '--:--';
+    }
   }
 
   Future<void> _showDateRangePicker() async {
@@ -481,7 +558,6 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            // ignore: deprecated_member_use
                             colors: [secondary, secondary.withOpacity(0.8)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -496,7 +572,6 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                // ignore: deprecated_member_use
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -612,11 +687,12 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                         ),
                       ),
                       const Divider(height: 1),
+                      // Calendar
                       Theme(
                         data: Theme.of(context).copyWith(
                           colorScheme: ColorScheme.light(
                             primary: secondary,
-                            onPrimary: primary,
+                            onPrimary: Colors.white,
                             onSurface: Colors.black87,
                             surface: Colors.white,
                           ),
@@ -704,20 +780,23 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                               flex: 2,
                               child: ElevatedButton(
                                 onPressed: () async {
+                                  // Close the dialog
                                   Navigator.pop(context);
+                                  // Update the local state
                                   setState(() {
                                     _selectedDateRange = tempDateRange;
                                   });
-                                  // Fetch data with selected date range
+                                  // Fetch updated data with new date range
                                   final formatter = DateFormat('yyyy-MM-dd');
-                                  await _viewModel.fetchAttendanceByDepartment(
-                                    startDate: formatter.format(
-                                      tempDateRange.start,
-                                    ),
-                                    endDate: formatter.format(
-                                      tempDateRange.end,
-                                    ),
-                                  );
+                                  await widget.viewModel
+                                      .fetchAttendanceByDepartment(
+                                        startDate: formatter.format(
+                                          tempDateRange.start,
+                                        ),
+                                        endDate: formatter.format(
+                                          tempDateRange.end,
+                                        ),
+                                      );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: secondary,
@@ -851,68 +930,45 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     );
   }
 
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-            const SizedBox(height: 16),
-            Text(
-              'Error Loading Data',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _viewModel.errorMessage ?? 'Unknown error occurred',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _viewModel.refresh(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: secondary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+  Widget _buildDateCard(
+    String label,
+    DateTime date,
+    IconData icon,
+    Color color,
+  ) {
+    final formatter = DateFormat('MMM dd, yyyy');
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'No Data Available',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            'No attendance data found',
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            formatter.format(date),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
           ),
         ],
       ),
