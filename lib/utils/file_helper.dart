@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/constant.dart';
+import '../localization/language.dart';
+import '../localization/language_logic.dart';
 import '../services/global_service.dart';
 import '../widgets/custom_toast_message.dart';
 
@@ -187,14 +189,17 @@ class FileHelper {
   }
 
   // Computed properties
-  String get greeting {
+  Future<String> getGreeting() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    final Language language = languageLogic.language;
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return "Good morning!";
+      return language.goodMorning;
     } else if (hour < 18) {
-      return "Good afternoon!";
+      return language.goodAfternoon;
     } else {
-      return "Good evening!";
+      return language.goodEvening;
     }
   }
 

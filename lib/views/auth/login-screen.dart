@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:provider/provider.dart';
 import 'dart:convert' as convert;
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../constants/constant.dart';
-// import '../../localization/language.dart';
+import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
 import '../dashboard/manager_dashboard.dart';
@@ -36,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isLoading = false;
   String _appVersion = '1.0.0';
 
-  // language language = Language();
+  Language language = Language();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -58,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen>
         _appVersion = packageInfo.version;
       });
     } catch (e) {
-      print('Error loading app version');
+      // print('Error loading app version');
     }
   }
 
@@ -149,8 +150,8 @@ class _LoginScreenState extends State<LoginScreen>
 
     if (eCard.isEmpty || password.isEmpty) {
       _showErrorDialog(
-        title: "Missing Information",
-        message: "Please enter both Staff ID and Password to continue.",
+        title: language.missingInformation,
+        message: language.pleaseEnterBothStaffIdAndPassword,
       );
       return;
     }
@@ -177,9 +178,7 @@ class _LoginScreenState extends State<LoginScreen>
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () {
-              throw Exception(
-                'Connection timeout. Please check your internet connection.',
-              );
+              throw Exception(language.connectionTimeout);
             },
           );
 
@@ -189,13 +188,8 @@ class _LoginScreenState extends State<LoginScreen>
         if (data['success'] == false &&
             (data['token'] == null &&
                 data['require_password_change'] == false)) {
-          final errorMessage =
-              data['message'] ??
-              'Invalid credentials. Please check your Staff ID and Password.';
-          _showErrorDialog(
-            title: "Authentication Failed",
-            message: errorMessage,
-          );
+          final errorMessage = data['message'] ?? language.invalidCredentials;
+          _showErrorDialog(title: language.loginFailed, message: errorMessage);
           return;
         }
         // ✅ NEW: Check if password change is required
@@ -252,50 +246,46 @@ class _LoginScreenState extends State<LoginScreen>
       } else if (response.statusCode == 401) {
         // ✅ Unauthorized - wrong credentials
         _showErrorDialog(
-          title: "Authentication Failed",
-          message:
-              "Invalid Staff ID or Password. Please check your credentials and try again.",
+          title: language.loginFailed,
+          message: language.invalidCredentials,
         );
       } else if (response.statusCode == 422) {
         // ✅ Validation error
         try {
           final data = convert.jsonDecode(response.body);
-          final errorMessage = data['message'] ?? 'Validation error occurred.';
-          _showErrorDialog(title: "Validation Error", message: errorMessage);
+          final errorMessage = data['message'] ?? language.invalidCredentials;
+          _showErrorDialog(title: language.loginFailed, message: errorMessage);
         } catch (_) {
           _showErrorDialog(
-            title: "Validation Error",
-            message: "Please check your input and try again.",
+            title: language.loginFailed,
+            message: language.invalidCredentials,
           );
         }
       } else if (response.statusCode >= 500) {
         // ✅ Server error
         _showErrorDialog(
-          title: "Server Error",
-          message:
-              "Our server is currently experiencing issues. Please try again later.",
+          title: language.loginFailed,
+          message: language.serverExperiencingIssues,
         );
       } else {
         // ✅ Other errors
-        String errorMessage = "An unexpected error occurred.";
+        String errorMessage = language.unknownError;
         try {
           final data = convert.jsonDecode(response.body);
           errorMessage = data['message'] ?? errorMessage;
         } catch (_) {}
 
-        _showErrorDialog(title: "Login Failed", message: errorMessage);
+        _showErrorDialog(title: language.loginFailed, message: errorMessage);
       }
     } on SocketException {
       _showErrorDialog(
-        title: "Network Error",
-        message:
-            "No internet connection detected. Please check your network settings and try again.",
+        title: language.networkError,
+        message: language.noInternetConnection,
       );
     } on FormatException {
       _showErrorDialog(
-        title: "Data Error",
-        message:
-            "Invalid response from server. Please contact support if this persists.",
+        title: language.dataError,
+        message: language.invalidResponseFromServer,
       );
     } finally {
       if (mounted) {
@@ -331,10 +321,10 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Password Change Required',
-                      style: TextStyle(
+                      language.passwordChangeRequired,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -348,7 +338,7 @@ class _LoginScreenState extends State<LoginScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'For security reasons, you need to change your password before continuing.',
+                    language.pleaseCreateStrongPassword,
                     style: TextStyle(
                       fontSize: 15,
                       color: Colors.grey[700],
@@ -373,7 +363,7 @@ class _LoginScreenState extends State<LoginScreen>
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Please create a strong password that you haven\'t used before.',
+                            language.pleaseCreateStrongPassword,
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.blue[900],
@@ -392,7 +382,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_forward, size: 20),
-                    label: const Text('Change Password Now'),
+                    label: Text("Change Password now"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primary,
                       foregroundColor: Colors.white,
@@ -472,7 +462,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ExpansionTile(
                     tilePadding: EdgeInsets.zero,
                     title: Text(
-                      'Technical Details',
+                      language.technicalDetails,
                       style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                     ),
                     children: [
@@ -511,9 +501,12 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  child: Text(
+                    language.ok,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -524,7 +517,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    // language = context.watch<LanguageLogic>().language;
+    language = context.watch<LanguageLogic>().language;
 
     return KeyboardVisibilityBuilder(
       builder: (context, isKeyboardVisible) {
@@ -630,7 +623,7 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Staff ID',
+          language.staffId,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -648,7 +641,7 @@ class _LoginScreenState extends State<LoginScreen>
             LengthLimitingTextInputFormatter(4),
           ],
           decoration: InputDecoration(
-            hintText: 'Enter your Staff ID',
+            hintText: language.enterStaffId,
             prefixIcon: Icon(Icons.person_outline, color: primary),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -681,10 +674,10 @@ class _LoginScreenState extends State<LoginScreen>
           },
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your Staff ID';
+              return language.enterStaffId;
             }
             if (value.length != 4) {
-              return 'Staff ID must be 4 digits';
+              return language.staffId4digits;
             }
             return null;
           },
@@ -698,7 +691,7 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Password',
+          language.password,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -712,7 +705,7 @@ class _LoginScreenState extends State<LoginScreen>
           textInputAction: TextInputAction.done,
           onFieldSubmitted: (_) => _login(),
           decoration: InputDecoration(
-            hintText: 'Enter your password',
+            hintText: language.enterPassword,
             prefixIcon: Icon(Icons.lock_outlined, color: primary),
             suffixIcon: IconButton(
               onPressed: () {
@@ -751,10 +744,10 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter your password';
+              return language.enterPassword;
             }
             if (value.length < 3) {
-              return 'Password must be at least 3 characters';
+              return language.passwordTooShort;
             }
             return null;
           },
@@ -804,7 +797,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _isLoading ? "Logging in..." : "Login",
+                          _isLoading ? language.logging : language.login,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -832,9 +825,9 @@ class _LoginScreenState extends State<LoginScreen>
         foregroundColor: primary,
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),
-      child: const Text(
-        'Forgot Password?',
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      child: Text(
+        language.forgotPassword,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -848,7 +841,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          '© 2025 Chokchey. All rights reserved.',
+          language.copyrightText,
           style: TextStyle(fontSize: 11, color: Colors.grey.shade400),
         ),
       ],

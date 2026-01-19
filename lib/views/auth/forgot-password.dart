@@ -5,6 +5,8 @@ import '../../constants/constant.dart';
 import 'otp-screen.dart';
 import '../../viewmodels/forgot_password_viewmodel.dart';
 import 'package:provider/provider.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 
 class ForgotPassword extends StatelessWidget {
   const ForgotPassword({super.key});
@@ -24,10 +26,11 @@ class ForgotPasswordViewBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<ForgotPasswordViewModel>(context);
+    final language = context.watch<LanguageLogic>().language;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Forgot Password"),
+        title: Text(language.forgotPasswordScreen),
         backgroundColor: primary,
         foregroundColor: Colors.white,
       ),
@@ -48,7 +51,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
               const SizedBox(height: 24),
               Center(
                 child: Text(
-                  "Reset your password",
+                  language.resetYourPassword,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -57,7 +60,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  "Please enter your Staff ID with Company Email to receive an OTP",
+                  language.enterStaffIdAndEmail,
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
@@ -74,7 +77,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
                   LengthLimitingTextInputFormatter(4),
                 ],
                 decoration: InputDecoration(
-                  labelText: "Staff ID",
+                  labelText: language.staffId,
                   prefixIcon: Icon(Icons.credit_card, color: secondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -95,7 +98,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
                 focusNode: vm.emailFocusNode,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  labelText: "Email",
+                  labelText: language.email,
                   prefixIcon: Icon(Icons.email_outlined, color: secondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -135,13 +138,15 @@ class ForgotPasswordViewBody extends StatelessWidget {
                           child: SpinKitCircle(color: Colors.white, size: 20),
                         )
                         : const Icon(Icons.send, color: Colors.white),
-                label: Text(vm.isLoading ? "Sending..." : "Get OTP"),
+                label: Text(vm.isLoading ? language.sending : language.getOTP),
                 onPressed:
                     vm.isLoading
                         ? null
                         : () async {
-                          if (vm.validateInputs()) {
-                            final success = await vm.requestForgotPassword();
+                          if (vm.validateInputs(language)) {
+                            final success = await vm.requestForgotPassword(
+                              language,
+                            );
                             if (success) {
                               Navigator.push(
                                 context,
@@ -164,7 +169,7 @@ class ForgotPasswordViewBody extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text("Back to Login"),
+                child: Text(language.backToLogin),
               ),
             ],
           ),

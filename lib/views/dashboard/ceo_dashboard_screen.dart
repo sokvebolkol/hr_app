@@ -9,6 +9,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
@@ -19,7 +21,6 @@ import '../../widgets/ceo_leave_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/statistics_card.dart';
-import '../attendance/staff_attendance_detail_screen.dart';
 import '../attendance/staff_attendance_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
@@ -52,6 +53,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   double screenHeight = 0.0;
   late DashboardViewModel _dashboardViewModel;
   late CeoDashboardViewModel _ceoDashboardViewModel;
+  Language language = Language();
 
   @override
   void initState() {
@@ -59,6 +61,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
     _ceoDashboardViewModel = CeoDashboardViewModel();
+    _initializeLanguage();
 
     _dashboardViewModel.initialize();
     _ceoDashboardViewModel.initialize();
@@ -72,15 +75,25 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
     };
   }
 
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
+  }
+
   Future<bool> _onBackPressed() async {
     await CustomAlertDialog.show(
       context,
-      title: 'Information',
-      message: 'Do you want to exit?',
+      title: language.information,
+      message: language.doYouWantToExit,
       icon: Icons.exit_to_app,
       iconColor: secondary,
-      primaryButtonText: 'No',
-      secondaryButtonText: 'Yes',
+      primaryButtonText: language.no,
+      secondaryButtonText: language.yes,
       onPrimaryPressed: () async {
         Navigator.of(context).pop();
       },
@@ -134,13 +147,13 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                     );
                   }
                 });
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SpinKitFadingCircle(color: secondary),
-                      SizedBox(height: 16),
-                      Text("Your account is inactive. Logging out..."),
+                      const SpinKitFadingCircle(color: secondary),
+                      const SizedBox(height: 16),
+                      Text(language.yourAccountIsInactiveLoggingOut),
                     ],
                   ),
                 );
@@ -157,25 +170,155 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                             ? dashboardViewModel.appVersion!.androidUrl
                             : dashboardViewModel.appVersion!.iosUrl;
 
-                    CustomAlertDialog.show(
+                    showModalBottomSheet(
                       // ignore: use_build_context_synchronously
-                      context,
-                      title: 'Update Required',
-                      message:
-                          'A new version ${dashboardViewModel.appVersion?.version} is available and must be installed to continue using the app.\n\n${dashboardViewModel.appVersion?.releaseNotes ?? ''}',
-                      icon: Icons.system_update,
-                      iconColor: Colors.orange,
-                      primaryButtonText: 'Update Now',
-                      onPrimaryPressed: () async {
-                        final uri = Uri.parse(updateUrl);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
-                      barrierDismissible: false,
+                      context: context,
+                      isDismissible: false,
+                      enableDrag: false,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder:
+                          (context) => WillPopScope(
+                            onWillPop: () async => false,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20),
+                                ),
+                              ),
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    MediaQuery.of(context).viewInsets.bottom,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Header
+                                  Container(
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.1),
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(20),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.withOpacity(
+                                              0.2,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.system_update,
+                                            size: 48,
+                                            color: Colors.orange,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          language.updateRequired,
+                                          style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Content
+                                  Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          '${language.aNewVersion} ${dashboardViewModel.appVersion?.version} ${language.isAvailableAndMustBeInstalled}',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.black87,
+                                            height: 1.5,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        if (dashboardViewModel
+                                                .appVersion
+                                                ?.releaseNotes
+                                                .isNotEmpty ??
+                                            false) ...[
+                                          const SizedBox(height: 16),
+                                          Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[100],
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              dashboardViewModel
+                                                  .appVersion!
+                                                  .releaseNotes,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey[700],
+                                                height: 1.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                        const SizedBox(height: 24),
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton(
+                                            onPressed: () async {
+                                              final uri = Uri.parse(updateUrl);
+                                              if (await canLaunchUrl(uri)) {
+                                                await launchUrl(
+                                                  uri,
+                                                  mode:
+                                                      LaunchMode
+                                                          .externalApplication,
+                                                );
+                                              }
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.orange,
+                                              foregroundColor: Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              elevation: 0,
+                                            ),
+                                            child: Text(
+                                              language.updateNow,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height:
+                                        MediaQuery.of(context).padding.bottom,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                     );
                   }
                 });
@@ -213,10 +356,10 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           activeColor: secondary,
           shadowColor: Colors.grey[200],
           style: TabStyle.fixedCircle,
-          items: const [
-            TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.person, title: 'Profile'),
-            TabItem(icon: Icons.menu, title: 'Menu'),
+          items: [
+            TabItem(icon: Icons.home, title: language.home),
+            TabItem(icon: Icons.person, title: language.profile),
+            TabItem(icon: Icons.menu, title: language.menu),
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
@@ -272,12 +415,17 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          FileHelper().greeting,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
+                        FutureBuilder<String>(
+                          future: FileHelper().getGreeting(),
+                          builder: (context, snapshot) {
+                            return Text(
+                              snapshot.data ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
                         ),
                         SizedBox(
                           width: 180,
@@ -408,7 +556,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
 
   void navigateToProfile() {
     setState(() {
-      _currentIndex = 3;
+      _currentIndex = 2;
     });
   }
 }
@@ -435,10 +583,12 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   String _selectedMonth = 'All'; // Default filter for Approval History tab
   String _selectedMonthPending =
       'All'; // Default filter for Pending Approval tab
+  Language language = Language();
 
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     _tabController = TabController(length: 2, vsync: this);
     _progressAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -457,6 +607,16 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       widget.dashboardViewModel.refreshProfile();
       widget.ceoViewModel.refresh();
     });
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -483,8 +643,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Remove the old _buildHeader() since it's now in sticky header
-                const DateSection(),
+                Padding(
+                  padding: EdgeInsets.only(left: 16, right: 16, top: 16),
+                  child: const DateSection(),
+                ),
                 InkWell(
                   onTap:
                       () => Navigator.push(
@@ -508,10 +670,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  // Remove the old _buildNotificationIcon method since it's now in sticky header
-
-  // Remove the old _buildProfileAvatar method since it's now in sticky header
-
   Widget _buildTodayAttendanceCard(CeoDashboardViewModel viewModel) {
     if (viewModel.errorMessage != null) {
       return Container(
@@ -534,9 +692,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   size: 48,
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Error Loading Dashboard',
-                  style: TextStyle(
+                Text(
+                  language.errorLoadingDashboard,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.red,
                     fontSize: 16,
@@ -555,7 +713,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Retry'),
+                  child: Text(language.retry),
                 ),
               ],
             ),
@@ -602,10 +760,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Today\'s Attendance',
-                    style: TextStyle(
+                    language.todaysAttendance,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -613,8 +771,8 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   ),
                 ),
                 Text(
-                  'View Details >',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  language.viewDetails,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
             ),
@@ -630,7 +788,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   ),
                   Expanded(
                     child: _buildSimpleAttendanceStatItem(
-                      'Late',
+                      language.late,
                       viewModel.lateCount.toString(),
                       Colors.orange[100]!,
                     ),
@@ -638,7 +796,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   _buildSeparator(),
                   Expanded(
                     child: _buildSimpleAttendanceStatItem(
-                      'Leave',
+                      language.leave,
                       viewModel.onLeaveCount.toString(),
                       Colors.blue[100]!,
                     ),
@@ -646,7 +804,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   _buildSeparator(),
                   Expanded(
                     child: _buildSimpleAttendanceStatItem(
-                      'Absent',
+                      language.absent,
                       viewModel.absentCount.toString(),
                       Colors.red[200]!,
                     ),
@@ -674,7 +832,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 iconColor: secondary.withOpacity(0.8),
                 iconData: FontAwesomeIcons.networkWired,
                 iconSize: 30,
-                label: 'CHOKCHEY Team',
+                label: language.chokcheyTeam,
                 textSize: 14,
                 onPressed: () {
                   Navigator.push(
@@ -693,7 +851,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 iconColor: secondary.withOpacity(0.8),
                 iconData: FontAwesomeIcons.userClock,
                 iconSize: 30,
-                label: 'Staff Attendances',
+                label: language.staffAttendances,
                 textSize: 14,
                 onPressed: () {
                   Navigator.push(
@@ -809,9 +967,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
-                    'Present',
-                    style: TextStyle(
+                  Text(
+                    language.present,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -895,7 +1053,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Pending Approval',
+                                  language.pendingApproval,
                                   style: TextStyle(
                                     color:
                                         isSelected
@@ -978,7 +1136,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Approval History',
+                                  language.approvalHistory,
                                   style: TextStyle(
                                     color:
                                         isSelected
@@ -1126,23 +1284,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             ],
           ),
         ),
-
-        // Results count
-        if (filteredLeaves.isNotEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              '${filteredLeaves.length} ${filteredLeaves.length == 1 ? 'request' : 'requests'} found',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-
-        // Leave list or empty state
         Expanded(
           child:
               filteredLeaves.isEmpty
@@ -1158,7 +1299,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No Pending Requests',
+                          language.noPendingRequests,
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.grey[600],
@@ -1168,8 +1309,8 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                         const SizedBox(height: 8),
                         Text(
                           _selectedMonthPending == 'All'
-                              ? 'All leave requests are up to date'
-                              : 'No requests found for $_selectedMonthPending',
+                              ? language.allLeaveRequestsAreUpToDate
+                              : '${language.noRequestsFoundFor} $_selectedMonthPending',
                           style: TextStyle(
                             color: Colors.grey[500],
                             fontSize: 14,
@@ -1286,7 +1427,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
           child: Row(
             children: [
               StatisticsCard(
-                title: 'Approved',
+                title: language.approved,
                 count: approvedCount,
                 color: Colors.green,
                 onTap: () {
@@ -1305,7 +1446,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               ),
               const SizedBox(width: 16),
               StatisticsCard(
-                title: 'Rejected',
+                title: language.rejected,
                 count: rejectedCount,
                 color: Colors.red,
                 onTap: () {
@@ -1431,9 +1572,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
-                            'Select Month',
-                            style: TextStyle(
+                          Text(
+                            language.selectMonth,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: secondary,
@@ -1612,18 +1753,18 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                           ),
                           const SizedBox(width: 12),
                           RichText(
-                            text: const TextSpan(
+                            text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: 'Select Month\n',
-                                  style: TextStyle(
+                                  text: '${language.selectMonth}\n',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '12 previous months available',
+                                  text: language.twelveMonthsAvailable,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,

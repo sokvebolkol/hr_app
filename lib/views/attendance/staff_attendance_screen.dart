@@ -1,7 +1,10 @@
+import 'package:chokchey_hr_app/widgets/date_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../models/attendance_by_department_model.dart';
 import '../../viewmodels/attendance_by_department_viewmodel.dart';
 import 'department_attendance_detail_screen.dart';
@@ -17,9 +20,11 @@ class StaffAttendanceScreen extends StatefulWidget {
 class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   late AttendanceByDepartmentViewModel _viewModel;
   DateTimeRange? _selectedDateRange;
+  Language language = Language();
+
   String get _dateRangeText {
     if (_selectedDateRange == null) {
-      return 'Today';
+      return language.today;
     }
     final formatter = DateFormat('MMM dd');
     return '${formatter.format(_selectedDateRange!.start)} - ${formatter.format(_selectedDateRange!.end)}';
@@ -28,8 +33,19 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     _viewModel = AttendanceByDepartmentViewModel();
     _viewModel.initialize();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -50,8 +66,8 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         ),
         title: Text(
           !widget.isTodayAttendance
-              ? 'Today\'s Attendance'
-              : 'Staff Attendance',
+              ? language.todaysAttendance
+              : language.staffAttendance,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         centerTitle: false,
@@ -119,27 +135,20 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         children: [
           widget.isTodayAttendance
               ? Text(
-                'Overall Summary',
-                style: TextStyle(
+                language.overallSummary,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               )
-              : Text(
-                DateFormat('EEEE - MMM dd, yyyy').format(DateTime.now()),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: secondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              : DateSection(),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: _buildSummaryCard(
-                  'Present',
+                  language.present,
                   summary.totalPresentOccurrences,
                   Colors.green[700]!,
                 ),
@@ -147,7 +156,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildSummaryCard(
-                  'Late',
+                  language.late,
                   summary.totalLateOccurrences,
                   Colors.blueGrey,
                 ),
@@ -155,7 +164,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildSummaryCard(
-                  'Leave',
+                  language.leave,
                   summary.totalLeaveOccurrences,
                   Colors.orange,
                 ),
@@ -163,7 +172,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildSummaryCard(
-                  'Absent',
+                  language.absent,
                   summary.totalAbsentOccurrences,
                   Colors.red[700]!,
                 ),
@@ -261,11 +270,11 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
           // Column headers
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 flex: 2,
                 child: Text(
-                  'Dept / Branch',
-                  style: TextStyle(
+                  language.deptBranch,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
@@ -276,7 +285,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 flex: 1,
                 child: Center(
                   child: Text(
-                    'Leave',
+                    language.leave,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -289,7 +298,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 flex: 1,
                 child: Center(
                   child: Text(
-                    'Absent',
+                    language.absent,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -302,7 +311,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 flex: 1,
                 child: Center(
                   child: Text(
-                    'Late',
+                    language.late,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -331,7 +340,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No departments found',
+              language.noDepartmentsFound,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -507,22 +516,22 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Select Date Range',
-                                    style: TextStyle(
+                                    language.selectDateRange,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
-                                    'Choose your desired date range',
-                                    style: TextStyle(
+                                    language.chooseYourDesiredDateRange,
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.white70,
                                     ),
@@ -547,7 +556,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                       });
                                     },
                                     child: _buildClickableDateCard(
-                                      'Start Date',
+                                      language.startDate,
                                       tempDateRange.start,
                                       Icons.event_available,
                                       secondary,
@@ -564,7 +573,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                       });
                                     },
                                     child: _buildClickableDateCard(
-                                      'End Date',
+                                      language.endDate,
                                       tempDateRange.end,
                                       Icons.event_busy,
                                       logoPink,
@@ -578,7 +587,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                _buildQuickSelectChip('Last 7 Days', () {
+                                _buildQuickSelectChip(language.last7Days, () {
                                   setDialogState(() {
                                     tempDateRange = DateTimeRange(
                                       start: now.subtract(
@@ -588,7 +597,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                     );
                                   });
                                 }),
-                                _buildQuickSelectChip('Last 30 Days', () {
+                                _buildQuickSelectChip(language.last30Days, () {
                                   setDialogState(() {
                                     tempDateRange = DateTimeRange(
                                       start: now.subtract(
@@ -598,7 +607,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                     );
                                   });
                                 }),
-                                _buildQuickSelectChip('This Month', () {
+                                _buildQuickSelectChip(language.thisMonth, () {
                                   setDialogState(() {
                                     tempDateRange = DateTimeRange(
                                       start: DateTime(now.year, now.month, 1),
@@ -689,9 +698,9 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                 ),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(
+                                child: Text(
+                                  language.cancel,
+                                  style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black54,
@@ -730,14 +739,14 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                                   ),
                                   elevation: 0,
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.check_circle, size: 18),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.check_circle, size: 18),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Apply',
-                                      style: TextStyle(
+                                      language.apply,
+                                      style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -861,7 +870,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
-              'Error Loading Data',
+              language.errorLoadingData,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -878,7 +887,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
             ElevatedButton.icon(
               onPressed: () => _viewModel.refresh(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(language.retry),
               style: ElevatedButton.styleFrom(
                 backgroundColor: secondary,
                 foregroundColor: Colors.white,

@@ -256,12 +256,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 16,
-          top: 16,
-        ),
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         child: Row(
           children: [
             InkWell(
@@ -279,12 +274,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          FileHelper().greeting,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
+                        FutureBuilder<String>(
+                          future: FileHelper().getGreeting(),
+                          builder: (context, snapshot) {
+                            return Text(
+                              snapshot.data ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
                         ),
                         SizedBox(
                           width: 180,
@@ -540,8 +540,14 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Remove the old _buildHeader() since it's now in sticky header
-                const DateSection(),
+                Padding(
+                  padding: EdgeInsetsGeometry.only(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                  ),
+                  child: const DateSection(),
+                ),
                 const SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),

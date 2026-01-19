@@ -2,8 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import 'confirm-password-screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -12,6 +15,7 @@ class OtpScreen extends StatefulWidget {
   final String email;
 
   @override
+  // ignore: library_private_types_in_public_api
   _OtpScreenState createState() => _OtpScreenState();
 }
 
@@ -67,17 +71,17 @@ class _OtpScreenState extends State<OtpScreen>
     super.dispose();
   }
 
-  Future<void> _onSend() async {
+  Future<void> _onSend(Language language) async {
     if (_secondsLeft == 0) {
       setState(() {
-        _errorMessage = "OTP expired. Please request a new one.";
+        _errorMessage = language.otpExpiredRequestNew;
       });
       return;
     }
     final otp = _otpController.text;
     if (otp.length != 6) {
       setState(() {
-        _errorMessage = "Please enter the 6-digit OTP.";
+        _errorMessage = language.pleaseEnter6DigitOTP;
       });
       return;
     }
@@ -99,12 +103,12 @@ class _OtpScreenState extends State<OtpScreen>
         );
       } else {
         setState(() {
-          _errorMessage = "Invalid OTP or expired. Please try again.";
+          _errorMessage = language.invalidOTPOrExpired;
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = "Network error. Please try again.";
+        _errorMessage = language.networkErrorTryAgain;
       });
     } finally {
       setState(() {
@@ -123,6 +127,7 @@ class _OtpScreenState extends State<OtpScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
+    final language = context.watch<LanguageLogic>().language;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -134,9 +139,9 @@ class _OtpScreenState extends State<OtpScreen>
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          "OTP Verification",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        title: Text(
+          language.otpVerification,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
       body: Center(
@@ -163,14 +168,14 @@ class _OtpScreenState extends State<OtpScreen>
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    "Enter OTP",
+                    language.enterOTP,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "We sent a code to your email\n${widget.email}",
+                    "${language.weSentCodeToEmail}\n${widget.email}",
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey[700],
                     ),
@@ -179,7 +184,7 @@ class _OtpScreenState extends State<OtpScreen>
                   const SizedBox(height: 18),
                   if (_secondsLeft > 0)
                     Text(
-                      "OTP expires in ${_formatTimer(_secondsLeft)}",
+                      "${language.otpExpiresIn} ${_formatTimer(_secondsLeft)}",
                       style: const TextStyle(
                         color: Colors.redAccent,
                         fontWeight: FontWeight.w600,
@@ -187,9 +192,9 @@ class _OtpScreenState extends State<OtpScreen>
                       ),
                     )
                   else
-                    const Text(
-                      "OTP expired. Please request a new one.",
-                      style: TextStyle(
+                    Text(
+                      language.otpExpiredRequestNew,
+                      style: const TextStyle(
                         color: Colors.redAccent,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -208,7 +213,7 @@ class _OtpScreenState extends State<OtpScreen>
                       letterSpacing: 8,
                     ),
                     decoration: InputDecoration(
-                      labelText: "6-digit OTP",
+                      labelText: language.sixDigitOTP,
                       counterText: "",
                       filled: true,
                       fillColor: Colors.grey[100],
@@ -225,7 +230,7 @@ class _OtpScreenState extends State<OtpScreen>
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(6),
                     ],
-                    onSubmitted: (_) => _onSend(),
+                    onSubmitted: (_) => _onSend(language),
                   ),
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),
@@ -253,7 +258,9 @@ class _OtpScreenState extends State<OtpScreen>
                         elevation: 2,
                       ),
                       onPressed:
-                          _isVerifying || _secondsLeft == 0 ? null : _onSend,
+                          _isVerifying || _secondsLeft == 0
+                              ? null
+                              : () => _onSend(language),
                       child:
                           _isVerifying
                               ? const SizedBox(
@@ -264,7 +271,7 @@ class _OtpScreenState extends State<OtpScreen>
                                   strokeWidth: 2,
                                 ),
                               )
-                              : const Text("Verify & Continue"),
+                              : Text(language.verifyAndContinue),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -278,12 +285,12 @@ class _OtpScreenState extends State<OtpScreen>
                                 _errorMessage = null;
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("OTP resent!")),
+                                SnackBar(content: Text(language.otpResent)),
                               );
                             }
                             : null,
                     child: Text(
-                      "Resend OTP",
+                      language.resendOTP,
                       style: TextStyle(
                         color: _secondsLeft == 0 ? primary : Colors.grey,
                         fontWeight: FontWeight.w600,

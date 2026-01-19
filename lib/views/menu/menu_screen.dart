@@ -99,82 +99,94 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Widget _buildBlueHeader() {
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(color: secondary),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Version $_appVersion',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              InkWell(
-                onTap: () => _handleLogout(_viewModel),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+    return Consumer<ProfileViewModel>(
+      builder: (context, viewModel, child) {
+        return Container(
+          height: 200,
+          decoration: BoxDecoration(color: secondary),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${viewModel.languageLogic.language.version} $_appVersion',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.exit_to_app,
-                    color: Colors.white,
-                    size: 20,
+                  InkWell(
+                    onTap: () => _handleLogout(viewModel),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.exit_to_app,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildItem() {
-    return Container(
-      padding: const EdgeInsets.only(top: 24, bottom: 24),
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-        ),
-      ),
-      child: Column(
-        children: [
-          SizedBox(height: 120),
-          _buildMenuItem(
-            icon: Icons.person_outline,
-            title: 'My Profile',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-              );
-            },
+    return Consumer<ProfileViewModel>(
+      builder: (context, viewModel, child) {
+        return Container(
+          padding: const EdgeInsets.only(top: 24, bottom: 24),
+          height: MediaQuery.of(context).size.height * 0.9,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+            ),
           ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.lock_outline,
-            title: 'Change Password',
-            onTap: () async {
-              await _navigateToChangePassword(_viewModel);
-            },
+          child: Column(
+            children: [
+              SizedBox(height: 120),
+              _buildMenuItem(
+                viewModel: viewModel,
+                icon: Icons.person_outline,
+                title: viewModel.languageLogic.language.myProfile,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfilePage(),
+                    ),
+                  );
+                },
+              ),
+              _buildDivider(),
+              _buildMenuItem(
+                viewModel: viewModel,
+                icon: Icons.lock_outline,
+                title: viewModel.languageLogic.language.changePassword,
+                onTap: () async {
+                  await _navigateToChangePassword(viewModel);
+                },
+              ),
+              _buildDivider(),
+              _buildLanguageSelector(),
+            ],
           ),
-          _buildDivider(),
-          _buildLanguageSelector(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -222,6 +234,7 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Widget _buildMenuItem({
+    required ProfileViewModel viewModel,
     required IconData icon,
     required String title,
     required VoidCallback onTap,
@@ -260,10 +273,10 @@ class _MenuScreenState extends State<MenuScreen> {
             children: [
               Icon(Icons.language, color: secondary, size: 24),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Language',
-                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                  viewModel.languageLogic.language.language,
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
                 ),
               ),
               Container(
@@ -332,8 +345,10 @@ class _MenuScreenState extends State<MenuScreen> {
       if (viewModel.employeeCard.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Unable to retrieve user information'),
+            SnackBar(
+              content: Text(
+                viewModel.languageLogic.language.unableToRetrieveUserInfo,
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -370,12 +385,12 @@ class _MenuScreenState extends State<MenuScreen> {
   void _handleLogout(ProfileViewModel viewModel) async {
     final shouldLogout = await CustomAlertDialog.showConfirmation(
       context,
-      title: "Logout",
-      message: "Are you sure you want to logout?",
+      title: viewModel.languageLogic.language.logout,
+      message: viewModel.languageLogic.language.logoutConfirmation,
       icon: Icons.logout_rounded,
       iconColor: themeColor,
-      yesButtonText: "Logout",
-      noButtonText: "Cancel",
+      yesButtonText: viewModel.languageLogic.language.logout,
+      noButtonText: viewModel.languageLogic.language.cancel,
     );
 
     if (shouldLogout == true) {
@@ -398,9 +413,9 @@ class _MenuScreenState extends State<MenuScreen> {
                     children: [
                       SpinKitFadingCircle(color: themeColor, size: 50),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Logging out...',
-                        style: TextStyle(
+                      Text(
+                        viewModel.languageLogic.language.loggingOut,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -457,7 +472,10 @@ class _MenuScreenState extends State<MenuScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(data['message'] ?? 'Logged out successfully'),
+                  content: Text(
+                    data['message'] ??
+                        viewModel.languageLogic.language.loggedOutSuccessfully,
+                  ),
                   backgroundColor: Colors.green,
                   duration: const Duration(seconds: 2),
                 ),
@@ -476,8 +494,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Logged out locally'),
+              SnackBar(
+                content: Text(
+                  viewModel.languageLogic.language.loggedOutLocally,
+                ),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -498,8 +518,8 @@ class _MenuScreenState extends State<MenuScreen> {
             SnackBar(
               content: Text(
                 e.toString().contains('timeout')
-                    ? 'Connection timeout. Logged out locally.'
-                    : 'Network error. Logged out locally.',
+                    ? viewModel.languageLogic.language.connectionTimeout
+                    : viewModel.languageLogic.language.networkErrorLoggedOut,
               ),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 3),

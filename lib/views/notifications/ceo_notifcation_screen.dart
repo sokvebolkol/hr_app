@@ -5,6 +5,8 @@ import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 
 class CeoNotificationScreen extends StatefulWidget {
   const CeoNotificationScreen({super.key});
@@ -16,6 +18,8 @@ class CeoNotificationScreen extends StatefulWidget {
 class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     with AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
+  late LanguageLogic _languageLogic;
+  late Language _language;
 
   // Cache filtered notifications - only Leave Request notifications for CEO
   List<NotificationModel> _leaveRequestNotifications = [];
@@ -30,11 +34,22 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _languageLogic = LanguageLogic();
+    _initializeLanguage();
 
     // Load notifications only once when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeNotifications();
     });
+  }
+
+  Future<void> _initializeLanguage() async {
+    await _languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        _language = _languageLogic.language;
+      });
+    }
   }
 
   Future<void> _initializeNotifications() async {
@@ -105,7 +120,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [const Text('Notifications')]),
+        title: Row(children: [Text(_language.notifications)]),
         backgroundColor: secondary, // CEO uses secondary color
         foregroundColor: Colors.white,
         elevation: 0,
@@ -120,16 +135,19 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                     context: context,
                     barrierDismissible: false,
                     builder:
-                        (context) => const Center(
+                        (context) => Center(
                           child: Card(
                             child: Padding(
-                              padding: EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(20),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  SpinKitCircle(color: secondary, size: 50.0),
-                                  SizedBox(height: 16),
-                                  Text('Marking all as read...'),
+                                  const SpinKitCircle(
+                                    color: secondary,
+                                    size: 50.0,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(_language.markingAllAsRead),
                                 ],
                               ),
                             ),
@@ -147,32 +165,37 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                       _updateFilteredNotifications(viewModel.notifications);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.check_circle, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text('✅ All notifications marked as read'),
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '✅ ${_language.allNotificationsMarkedAsRead}',
+                                ),
                               ],
                             ),
                             backgroundColor: Colors.green,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
                     } else {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.error, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text('❌ Failed to mark all as read'),
+                                const Icon(Icons.error, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Text('❌ ${_language.failedToMarkAllAsRead}'),
                               ],
                             ),
                             backgroundColor: Colors.red,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
@@ -200,10 +223,10 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                 case 'refresh':
                   // Show loading indicator
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 16,
                             height: 16,
                             child: SpinKitCircle(
@@ -211,11 +234,11 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                               size: 16.0,
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Text('Refreshing notifications...'),
+                          const SizedBox(width: 12),
+                          Text(_language.refreshingNotifications),
                         ],
                       ),
-                      duration: Duration(seconds: 1),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                   await _refreshNotifications();
@@ -230,17 +253,17 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                       children: [
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
-                        const Text('Mark all as read'),
+                        Text(_language.markAllAsRead),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'refresh',
                     child: Row(
                       children: [
-                        Icon(Icons.refresh, color: secondary),
-                        SizedBox(width: 8),
-                        Text('Refresh'),
+                        const Icon(Icons.refresh, color: secondary),
+                        const SizedBox(width: 8),
+                        Text(_language.refresh),
                       ],
                     ),
                   ),
@@ -254,13 +277,13 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
           if (!_isInitialized &&
               _leaveRequestNotifications.isEmpty &&
               viewModel.isLoading) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SpinKitCircle(color: secondary, size: 50.0),
-                  SizedBox(height: 16),
-                  Text('Loading leave requests...'),
+                  const SpinKitCircle(color: secondary, size: 50.0),
+                  const SizedBox(height: 16),
+                  Text(_language.loadingLeaveRequests),
                 ],
               ),
             );
@@ -401,9 +424,9 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      'NEW',
-                      style: TextStyle(
+                    child: Text(
+                      _language.newLabel,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -417,19 +440,19 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
         onTap: () async {
           // Show loading indicator
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 16,
                     height: 16,
                     child: SpinKitCircle(color: secondary, size: 50.0),
                   ),
-                  SizedBox(width: 12),
-                  Text('Opening leave request...'),
+                  const SizedBox(width: 12),
+                  Text(_language.openingLeaveRequest),
                 ],
               ),
-              duration: Duration(seconds: 1),
+              duration: const Duration(seconds: 1),
             ),
           );
 
@@ -446,8 +469,10 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             // Show error if marking as read failed
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('❌ Failed to mark notification as read'),
+                SnackBar(
+                  content: Text(
+                    '❌ ${_language.failedToMarkNotificationAsRead}',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -498,11 +523,11 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Error'),
+                const Icon(Icons.error_outline, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(_language.error),
               ],
             ),
             content: Text(message),
@@ -510,7 +535,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(foregroundColor: secondary),
-                child: const Text('OK'),
+                child: Text(_language.ok),
               ),
             ],
           ),
@@ -527,7 +552,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             Icon(Icons.error_outline, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 24),
             Text(
-              'Failed to load notifications',
+              _language.failedToLoadNotifications,
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.grey.shade600,
@@ -536,7 +561,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              viewModel.error ?? 'Unknown error occurred',
+              viewModel.error ?? _language.unknownErrorOccurred,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
@@ -547,7 +572,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                 await _refreshNotifications();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(_language.tryAgain),
               style: ElevatedButton.styleFrom(
                 backgroundColor: secondary,
                 foregroundColor: Colors.white,
@@ -584,7 +609,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'All Caught Up! 🎉',
+              _language.allCaughtUp,
               style: TextStyle(
                 fontSize: 22,
                 color: Colors.grey.shade700,
@@ -593,7 +618,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'No new leave requests to review.\nYour team is all set!',
+              _language.noNewLeaveRequests,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade500,
@@ -605,7 +630,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             OutlinedButton.icon(
               onPressed: _refreshNotifications,
               icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
+              label: Text(_language.refresh),
               style: OutlinedButton.styleFrom(
                 foregroundColor: secondary,
                 side: BorderSide(color: secondary),

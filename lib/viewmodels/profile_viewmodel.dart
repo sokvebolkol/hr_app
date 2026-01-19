@@ -45,28 +45,45 @@ class ProfileViewModel extends ChangeNotifier {
 
   // Profile items for display
   List<ProfileItem> get profileItems => [
-    ProfileItem(icon: Icons.email, label: "Email", value: email),
-    ProfileItem(icon: Icons.badge, label: "Employee ID", value: employeeCard),
-    // ProfileItem(icon: Icons.person, label: "Full Name", value: fullName),
-    // ProfileItem(icon: Icons.wc, label: "Gender", value: gender),
-    ProfileItem(icon: Icons.business, label: "Department", value: department),
-    ProfileItem(icon: Icons.location_on, label: "Branch", value: branch),
+    ProfileItem(
+      icon: Icons.email,
+      label: _languageLogic.language.email,
+      value: email,
+    ),
+    ProfileItem(
+      icon: Icons.badge,
+      label: _languageLogic.language.employeeCard,
+      value: employeeCard,
+    ),
+    // ProfileItem(icon: Icons.person, label: _languageLogic.language.fullName, value: fullName),
+    // ProfileItem(icon: Icons.wc, label: _languageLogic.language.gender, value: gender),
+    ProfileItem(
+      icon: Icons.business,
+      label: _languageLogic.language.department,
+      value: department,
+    ),
+    ProfileItem(
+      icon: Icons.location_on,
+      label: _languageLogic.language.branch,
+      value: branch,
+    ),
     ProfileItem(
       icon: Icons.work,
-      label: "Employment Type",
+      label: _languageLogic.language.employmentType,
       value: employmentType,
     ),
     ProfileItem(
       icon: Icons.type_specimen,
-      label: "Contract Type",
+      label: _languageLogic.language.contractType,
       value: contract,
     ),
-    // ProfileItem(icon: Icons.money, label: "Salary", value: monthlySalary),
+    // ProfileItem(icon: Icons.money, label: _languageLogic.language.monthlySalary, value: monthlySalary),
     ProfileItem(
       icon: Icons.calendar_today,
-      label: "Joined Date",
+      label: _languageLogic.language.joinedDate,
       value: joinedDate,
     ),
+    // Language option removed - now available in Menu Screen
     // ProfileItem(
     //   icon: Icons.language,
     //   label: _languageLogic.language.language,

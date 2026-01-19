@@ -10,7 +10,7 @@ class LanguageLogic extends ChangeNotifier {
 
   Future<void> initialize() async {
     final pref = await SharedPreferences.getInstance();
-    _index = pref.getInt('languageIndex') ?? 0;
+    _index = pref.getInt('languageIndex') ?? 1;
     _language = languageList[_index];
   }
 

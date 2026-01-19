@@ -4,6 +4,8 @@ import '../../models/ceo_dashboard_model.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../widgets/ceo_leave_request_widget.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 
 class ApprovalHistoryScreen extends StatefulWidget {
   final String filterType; // 'approved' or 'rejected'
@@ -25,10 +27,15 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
     with SingleTickerProviderStateMixin {
   late String _selectedMonth;
   late TabController _tabController;
+  late LanguageLogic _languageLogic;
+  late Language _language;
 
   @override
   void initState() {
     super.initState();
+    _languageLogic = LanguageLogic();
+    _initializeLanguage();
+
     // Use the month passed from dashboard, or default to 'All'
     _selectedMonth = widget.initialMonth ?? 'All';
 
@@ -48,6 +55,15 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
     });
   }
 
+  Future<void> _initializeLanguage() async {
+    await _languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        _language = _languageLogic.language;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -61,7 +77,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
     // Filter approved leaves by month
     final filteredApprovedLeaves =
-        _selectedMonth == 'All'
+        _selectedMonth == _language.all || _selectedMonth == 'All'
             ? approvedLeaves
             : approvedLeaves.where((leave) {
               DateTime? leaveDate = DateTime.tryParse(leave.createdate);
@@ -76,7 +92,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
     // Filter rejected leaves by month
     final filteredRejectedLeaves =
-        _selectedMonth == 'All'
+        _selectedMonth == _language.all || _selectedMonth == 'All'
             ? rejectedLeaves
             : rejectedLeaves.where((leave) {
               DateTime? leaveDate = DateTime.tryParse(leave.createdate);
@@ -101,9 +117,9 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Approval History',
-          style: TextStyle(
+        title: Text(
+          _language.approvalHistory,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -136,9 +152,9 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Approved',
-                          style: TextStyle(
+                        Text(
+                          _language.approved,
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -175,9 +191,9 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Rejected',
-                          style: TextStyle(
+                        Text(
+                          _language.rejected,
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -226,9 +242,9 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
               children: [
                 const Icon(Icons.calendar_month, size: 20, color: secondary),
                 const SizedBox(width: 8),
-                const Text(
-                  'Filter by Month:',
-                  style: TextStyle(
+                Text(
+                  _language.filterByMonth,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: secondary,
@@ -294,7 +310,9 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
             Icon(Icons.history, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No ${type == 'approved' ? 'approved' : 'rejected'} leaves found',
+              type == 'approved'
+                  ? _language.noApprovedLeavesFound
+                  : _language.noRejectedLeavesFound,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -303,7 +321,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Try changing the filter',
+              _language.tryChangingTheFilter,
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
@@ -401,9 +419,9 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
-                            'Select Month',
-                            style: TextStyle(
+                          Text(
+                            _language.selectMonth,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: secondary,
@@ -552,7 +570,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
     final sortedMonths = monthMap.keys.toList()..sort((a, b) => b.compareTo(a));
 
-    final result = <String>['All'];
+    final result = <String>[_language.all];
     for (var monthKey in sortedMonths) {
       result.add(monthMap[monthKey]!);
     }
@@ -561,19 +579,19 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
   }
 
   String _getMonthName(int month) {
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+    final monthNames = [
+      _language.january,
+      _language.february,
+      _language.march,
+      _language.april,
+      _language.may,
+      _language.june,
+      _language.july,
+      _language.august,
+      _language.september,
+      _language.october,
+      _language.november,
+      _language.december,
     ];
     return monthNames[month - 1];
   }

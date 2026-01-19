@@ -31,7 +31,8 @@ Future<bool> checkInternetConnection() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  final languageLogic = LanguageLogic();
+  await languageLogic.initialize();
   try {
     final languageLogic = LanguageLogic();
     await languageLogic.initialize();

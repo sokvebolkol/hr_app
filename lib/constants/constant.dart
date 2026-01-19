@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../localization/language_logic.dart';
 
 /**
  * App colors
@@ -52,6 +53,58 @@ const getAndroidUpdateUrl =
 
 enum LoadingStatus { none, loading, error, done }
 
+// Get leave types with language support
+Future<List<Map<String, dynamic>>> getLeaveTypes() async {
+  final languageLogic = LanguageLogic();
+  await languageLogic.initialize();
+  final language = languageLogic.language;
+
+  return [
+    {"label": language.annualLeave, "value": 700001},
+    {"label": language.sickLeave, "value": 700002},
+    {"label": language.unpaidLeave, "value": 700003},
+    {"label": language.maternityLeave, "value": 700004},
+    {"label": language.specialLeave, "value": 700005},
+  ];
+}
+
+// Get leaves for with language support
+Future<List<Map<String, dynamic>>> getLeavesFor() async {
+  final languageLogic = LanguageLogic();
+  await languageLogic.initialize();
+  final language = languageLogic.language;
+
+  return [
+    {"label": language.halfDay, "value": 0},
+    {"label": language.fullDay, "value": 1},
+  ];
+}
+
+// Get leave notes with language support
+Future<List<Map<String, dynamic>>> getLeaveNotes() async {
+  final languageLogic = LanguageLogic();
+  await languageLogic.initialize();
+  final language = languageLogic.language;
+
+  return [
+    {"label": language.morning, "value": 1},
+    {"label": language.afternoon, "value": 0},
+  ];
+}
+
+// Get approval levels with language support
+Future<List<Map<String, dynamic>>> getApprovalLevels() async {
+  final languageLogic = LanguageLogic();
+  await languageLogic.initialize();
+  final language = languageLogic.language;
+
+  return [
+    {"label": language.firstApprover, "value": 1},
+    {"label": language.secondApprover, "value": 2},
+  ];
+}
+
+// Legacy constants (deprecated - use async functions above)
 final leaveTypes = [
   {"label": "Annual Leave", "value": 700001},
   {"label": "Sick Leave", "value": 700002},
@@ -68,7 +121,6 @@ final leavesFor = [
 final leaveNotes = [
   {"label": "Morning", "value": 1},
   {"label": "Afternoon", "value": 0},
-  // {"label": "Full Day", "value": 10},
 ];
 
 final approvalLevels = [

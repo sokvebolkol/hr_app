@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../services/global_service.dart';
+import '../localization/language.dart';
 
 class ForgotPasswordViewModel extends ChangeNotifier {
   final TextEditingController userIdController = TextEditingController();
@@ -10,15 +11,15 @@ class ForgotPasswordViewModel extends ChangeNotifier {
   String? errorMessage;
   bool isLoading = false;
 
-  bool validateInputs() {
+  bool validateInputs(Language language) {
     errorMessage = null;
     if (userIdController.text.length != 4) {
-      errorMessage = "User ID must be 4 digits.";
+      errorMessage = language.userIdMust4Digits;
       notifyListeners();
       return false;
     }
     if (!RegExp(r"^[\w\.-]+@[\w\.-]+\.\w+$").hasMatch(emailController.text)) {
-      errorMessage = "Please enter a valid email address.";
+      errorMessage = language.pleaseEnterValidEmail;
       notifyListeners();
       return false;
     }
@@ -26,7 +27,7 @@ class ForgotPasswordViewModel extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> requestForgotPassword() async {
+  Future<bool> requestForgotPassword(Language language) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -34,10 +35,7 @@ class ForgotPasswordViewModel extends ChangeNotifier {
     try {
       final response = await http.post(
         Uri.parse('${ServerService().baseUrl}password/email'),
-        body: {
-          'ecard': userIdController.text, 
-          'email': emailController.text,
-        },
+        body: {'ecard': userIdController.text, 'email': emailController.text},
       );
 
       isLoading = false;
@@ -46,13 +44,13 @@ class ForgotPasswordViewModel extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        errorMessage = "User ID or Email not found.";
+        errorMessage = language.userIdOrEmailNotFound;
         notifyListeners();
         return false;
       }
     } catch (e) {
       isLoading = false;
-      errorMessage = "Network error. Please try again.";
+      errorMessage = language.networkErrorTryAgain;
       notifyListeners();
       return false;
     }

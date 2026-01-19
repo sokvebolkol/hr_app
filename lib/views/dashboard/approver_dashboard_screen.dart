@@ -242,12 +242,17 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          FileHelper().greeting,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
+                        FutureBuilder<String>(
+                          future: FileHelper().getGreeting(),
+                          builder: (context, snapshot) {
+                            return Text(
+                              snapshot.data ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
                         ),
                         SizedBox(
                           width: 180,

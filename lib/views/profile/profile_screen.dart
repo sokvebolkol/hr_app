@@ -257,14 +257,17 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "Please choose one",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                Text(
+                  viewModel.languageLogic.language.pleaseChooseOne,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(Icons.camera_alt, color: Colors.black87),
-                  title: const Text("Camera"),
+                  title: Text(viewModel.languageLogic.language.camera),
                   onTap: () async {
                     Navigator.pop(context);
                     await _pickImage(viewModel, ImageSource.camera);
@@ -275,7 +278,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Icons.photo_library,
                     color: Colors.black87,
                   ),
-                  title: const Text("Gallery"),
+                  title: Text(viewModel.languageLogic.language.gallery),
                   onTap: () async {
                     Navigator.pop(context);
                     await _pickImage(viewModel, ImageSource.gallery);
@@ -292,25 +295,24 @@ class _ProfilePageState extends State<ProfilePage> {
     ImageSource source,
   ) async {
     void showPermissionDialog(BuildContext context, String permissionType) {
+      final language = viewModel.languageLogic.language;
       showDialog(
         context: context,
         builder:
             (context) => AlertDialog(
-              title: Text('$permissionType Permission Required'),
-              content: Text(
-                'Please enable $permissionType permission in app settings to use this feature.',
-              ),
+              title: Text('$permissionType ${language.permissionRequired}'),
+              content: Text(language.pleaseEnablePermission),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(language.cancel),
                 ),
                 TextButton(
                   onPressed: () async {
                     Navigator.of(context).pop();
                     await openAppSettings();
                   },
-                  child: const Text('Open Settings'),
+                  child: Text(language.openSettings),
                 ),
               ],
             ),
@@ -323,10 +325,17 @@ class _ProfilePageState extends State<ProfilePage> {
       status = await Permission.camera.request();
       if (!status.isGranted) {
         if (status.isPermanentlyDenied) {
-          showPermissionDialog(context, 'Camera');
+          showPermissionDialog(
+            context,
+            viewModel.languageLogic.language.camera,
+          );
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Camera permission denied')),
+            SnackBar(
+              content: Text(
+                viewModel.languageLogic.language.cameraPermissionDenied,
+              ),
+            ),
           );
         }
         return;
@@ -337,10 +346,17 @@ class _ProfilePageState extends State<ProfilePage> {
         status = await Permission.photos.request();
         if (!status.isGranted) {
           if (status.isPermanentlyDenied) {
-            showPermissionDialog(context, 'Photos');
+            showPermissionDialog(
+              context,
+              viewModel.languageLogic.language.gallery,
+            );
           } else if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Photo library permission denied')),
+              SnackBar(
+                content: Text(
+                  viewModel.languageLogic.language.photoLibraryPermissionDenied,
+                ),
+              ),
             );
           }
           return;
@@ -373,7 +389,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _handleItemTap(ProfileViewModel viewModel, dynamic item) {
-    if (item.label == "Language" || item.label == "ភាសា") {
+    if (item.label == viewModel.languageLogic.language.language) {
       _showLanguageDialog(viewModel);
     }
   }
