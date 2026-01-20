@@ -35,9 +35,6 @@ class CeoDashboardRepository {
         },
       );
 
-      print('CEO Dashboard Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
@@ -54,8 +51,6 @@ class CeoDashboardRepository {
 
           return CeoDashboardResponse.fromJson(data);
         } catch (e) {
-          print('JSON Parsing Error: $e');
-          print('Raw Response: ${response.body}');
           throw Exception('Failed to parse response');
         }
       } else {
@@ -69,7 +64,6 @@ class CeoDashboardRepository {
         }
       }
     } catch (e) {
-      print('Error in getAttendanceSummary: $e');
       if (e.toString().contains('SocketException')) {
         throw Exception('Network error: Please check your internet connection');
       } else if (e.toString().contains('TimeoutException')) {

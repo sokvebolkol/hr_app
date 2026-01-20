@@ -33,7 +33,6 @@ class ProfileRepository {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('User Profile Data: $data');
         return UserProfile.fromJson(data);
       } else {
         throw Exception('Failed to fetch user profile: ${response.statusCode}');

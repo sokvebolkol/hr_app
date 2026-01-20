@@ -54,6 +54,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   late DashboardViewModel _dashboardViewModel;
   late CeoDashboardViewModel _ceoDashboardViewModel;
   Language language = Language();
+  bool _hasShownUpdateDialog = false;
 
   @override
   void initState() {
@@ -108,7 +109,6 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
-
     // Set the home content dynamically
     _screens[0] = _CeoDashboardHomeContent(
       dashboardViewModel: _dashboardViewModel,
@@ -160,11 +160,16 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
               }
 
               // Check for force update
-              if (dashboardViewModel.appVersion != null) {
+              if (dashboardViewModel.appVersion != null &&
+                  !_hasShownUpdateDialog) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  if (_hasShownUpdateDialog) return; // Double check
+
                   final shouldUpdate =
                       await dashboardViewModel.shouldForceUpdate();
                   if (shouldUpdate && mounted) {
+                    _hasShownUpdateDialog = true; // Set flag before showing
+
                     final updateUrl =
                         Platform.isAndroid
                             ? dashboardViewModel.appVersion!.androidUrl

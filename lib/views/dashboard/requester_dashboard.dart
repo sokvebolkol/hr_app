@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import '../../widgets/custom_alert_dialog.dart';
-import '../../widgets/error_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -11,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
-import '../../constants/responsive.dart';
 import '../../utils/error_handler.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
@@ -29,6 +27,7 @@ import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
+import '../menu/menu_screen.dart';
 import '../notifications/requester_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -48,7 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   double screenHeight = 0.0;
   late DashboardViewModel _dashboardViewModel;
 
-  final List<Widget> _screens = [const DashboardScreen(), const ProfilePage()];
+  final List<Widget> _screens = [const DashboardScreen(), const MenuScreen()];
 
   @override
   void initState() {
@@ -203,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           items: const [
             TabItem(icon: Icons.home, title: 'Home'),
             TabItem(icon: Icons.home, title: 'Request Leave'),
-            TabItem(icon: Icons.person, title: 'Profile'),
+            TabItem(icon: Icons.menu, title: 'Menu'),
           ],
           initialActiveIndex: _currentIndex == 0 ? 0 : 2,
           onTap: (int i) {
@@ -600,7 +599,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                   return Row(
                     children: [
                       SizedBox(
-                        width: 110,
+                        width: 120,
                         child: FunctionIconCardWidget(
                           iconData: button['icon'] as IconData,
                           label: button['label'] as String,

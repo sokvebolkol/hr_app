@@ -95,10 +95,26 @@ class DashboardRepository {
         leaveBalance = _createDefaultLeaveBalance();
       }
 
+      // Parse app version - it's directly under data, not in summary
+      AppVersion? appVersion;
+      try {
+        final appVersionData = data['app_version'];
+        if (appVersionData != null &&
+            appVersionData is List &&
+            appVersionData.isNotEmpty &&
+            appVersionData[0] != null) {
+          appVersion = AppVersion.fromJson(
+            appVersionData[0] as Map<String, dynamic>,
+          );
+        }
+      } catch (error) {
+        ErrorHandler.logError(error, StackTrace.current);
+      }
       return DashboardData(
         user: UserModel.fromJson(userData as Map<String, dynamic>),
         leaves: leaves,
         leaveBalance: leaveBalance,
+        appVersion: appVersion,
       );
     } catch (e, stackTrace) {
       ErrorHandler.logError(e, stackTrace);

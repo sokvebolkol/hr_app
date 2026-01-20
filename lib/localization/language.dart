@@ -120,7 +120,7 @@ class Language {
   String get updateRequired => "Update Required";
   String get aNewVersion => "A new version";
   String get isAvailableAndMustBeInstalled =>
-      "is available and must be installed to continue using the app.";
+      "is available and must be installed to continue using the app";
   String get updateNow => "Update Now";
   String get menu => "Menu";
   String get errorLoadingDashboard => "Error Loading Dashboard";
