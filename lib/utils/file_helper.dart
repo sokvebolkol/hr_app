@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -95,6 +96,11 @@ class FileHelper {
 
     return abbreviation;
   }
+  
+  // DateFormat.MMM() gives Jan, Feb, etc.
+  String getMonthShortName(int month) {
+    return DateFormat.MMM().format(DateTime(0, month));
+  }
 
   /**
    * Get current date by format Day Date Month, Year for En
@@ -160,16 +166,16 @@ class FileHelper {
 
   static IconData getStatusIcon(String status) {
     switch (status) {
-      case '0':
-        return Icons.cancel;
-      case '1':
-        return Icons.check_circle;
-      case '2':
-        return Icons.schedule;
-      case '3':
+      case '0': // Rejected
+        return Icons.cancel_outlined;
+      case '1': // Approved
+        return Icons.check_circle_outline;
+      case '2': // Pending
+        return Icons.hourglass_empty;
+      case '3': // Cancelled
         return Icons.block;
       default:
-        return Icons.help;
+        return Icons.help_outline;
     }
   }
 

@@ -257,17 +257,14 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  viewModel.languageLogic.language.pleaseChooseOne,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                const Text(
+                  "Please choose one",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(Icons.camera_alt, color: Colors.black87),
-                  title: Text(viewModel.languageLogic.language.camera),
+                  title: const Text("Camera"),
                   onTap: () async {
                     Navigator.pop(context);
                     await _pickImage(viewModel, ImageSource.camera);
@@ -278,7 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Icons.photo_library,
                     color: Colors.black87,
                   ),
-                  title: Text(viewModel.languageLogic.language.gallery),
+                  title: const Text("Gallery"),
                   onTap: () async {
                     Navigator.pop(context);
                     await _pickImage(viewModel, ImageSource.gallery);
@@ -294,97 +291,79 @@ class _ProfilePageState extends State<ProfilePage> {
     ProfileViewModel viewModel,
     ImageSource source,
   ) async {
-    void showPermissionDialog(BuildContext context, String permissionType) {
-      final language = viewModel.languageLogic.language;
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('$permissionType ${language.permissionRequired}'),
-              content: Text(language.pleaseEnablePermission),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(language.cancel),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    await openAppSettings();
-                  },
-                  child: Text(language.openSettings),
-                ),
-              ],
-            ),
-      );
-    }
+    // For iOS 14+, photo library picker doesn't require permission (uses PHPicker)
+    // PHPicker provides "Limited Photos Access" automatically without explicit permissions
+    // Only camera requires permission check
 
-    PermissionStatus status;
+    try {
+      // Only check camera permission, not photos (PHPicker handles photos automatically)
+      if (source == ImageSource.camera) {
+        final cameraStatus = await Permission.camera.status;
 
-    if (source == ImageSource.camera) {
-      status = await Permission.camera.request();
-      if (!status.isGranted) {
-        if (status.isPermanentlyDenied) {
-          showPermissionDialog(
-            context,
-            viewModel.languageLogic.language.camera,
-          );
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                viewModel.languageLogic.language.cameraPermissionDenied,
-              ),
-            ),
-          );
+        // If camera permission is permanently denied, show settings guidance
+        if (cameraStatus.isPermanentlyDenied) {
+          _showSettingsGuidanceDialog(context, 'Camera');
+          return;
         }
-        return;
       }
-    } else {
-      // Gallery permission handling
-      if (Platform.isIOS) {
-        status = await Permission.photos.request();
-        if (!status.isGranted) {
-          if (status.isPermanentlyDenied) {
-            showPermissionDialog(
-              context,
-              viewModel.languageLogic.language.gallery,
+
+      // Let image_picker handle the permission request naturally
+      // For camera: triggers native iOS permission dialog on first use
+      // For photos: uses PHPicker which doesn't need permissions
+      final result = await viewModel.pickAndUploadImage(source);
+
+      if (mounted && result != null) {
+        final isSuccess =
+            result.contains('successfully') || result.contains('uploaded');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result),
+            backgroundColor: isSuccess ? Colors.green : Colors.red,
+            duration: Duration(seconds: isSuccess ? 3 : 4),
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle permission denial or other errors
+      if (mounted) {
+        // Only check camera status on error, not photos
+        if (source == ImageSource.camera) {
+          final cameraStatus = await Permission.camera.status;
+
+          if (cameraStatus.isPermanentlyDenied) {
+            _showSettingsGuidanceDialog(context, 'Camera');
+          } else if (cameraStatus.isDenied) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Camera access is needed to use this feature. Please try again and allow access.',
+                ),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
+              ),
             );
-          } else if (mounted) {
+          } else {
+            // Other camera errors
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                  viewModel.languageLogic.language.photoLibraryPermissionDenied,
-                ),
+                content: Text('Failed to process image: ${e.toString()}'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
               ),
             );
           }
-          return;
+        } else {
+          // Photo errors (network, file issues, etc.)
+          // Don't show permission errors for photos since PHPicker handles it
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to process image: ${e.toString()}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
         }
-      } else {
-        // Android gallery permission handling
-        // For Android 13+ (API 33+), Photo Picker is used automatically by image_picker
-        // and doesn't require any permissions - skip permission request entirely
-        // For Android 12 and below (API 32-), we need READ_EXTERNAL_STORAGE
-
-        // Only request storage permission for Android 12 and below
-        // Android 13+ will use Photo Picker which doesn't need permissions
       }
-    }
-
-    // Use ViewModel to handle image selection and upload
-    final result = await viewModel.pickAndUploadImage(source);
-
-    if (mounted && result != null) {
-      final isSuccess =
-          result.contains('successfully') || result.contains('uploaded');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result),
-          backgroundColor: isSuccess ? Colors.green : Colors.red,
-          duration: Duration(seconds: isSuccess ? 3 : 4),
-        ),
-      );
     }
   }
 
@@ -392,6 +371,35 @@ class _ProfilePageState extends State<ProfilePage> {
     if (item.label == viewModel.languageLogic.language.language) {
       _showLanguageDialog(viewModel);
     }
+  }
+
+  void _showSettingsGuidanceDialog(
+    BuildContext context,
+    String permissionType,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('$permissionType Access Required'),
+            content: Text(
+              'This feature requires $permissionType access. You have previously denied this permission.\n\nTo enable it, please go to Settings > CHOKCHEY and allow $permissionType access.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Not Now'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await openAppSettings();
+                },
+                child: const Text('Open Settings'),
+              ),
+            ],
+          ),
+    );
   }
 
   void _showLanguageDialog(ProfileViewModel viewModel) {

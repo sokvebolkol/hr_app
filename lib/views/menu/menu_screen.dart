@@ -65,7 +65,7 @@ class _MenuScreenState extends State<MenuScreen> {
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Scaffold(
-        backgroundColor: secondary,
+        backgroundColor: themeColor,
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -103,7 +103,7 @@ class _MenuScreenState extends State<MenuScreen> {
       builder: (context, viewModel, child) {
         return Container(
           height: 200,
-          decoration: BoxDecoration(color: secondary),
+          decoration: BoxDecoration(color: themeColor),
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -245,7 +245,7 @@ class _MenuScreenState extends State<MenuScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           children: [
-            Icon(icon, color: secondary, size: 22),
+            Icon(icon, color: themeColor, size: 22),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -271,7 +271,7 @@ class _MenuScreenState extends State<MenuScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Row(
             children: [
-              Icon(Icons.language, color: secondary, size: 24),
+              Icon(Icons.language, color: themeColor, size: 24),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
@@ -315,7 +315,7 @@ class _MenuScreenState extends State<MenuScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? secondary : Colors.transparent,
+          color: isSelected ? themeColor : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(

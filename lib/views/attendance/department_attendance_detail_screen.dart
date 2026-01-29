@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
 import '../../models/attendance_by_department_model.dart';
 import '../../viewmodels/attendance_by_department_viewmodel.dart';
+import '../../widgets/clickable_date_card_widget.dart';
 
 class DepartmentAttendanceDetailScreen extends StatefulWidget {
   final Department department;
@@ -621,12 +622,12 @@ class _DepartmentAttendanceDetailScreenState
                                         isSelectingStart = true;
                                       });
                                     },
-                                    child: _buildClickableDateCard(
-                                      'Start Date',
-                                      tempDateRange.start,
-                                      Icons.event_available,
-                                      secondary,
-                                      isSelectingStart,
+                                    child: ClickableDateCard(
+                                      label: 'Start Date',
+                                      date: tempDateRange.start,
+                                      icon: Icons.event_available,
+                                      color: secondary,
+                                      isActive: isSelectingStart,
                                     ),
                                   ),
                                 ),
@@ -638,12 +639,12 @@ class _DepartmentAttendanceDetailScreenState
                                         isSelectingStart = false;
                                       });
                                     },
-                                    child: _buildClickableDateCard(
-                                      'End Date',
-                                      tempDateRange.end,
-                                      Icons.event_busy,
-                                      logoPink,
-                                      !isSelectingStart,
+                                    child: ClickableDateCard(
+                                      label: 'End Date',
+                                      date: tempDateRange.end,
+                                      icon: Icons.event_busy,
+                                      color: logoPink,
+                                      isActive: !isSelectingStart,
                                     ),
                                   ),
                                 ),
@@ -839,67 +840,6 @@ class _DepartmentAttendanceDetailScreenState
     );
   }
 
-  Widget _buildClickableDateCard(
-    String label,
-    DateTime date,
-    IconData icon,
-    Color color,
-    bool isActive,
-  ) {
-    final formatter = DateFormat('MMM dd, yyyy');
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isActive ? color : color.withOpacity(0.3),
-          width: isActive ? 1 : 0.5,
-        ),
-        boxShadow:
-            isActive
-                ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-                : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-              const Spacer(),
-              if (isActive) Icon(Icons.check_circle, size: 14, color: color),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            formatter.format(date),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildQuickSelectChip(String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
@@ -926,51 +866,6 @@ class _DepartmentAttendanceDetailScreenState
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDateCard(
-    String label,
-    DateTime date,
-    IconData icon,
-    Color color,
-  ) {
-    final formatter = DateFormat('MMM dd, yyyy');
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            formatter.format(date),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
-        ],
       ),
     );
   }

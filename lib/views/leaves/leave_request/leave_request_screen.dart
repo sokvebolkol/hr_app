@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../constants/constant.dart';
 import '../../../repositories/leave_request_repository.dart';
 import '../../../models/leave_type_model.dart';
@@ -476,6 +477,18 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   // ✅ Image picker with progressive compression
   Future<void> _pickAndValidateImage(ImageSource source) async {
     try {
+      // Check camera permission before proceeding (only for camera, not photos)
+      // iOS 14+ uses PHPicker for photos which doesn't require explicit permissions
+      if (source == ImageSource.camera) {
+        final cameraStatus = await Permission.camera.status;
+
+        // If camera permission is permanently denied, show settings guidance
+        if (cameraStatus.isPermanentlyDenied) {
+          _showSettingsGuidanceDialog('Camera');
+          return;
+        }
+      }
+
       if (mounted) {
         showDialog(
           context: context,
@@ -577,6 +590,25 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
+
+        // Handle camera permission errors specifically
+        if (source == ImageSource.camera) {
+          final cameraStatus = await Permission.camera.status;
+
+          if (cameraStatus.isPermanentlyDenied) {
+            _showSettingsGuidanceDialog('Camera');
+            return;
+          } else if (cameraStatus.isDenied) {
+            _showSnackBar(
+              'Camera access is needed to use this feature. Please try again and allow access.',
+              Colors.orange,
+              Icons.warning_amber,
+            );
+            return;
+          }
+        }
+
+        // Other errors (network, file issues, etc.)
         _showSnackBar(
           "Error: ${e.toString()}",
           Colors.red,
@@ -611,6 +643,35 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       ),
+    );
+  }
+
+  // ✅ Settings guidance dialog for permanently denied permissions
+  void _showSettingsGuidanceDialog(String permissionType) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('$permissionType Access Required'),
+            content: Text(
+              'This feature requires $permissionType access. You have previously denied this permission.\n\nTo enable it, please go to Settings > CHOKCHEY and allow $permissionType access.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Not Now'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await openAppSettings();
+                },
+                child: const Text('Open Settings'),
+              ),
+            ],
+          ),
     );
   }
 
