@@ -17,7 +17,7 @@ import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
-import '../attendance/attendance_calendar_screen.dart';
+import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';

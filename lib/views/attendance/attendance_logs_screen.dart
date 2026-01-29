@@ -176,7 +176,6 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
       color: primary,
       child: CustomScrollView(
         slivers: [
-          // ✅ REMOVED: User info header
           SliverToBoxAdapter(child: _buildSummaryCards(viewModel)),
           SliverToBoxAdapter(child: _buildDateRangeHeader(viewModel)),
           SliverFillRemaining(
@@ -417,7 +416,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
           Icon(Icons.date_range_rounded, color: primary, size: 20),
           const SizedBox(width: 8),
           Text(
-            'Report Period: ',
+            'Period: ',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Colors.grey[700],
@@ -425,7 +424,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
           ),
           Expanded(
             child: Text(
-              '${DateFormat('MMM dd, yyyy').format(DateTime.parse(summary.dateRange.startDate))} - ${DateFormat('MMM dd, yyyy').format(DateTime.parse(summary.dateRange.endDate))}',
+              '${DateFormat('MMM dd, yyyy').format(DateTime.parse(summary.dateRange.startDate))} → ${DateFormat('MMM dd, yyyy').format(DateTime.parse(summary.dateRange.endDate))}',
               style: TextStyle(fontWeight: FontWeight.bold, color: primary),
             ),
           ),

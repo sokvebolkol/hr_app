@@ -43,7 +43,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
           title: const Text(
-            'Leave History',
+            'History Requests',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -69,7 +69,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               color: primary,
               child: Column(
                 children: [
-                  _buildStatsHeader(viewModel),
+                  _buildStatsHeader(filteredHistory),
 
                   // ===== FILTER ROW (CEO STYLE) =====
                   _buildFilterRow(),
@@ -128,7 +128,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   }
 
   /* =========================================================
-     FILTER ROW (CEO DASHBOARD STYLE)
+     FILTER BETWEEN DATE
      ========================================================= */
 
   Widget _buildFilterRow() {
@@ -232,7 +232,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   }
 
   /* =========================================================
-     CUSTOM DATE RANGE DIALOG (YOUR STYLE)
+     CUSTOM DATE RANGE DIALOG 
      ========================================================= */
 
   Future<void> _showDateRangePicker() async {
@@ -459,78 +459,181 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   /* =========================================================
      TYPE FILTER
      ========================================================= */
-
   void _showTypeFilterBottomSheet() {
     final types = ['All', 'Leave', 'Attendance'];
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder:
-          (context) => Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: types.length,
-              itemBuilder: (context, index) {
-                final type = types[index];
-                final isSelected = _selectedType == type;
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ===== HANDLE BAR =====
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
 
-                return InkWell(
-                  onTap: () {
-                    setState(() => _selectedType = type);
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? secondary.withOpacity(0.08)
-                              : Colors.transparent,
-                      border: Border(
-                        left: BorderSide(
-                          color: isSelected ? secondary : Colors.transparent,
-                          width: 3,
-                        ),
+              // ===== HEADER =====
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: primary.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.filter_alt_rounded,
+                        color: primary,
+                        size: 22,
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          type == 'Attendance'
-                              ? Icons.access_time
-                              : Icons.beach_access,
-                          color: isSelected ? secondary : Colors.grey[600],
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            type,
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Filter by Type',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight:
-                                  isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w500,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Select request category',
+                            style: TextStyle(fontSize: 13, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // ===== TYPE LIST =====
+              ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: types.length,
+                itemBuilder: (context, index) {
+                  final type = types[index];
+                  final isSelected = _selectedType == type;
+
+                  IconData icon;
+                  if (type == 'Attendance') {
+                    icon = Icons.access_time;
+                  } else if (type == 'Leave') {
+                    icon = Icons.beach_access;
+                  } else {
+                    icon = Icons.all_inclusive;
+                  }
+
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() => _selectedType = type);
+                        Navigator.pop(context);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? primary.withOpacity(0.08)
+                                  : Colors.transparent,
+                          border: Border(
+                            left: BorderSide(
+                              color: isSelected ? primary : Colors.transparent,
+                              width: 3,
                             ),
                           ),
                         ),
-                        if (isSelected)
-                          const Icon(Icons.check, color: secondary),
-                      ],
+                        child: Row(
+                          children: [
+                            // Icon box
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? primary.withOpacity(0.15)
+                                        : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                icon,
+                                size: 20,
+                                color: isSelected ? primary : Colors.grey[600],
+                              ),
+                            ),
+
+                            const SizedBox(width: 16),
+
+                            // Text
+                            Expanded(
+                              child: Text(
+                                type,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                  color: isSelected ? primary : Colors.black87,
+                                ),
+                              ),
+                            ),
+
+                            // Selected check
+                            if (isSelected)
+                              const Icon(
+                                Icons.check_circle,
+                                color: primary,
+                                size: 20,
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+            ],
           ),
+        );
+      },
     );
   }
 
@@ -706,7 +809,16 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     );
   }
 
-  Widget _buildStatsHeader(LeaveHistoryViewModel vm) {
+  Widget _buildStatsHeader(List<LeaveHistoryModel> filteredList) {
+    final total = filteredList.length;
+
+    final pending =
+        filteredList.where((e) => e.statu == '0' || e.isPending).length;
+
+    final approved = filteredList.where((e) => e.statu == '1').length;
+
+    final rejected = filteredList.where((e) => e.statu == '2').length;
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -717,10 +829,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _stat('Total', vm.leaveHistory.length, Colors.blue),
-          _stat('Pending', vm.pendingCount, Colors.orange),
-          _stat('Approved', vm.approvedCount, Colors.green),
-          _stat('Rejected', vm.rejectedCount, Colors.red),
+          _stat('Total', total, Colors.blue),
+          _stat('Pending', pending, Colors.orange),
+          _stat('Approved', approved, Colors.green),
+          _stat('Rejected', rejected, Colors.red),
         ],
       ),
     );
@@ -729,16 +841,34 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   Widget _stat(String label, int value, Color color) {
     return Column(
       children: [
-        Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
+        Container(
+          
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Text(
+            value.toString(),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(label),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }

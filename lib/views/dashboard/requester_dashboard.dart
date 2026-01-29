@@ -1,8 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import '../../widgets/custom_alert_dialog.dart';
-import 'package:chokchey_hr_app/models/leave_model.dart';
-import 'package:chokchey_hr_app/utils/file_helper.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +16,7 @@ import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
-import '../attendance/attendance_calendar_screen.dart';
+import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
@@ -28,8 +25,10 @@ import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../leaves/leave_history/leave_history_screen.dart';
 import '../menu/menu_screen.dart';
-import '../notifications/requester_notifcation_screen.dart';
-import '../profile/profile_screen.dart';
+import '../../models/leave_model.dart';
+import '../../utils/file_helper.dart';
+import '../../widgets/custom_alert_dialog.dart';
+import '../notifications/requester_notification_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -446,17 +445,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           ),
     },
     {
-      'icon': Icons.history,
-      'label': 'Leaves History',
-      'onPressed':
-          (BuildContext context) => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const LeaveHistoryScreen()),
-          ),
-    },
-    {
       'icon': Icons.event_available,
-      'label': 'Attendances',
+      'label': 'Attendance Logs',
       'onPressed': (BuildContext context) {
         Navigator.push(
           context,
@@ -465,6 +455,15 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           ),
         );
       },
+    },
+    {
+      'icon': Icons.history,
+      'label': 'History Requests',
+      'onPressed':
+          (BuildContext context) => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LeaveHistoryScreen()),
+          ),
     },
     {
       'icon': Icons.calendar_month,
@@ -599,7 +598,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                   return Row(
                     children: [
                       SizedBox(
-                        width: 120,
+                        width: 145,
                         child: FunctionIconCardWidget(
                           iconData: button['icon'] as IconData,
                           label: button['label'] as String,
