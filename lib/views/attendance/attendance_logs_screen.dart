@@ -26,7 +26,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   @override
   void dispose() {
-    _viewModel.dispose();
+    // Don't manually dispose _viewModel here as ChangeNotifierProvider will handle it
     super.dispose();
   }
 

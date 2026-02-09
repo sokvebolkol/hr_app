@@ -96,7 +96,7 @@ class FileHelper {
 
     return abbreviation;
   }
-  
+
   // DateFormat.MMM() gives Jan, Feb, etc.
   String getMonthShortName(int month) {
     return DateFormat.MMM().format(DateTime(0, month));
@@ -126,6 +126,29 @@ class FileHelper {
    */
   static formatDate(DateTime date) {
     return DateFormat('MMM dd, yyyy').format(date);
+  }
+
+  String formatTime(String? time) {
+    if (time == null || time.isEmpty || time == '00:00') {
+      return '--:--';
+    }
+    try {
+      final timeParts = time.split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = timeParts[1];
+
+      if (hour == 0) {
+        return '12:$minute AM';
+      } else if (hour < 12) {
+        return '$hour:$minute AM';
+      } else if (hour == 12) {
+        return '12:$minute PM';
+      } else {
+        return '${hour - 12}:$minute PM';
+      }
+    } catch (e) {
+      return time;
+    }
   }
 
   /**

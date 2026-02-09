@@ -18,6 +18,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
+import '../attendance/attendance_adjustment_screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
@@ -457,6 +458,18 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       },
     },
     {
+      'icon': Icons.edit_calendar_outlined,
+      'label': 'Attendance Requests',
+      'onPressed': (BuildContext context) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AttendanceAdjustmentScreen(),
+          ),
+        );
+      },
+    },
+    {
       'icon': Icons.history,
       'label': 'History Requests',
       'onPressed':
@@ -598,7 +611,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                   return Row(
                     children: [
                       SizedBox(
-                        width: 145,
+                        width: 155,
                         child: FunctionIconCardWidget(
                           iconData: button['icon'] as IconData,
                           label: button['label'] as String,
