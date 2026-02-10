@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../models/attendance_adjustment_model.dart';
+import '../repositories/attendance_repository.dart';
 
 class AttendanceAdjustmentViewModel extends ChangeNotifier {
+  final AttendanceRepository _attendanceRepository = AttendanceRepository();
+
   AttendanceAdjustmentData? _data;
   bool _isLoading = false;
   String _errorMessage = '';
@@ -28,102 +31,21 @@ class AttendanceAdjustmentViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Replace with actual API call
-      // For now, using the provided sample data
-      await Future.delayed(const Duration(milliseconds: 500));
+      final response = await _attendanceRepository.getAttendanceForAdjustment();
 
-      final sampleData = {
-        "success": true,
-        "data": {
-          "user_info": {
-            "employee_id": "200510",
-            "staff_id": "0892",
-            "username": "KOL SOKVEBOL",
-          },
-          "approvers": [
-            {
-              "id": 1465,
-              "requester_id": 200510,
-              "approver_id": 200619,
-              "approval_level": 2,
-              "created_at": "2026-02-02 03:52:20.667",
-              "updated_at": "2026-02-02 03:52:20.667",
-              "dname": "MOEUN SREYMOM",
-              "approver_level_name": "Second Approver",
-            },
-            {
-              "id": 1466,
-              "requester_id": 200510,
-              "approver_id": 200075,
-              "approval_level": 98,
-              "created_at": "2026-02-02 03:52:20.667",
-              "updated_at": "2026-02-02 03:52:20.667",
-              "dname": "LANG DALIN",
-              "approver_level_name": "HR (Default)",
-            },
-          ],
-          "request_limit": {
-            "monthly_limit": 4,
-            "requests_used": 1,
-            "requests_remaining": 3,
-            "can_request": true,
-            "current_month": "2026-02",
-          },
-          "attendance_reports": [],
-          "missing_attendance": [
-            {
-              "date": "2026-02-03",
-              "formatted_date": "Feb 03, 2026",
-              "day_of_week": "Tuesday",
-              "is_weekend": false,
-              "is_holiday": false,
-              "scan_in": null,
-              "scan_out": null,
-              "clock_in": "10:55",
-              "clock_out": null,
-              "working_hours": null,
-              "status": "No Check-Out",
-              "holiday_details": null,
-              "leave_details": null,
-            },
-            {
-              "date": "2026-01-30",
-              "formatted_date": "Jan 30, 2026",
-              "day_of_week": "Friday",
-              "is_weekend": false,
-              "is_holiday": false,
-              "scan_in": "07:55",
-              "scan_out": null,
-              "clock_in": null,
-              "clock_out": null,
-              "working_hours": null,
-              "status": "No Check-Out",
-              "holiday_details": null,
-              "leave_details": null,
-            },
-            {
-              "date": "2026-01-28",
-              "formatted_date": "Jan 28, 2026",
-              "day_of_week": "Wednesday",
-              "is_weekend": false,
-              "is_holiday": false,
-              "scan_in": "07:59",
-              "scan_out": "",
-              "clock_in": null,
-              "clock_out": null,
-              "working_hours": null,
-              "status": "No Check-Out",
-              "holiday_details": null,
-              "leave_details": null,
-            },
-          ],
-        },
-      };
-
-      final response = AttendanceAdjustmentResponse.fromJson(sampleData);
-      _data = response.data;
+      if (response['success'] == true) {
+        final adjustmentResponse = AttendanceAdjustmentResponse.fromJson(
+          response,
+        );
+        _data = adjustmentResponse.data;
+      } else {
+        throw Exception(
+          response['message'] ?? 'Failed to load attendance data',
+        );
+      }
     } catch (e) {
       _errorMessage = 'Failed to load attendance data: ${e.toString()}';
+      print('Error loading attendance data: $e');
     }
 
     _isLoading = false;

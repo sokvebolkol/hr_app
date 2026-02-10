@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../constants/constant.dart';
 import '../../models/attendance_adjustment_model.dart';
+import '../../repositories/attendance_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/horizontal_approver_flow.dart';
@@ -28,6 +29,7 @@ class AttendanceAdjustmentDetailScreen extends StatefulWidget {
 class _AttendanceAdjustmentDetailScreenState
     extends State<AttendanceAdjustmentDetailScreen> {
   final TextEditingController _reasonController = TextEditingController();
+  final AttendanceRepository _attendanceRepository = AttendanceRepository();
   String? _attachedFileName;
   XFile? documentPhoto;
   final ImagePicker _picker = ImagePicker();
@@ -441,23 +443,46 @@ class _AttendanceAdjustmentDetailScreenState
     final canSubmit = _reasonController.text.trim().isNotEmpty;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      height: 50,
+      height: 56,
       width: double.infinity,
-      child: ElevatedButton(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow:
+            canSubmit
+                ? [
+                  BoxShadow(
+                    color: primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                : null,
+      ),
+      child: ElevatedButton.icon(
         onPressed: canSubmit ? _submitRequest : null,
+        icon: Icon(
+          Icons.send_rounded,
+          size: 20,
+          color: canSubmit ? Colors.white : Colors.grey[500],
+        ),
+        label: Text(
+          'Submit Request',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: canSubmit ? Colors.white : Colors.grey[500],
+          ),
+        ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: canSubmit ? primary : Colors.grey[300],
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 18),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          elevation: canSubmit ? 4 : 0,
           disabledBackgroundColor: Colors.grey[300],
-          elevation: 0,
-        ),
-        child: const Text(
-          'Submit',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          animationDuration: const Duration(milliseconds: 200),
         ),
       ),
     );
@@ -856,70 +881,381 @@ class _AttendanceAdjustmentDetailScreenState
 
   Future<void> _submitRequest() async {
     if (_reasonController.text.trim().isEmpty) {
+      _showSnackBar(
+        'Please provide a reason for the adjustment request',
+        Colors.red,
+        Icons.error_outline,
+      );
       return;
     }
 
-    // Show confirmation dialog
+    // Show professional confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Request'),
-            content: Text(
-              'Submit adjustment request for ${widget.selectedAttendance.formattedDate}?\n'
-              'Type: ${widget.adjustmentType}\n\n'
-              'Reason: ${_reasonController.text.trim()}',
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+            elevation: 8,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
               ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: primary),
-                child: const Text(
-                  'Submit',
-                  style: TextStyle(color: Colors.white),
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with icon
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(32),
+                    ),
+                    child: Icon(
+                      Icons.assignment_turned_in_rounded,
+                      size: 32,
+                      color: primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Title
+                  const Text(
+                    'Confirm Request',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please review your request details before submitting',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  // Request details card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[200]!, width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Date',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.selectedAttendance.formattedDate,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(Icons.access_time, size: 16, color: primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Adjustment Type',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            widget.adjustmentType,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(Icons.edit_note, size: 16, color: primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Reason',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _reasonController.text.trim(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        if (documentPhoto != null) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(Icons.attach_file, size: 16, color: primary),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Attachment',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: Colors.green,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Photo attached',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.green[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.grey[300]!),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 2,
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
     );
 
     if (confirmed != true) return;
 
-    // Show loading dialog
+    // Show professional loading dialog
     if (mounted) {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder:
-            (context) =>
-                const Center(child: CircularProgressIndicator(color: primary)),
+            (context) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 8,
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: const CircularProgressIndicator(
+                        color: primary,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Submitting Request',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please wait while we process your adjustment request',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
       );
     }
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call the API
+      final response = await _attendanceRepository.submitAdjustmentRequest(
+        dateScan: widget.selectedAttendance.formattedDate,
+        adjustType: widget.adjustmentType,
+        reason: _reasonController.text.trim(),
+        attachmentImage: documentPhoto,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    Navigator.pop(context); // Close loading dialog
+      // Close loading dialog
+      Navigator.pop(context);
 
-    // Show success dialog
-    if (mounted) {
+      // Check if the response indicates success
+      final success = response['success'] ?? false;
+      final message =
+          response['message'] ??
+          (success
+              ? 'Request submitted successfully'
+              : 'Failed to submit request');
+
+      if (success) {
+        // Show success dialog
+        await CustomAlertDialog.show(
+          context,
+          title: 'Success',
+          message: message,
+          icon: Icons.check_circle,
+          iconColor: Colors.green,
+          primaryButtonText: 'OK',
+          onPrimaryPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop(true); // Return success to main screen
+          },
+        );
+      } else {
+        // Show error dialog
+        await CustomAlertDialog.show(
+          context,
+          title: 'Error',
+          message: message,
+          icon: Icons.error,
+          iconColor: Colors.red,
+          primaryButtonText: 'OK',
+          onPrimaryPressed: () {
+            Navigator.of(context).pop();
+          },
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Extract meaningful error message
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+
+      // Show error dialog
       await CustomAlertDialog.show(
         context,
-        title: 'Success',
-        message:
-            'Your attendance adjustment request has been submitted successfully',
-        icon: Icons.check_circle,
-        iconColor: Colors.green,
+        title: 'Error',
+        message: errorMessage,
+        icon: Icons.error,
+        iconColor: Colors.red,
         primaryButtonText: 'OK',
         onPrimaryPressed: () {
           Navigator.of(context).pop();
-          Navigator.of(context).pop(true); // Return success to main screen
         },
       );
     }

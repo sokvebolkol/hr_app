@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/attendance_model.dart';
 import '../services/global_service.dart';
 
@@ -79,6 +81,209 @@ class AttendanceRepository {
     } catch (e) {
       print('Error in clockInOut: $e');
       throw Exception('Error during clock in/out: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getAttendanceForAdjustment() async {
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      final token = pref.getString("token");
+
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final requestBody = {
+        "start_date": "2026-01-07",
+        "end_date": "2026-02-09",
+        "is_request_adjustment_att_screen": true,
+      };
+
+      print('Fetching attendance for adjustment...');
+      print('Request Body: ${json.encode(requestBody)}');
+
+      final response = await http.post(
+        Uri.parse('${_serverService.baseUrl}attendance/all'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+
+      print('Attendance For Adjustment Response: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        try {
+          final errorData = json.decode(response.body);
+          throw Exception(
+            errorData['message'] ?? 'Failed to load attendance data',
+          );
+        } catch (_) {
+          throw Exception('Server error: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      print('Error in getAttendanceForAdjustment: $e');
+      throw Exception('Error loading attendance data: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> submitAdjustmentRequest({
+    required String dateScan,
+    required String adjustType,
+    required String reason,
+    XFile? attachmentImage,
+  }) async {
+    print('Submitting adjustment request with data:');
+    print('Date Scan: $dateScan');
+    print('Adjust Type: $adjustType');
+    print('Reason: $reason');
+    if (attachmentImage != null) {
+      print('Attachment Image: ${attachmentImage.path}');
+    }
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      final token = pref.getString("token");
+
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      // Use multipart request if there's an image attachment
+      if (attachmentImage != null) {
+        return await _submitWithAttachment(
+          dateScan: dateScan,
+          adjustType: adjustType,
+          reason: reason,
+          attachmentImage: attachmentImage,
+          token: token,
+        );
+      } else {
+        return await _submitWithoutAttachment(
+          dateScan: dateScan,
+          adjustType: adjustType,
+          reason: reason,
+          token: token,
+        );
+      }
+    } catch (e) {
+      print('Error in submitAdjustmentRequest: $e');
+      throw Exception('Error submitting adjustment request: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> _submitWithAttachment({
+    required String dateScan,
+    required String adjustType,
+    required String reason,
+    required XFile attachmentImage,
+    required String token,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${_serverService.baseUrl}attendance/submit-adjustment'),
+      );
+
+      // Add headers
+      request.headers.addAll({
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      });
+
+      // Add form fields
+      request.fields.addAll({
+        'date_scan': dateScan,
+        'adjust_type': adjustType,
+        'reason': reason,
+      });
+
+      // Add attachment file
+      final file = File(attachmentImage.path);
+      if (await file.exists()) {
+        try {
+          final multipartFile = await http.MultipartFile.fromPath(
+            'adjustment_support_doc',
+            file.path,
+          );
+          request.files.add(multipartFile);
+        } catch (fileError) {
+          throw Exception('Failed to prepare attachment for upload');
+        }
+      } else {
+        throw Exception('Attachment file does not exist');
+      }
+
+      print('Sending multipart adjustment request...');
+      print('Fields: ${request.fields}');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = json.decode(response.body);
+
+      print('Adjustment Response: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Failed to submit adjustment request',
+        );
+      }
+    } catch (e) {
+      print('Error in _submitWithAttachment: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> _submitWithoutAttachment({
+    required String dateScan,
+    required String adjustType,
+    required String reason,
+    required String token,
+  }) async {
+    try {
+      final requestBody = {
+        'date_scan': dateScan,
+        'adjust_type': adjustType,
+        'reason': reason,
+      };
+
+      print('Sending adjustment request...');
+      print('Request Body: ${json.encode(requestBody)}');
+
+      final response = await http.post(
+        Uri.parse('${_serverService.baseUrl}attendance/submit-adjustment'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+
+      print('Adjustment Response: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        try {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['message'] ?? 'Adjustment request failed');
+        } catch (_) {
+          throw Exception('Server error: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      print('Error in _submitWithoutAttachment: $e');
+      rethrow;
     }
   }
 }
