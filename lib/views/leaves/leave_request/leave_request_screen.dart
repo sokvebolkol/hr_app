@@ -7,6 +7,8 @@ import '../../../constants/constant.dart';
 import '../../../repositories/leave_request_repository.dart';
 import '../../../models/leave_type_model.dart';
 import '../../../models/approver_model.dart';
+import '../../../localization/language.dart';
+import '../../../localization/language_logic.dart';
 
 class LeaveRequestScreen extends StatefulWidget {
   const LeaveRequestScreen({super.key});
@@ -18,6 +20,7 @@ class LeaveRequestScreen extends StatefulWidget {
 class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   final _formKey = GlobalKey<FormState>();
   final LeaveRequestRepository _repository = LeaveRequestRepository();
+  Language language = Language();
 
   // ✅ File size limit constant
   static const int maxFileSizeInBytes = 5 * 1024 * 1024; // 5MB
@@ -46,7 +49,18 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     _fetchLeaveRequestData();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   Future<void> _fetchLeaveRequestData() async {
@@ -122,7 +136,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   }
 
   String get leaveDateLabel {
-    if (leaveDateRange == null) return 'Select date range';
+    if (leaveDateRange == null) return language.selectDateRange;
     final start = DateFormat('yyyy-MM-dd').format(leaveDateRange!.start);
     final end = DateFormat('yyyy-MM-dd').format(leaveDateRange!.end);
     return start == end ? start : '$start to $end';
@@ -172,8 +186,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     if ((selectedLeaveType?.requiresDocument ?? false) &&
         documentPhoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Document support is required for this leave type'),
+        SnackBar(
+          content: Text(language.documentSupportRequired),
           backgroundColor: Colors.red,
         ),
       );
@@ -187,8 +201,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       // Check if file exists
       if (!await file.exists()) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Selected file does not exist. Please select again.'),
+          SnackBar(
+            content: Text(language.selectedFileNotExist),
             backgroundColor: Colors.red,
           ),
         );
@@ -198,10 +212,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       // Validate file type
       if (!_repository.isValidImageFile(file)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please select a valid image file (JPG, JPEG, PNG, PDF)',
-            ),
+          SnackBar(
+            content: Text(language.pleaseSelectValidImageFile),
             backgroundColor: Colors.red,
           ),
         );
@@ -211,8 +223,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       // Validate file size
       if (!await _repository.isValidFileSize(file)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('File size must be less than 5MB'),
+          SnackBar(
+            content: Text(language.fileSizeTooLarge),
             backgroundColor: Colors.red,
           ),
         );
@@ -311,8 +323,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               const SizedBox(height: 24),
 
               // Success Title
-              const Text(
-                'Success!',
+              Text(
+                language.success,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -349,8 +361,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'OK',
+                child: Text(
+                  language.ok,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -395,8 +407,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               const SizedBox(height: 24),
 
               // Error Title
-              const Text(
-                'Request Failed',
+              Text(
+                language.requestFailed,
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -432,8 +444,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         side: BorderSide(color: Colors.grey.shade300),
                       ),
                     ),
-                    child: const Text(
-                      'Cancel',
+                    child: Text(
+                      language.cancel,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -456,8 +468,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Retry',
+                    child: Text(
+                      language.retry,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -488,22 +500,21 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           return;
         }
       }
-
       if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,
           builder:
-              (context) => const Center(
+              (context) => Center(
                 child: Card(
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(16),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
-                        Text("Processing image..."),
+                        Text(language.processingImage),
                       ],
                     ),
                   ),
@@ -567,7 +578,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       if (finalFileSize > maxFileSizeInBytes) {
         if (mounted) Navigator.pop(context);
         _showSnackBar(
-          "File too large (${(finalFileSize / 1024 / 1024).toStringAsFixed(1)} MB). Max: 5MB\nPlease choose a smaller image.",
+          "${language.fileTooLarge} (${(finalFileSize / 1024 / 1024).toStringAsFixed(1)} MB). ${language.maxSize}",
           Colors.red,
           Icons.error_outline,
         );
@@ -582,7 +593,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         final sizeInMB = (finalFileSize / 1024 / 1024).toStringAsFixed(1);
 
         _showSnackBar(
-          "Photo selected (${finalFileSize > 1024 * 1024 ? '$sizeInMB MB' : '$sizeInKB KB'})",
+          "${language.photoSelected} (${finalFileSize > 1024 * 1024 ? '$sizeInMB MB' : '$sizeInKB KB'})",
           Colors.green,
           Icons.check_circle,
         );
@@ -692,8 +703,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "Select Photo Source",
+                      Text(
+                        language.selectPhotoSource,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -715,12 +726,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                       ),
                       child: const Icon(Icons.camera_alt, color: Colors.blue),
                     ),
-                    title: const Text(
-                      "Camera",
+                    title: Text(
+                      language.camera,
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: const Text(
-                      "Take a new photo",
+                    subtitle: Text(
+                      language.takeANewPhoto,
                       style: TextStyle(fontSize: 12),
                     ),
                     onTap: () {
@@ -741,12 +752,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         color: Colors.green,
                       ),
                     ),
-                    title: const Text(
-                      "Gallery",
+                    title: Text(
+                      language.gallery,
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: const Text(
-                      "Choose from photos",
+                    subtitle: Text(
+                      language.chooseFromPhotos,
                       style: TextStyle(fontSize: 12),
                     ),
                     onTap: () {
@@ -765,19 +776,19 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         ),
                         child: const Icon(Icons.delete, color: Colors.red),
                       ),
-                      title: const Text(
-                        "Remove Photo",
+                      title: Text(
+                        language.removePhoto,
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      subtitle: const Text(
-                        "Clear selected photo",
+                      subtitle: Text(
+                        language.clearSelectedPhoto,
                         style: TextStyle(fontSize: 12),
                       ),
                       onTap: () {
                         Navigator.pop(context);
                         setState(() => documentPhoto = null);
                         _showSnackBar(
-                          "Photo removed",
+                          language.photoRemoved,
                           Colors.orange,
                           Icons.delete,
                         );
@@ -819,20 +830,20 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Leave Request"),
+        title: Text(language.leaveRequest),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
       body:
           isLoading
-              ? const Center(
+              ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(color: primary),
                     SizedBox(height: 16),
-                    Text('Loading leave request data...'),
+                    Text(language.loadingLeaveRequestData),
                   ],
                 ),
               )
@@ -848,7 +859,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Error loading data',
+                      language.errorLoadingData,
                       style: TextStyle(fontSize: 18, color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 8),
@@ -860,7 +871,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _fetchLeaveRequestData,
-                      child: const Text('Retry'),
+                      child: Text(language.retry),
                     ),
                   ],
                 ),
@@ -902,7 +913,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         Icon(Icons.category, color: primary),
                                         const SizedBox(width: 8),
                                         Text(
-                                          "Leave Type",
+                                          language.leaveType,
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: fontSizeLabel,
@@ -929,7 +940,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                               horizontal: 12,
                                               vertical: 10,
                                             ),
-                                        hintText: 'Select leave type',
+                                        hintText: language.selectLeaveType,
                                       ),
                                       isExpanded: true,
                                       items:
@@ -963,7 +974,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                       validator:
                                           (val) =>
                                               val == null
-                                                  ? 'Please select leave type'
+                                                  ? language
+                                                      .pleaseSelectLeaveType
                                                   : null,
                                     ),
                                     SizedBox(height: isWide ? 24 : 18),
@@ -974,7 +986,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         Icon(Icons.date_range, color: primary),
                                         const SizedBox(width: 8),
                                         Text(
-                                          "Leave Date",
+                                          language.leaveDate,
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: fontSizeLabel,
@@ -1007,7 +1019,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         child: TextFormField(
                                           readOnly: true,
                                           decoration: InputDecoration(
-                                            hintText: 'Select date range',
+                                            hintText: language.selectDateRange,
                                             border: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(12),
@@ -1029,7 +1041,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           validator:
                                               (_) =>
                                                   leaveDateRange == null
-                                                      ? 'Please select leave date'
+                                                      ? language
+                                                          .pleaseSelectLeaveDate
                                                       : null,
                                         ),
                                       ),
@@ -1062,7 +1075,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                               backgroundColor: primary
                                                   .withOpacity(0.1),
                                               label: Text(
-                                                "${totalLeaveDays % 1 == 0 ? totalLeaveDays.toInt() : totalLeaveDays} day${totalLeaveDays > 1 ? 's' : ''}",
+                                                "${totalLeaveDays % 1 == 0 ? totalLeaveDays.toInt() : totalLeaveDays} ${totalLeaveDays > 1 ? language.days : language.day}",
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   color: primary,
@@ -1080,7 +1093,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         Icon(Icons.timelapse, color: primary),
                                         const SizedBox(width: 8),
                                         Text(
-                                          "Leave For",
+                                          language.leaveFor,
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: fontSizeLabel,
@@ -1093,7 +1106,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                       children: [
                                         Expanded(
                                           child: RadioListTile<String>(
-                                            title: const Text('Full Day'),
+                                            title: Text(language.fullDay),
                                             value: 'Full Day',
                                             groupValue: leaveFor,
                                             onChanged:
@@ -1104,7 +1117,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         ),
                                         Expanded(
                                           child: RadioListTile<String>(
-                                            title: const Text('Half Day'),
+                                            title: Text(language.halfDay),
                                             value: 'Half Day',
                                             groupValue: leaveFor,
                                             onChanged:
@@ -1124,7 +1137,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           Icon(Icons.wb_sunny, color: primary),
                                           const SizedBox(width: 8),
                                           Text(
-                                            "Leave Note",
+                                            language.leaveNote,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: fontSizeLabel,
@@ -1137,7 +1150,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         children: [
                                           Expanded(
                                             child: RadioListTile<String>(
-                                              title: const Text('Morning'),
+                                              title: Text(language.morning),
                                               value: 'Morning',
                                               groupValue: halfDaySession,
                                               onChanged:
@@ -1148,7 +1161,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           ),
                                           Expanded(
                                             child: RadioListTile<String>(
-                                              title: const Text('Afternoon'),
+                                              title: Text(language.afternoon),
                                               value: 'Afternoon',
                                               groupValue: halfDaySession,
                                               onChanged:
@@ -1168,7 +1181,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         Icon(Icons.edit_note, color: primary),
                                         const SizedBox(width: 8),
                                         Text(
-                                          "Reason",
+                                          language.reason,
                                           style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: fontSizeLabel,
@@ -1180,7 +1193,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                     TextFormField(
                                       maxLines: 3,
                                       decoration: InputDecoration(
-                                        hintText: "Enter your reason",
+                                        hintText: language.enterYourReason,
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                             12,
@@ -1197,7 +1210,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                       validator:
                                           (val) =>
                                               val == null || val.isEmpty
-                                                  ? 'Please enter reason'
+                                                  ? language.pleaseEnterReason
                                                   : null,
                                     ),
                                     SizedBox(height: isWide ? 24 : 18),
@@ -1214,7 +1227,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
-                                            "Document Support",
+                                            language.documentSupport,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: fontSizeLabel,
@@ -1227,14 +1240,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                               icon: const Icon(
                                                 Icons.visibility,
                                               ),
-                                              label: const Text("View Sample"),
+                                              label: Text(language.viewSample),
                                               onPressed: () {
                                                 showDialog(
                                                   context: context,
                                                   builder:
                                                       (context) => AlertDialog(
-                                                        title: const Text(
-                                                          "Sample Document",
+                                                        title: Text(
+                                                          language
+                                                              .sampleDocument,
                                                         ),
                                                         content: Image.network(
                                                           selectedLeaveType!
@@ -1253,7 +1267,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                             error,
                                                             stackTrace,
                                                           ) {
-                                                            return const Column(
+                                                            return Column(
                                                               mainAxisSize:
                                                                   MainAxisSize
                                                                       .min,
@@ -1269,7 +1283,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                                   height: 8,
                                                                 ),
                                                                 Text(
-                                                                  'Failed to load sample document',
+                                                                  language
+                                                                      .failedToLoadSampleDocument,
                                                                 ),
                                                               ],
                                                             );
@@ -1282,8 +1297,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                                     Navigator.pop(
                                                                       context,
                                                                     ),
-                                                            child: const Text(
-                                                              "Close",
+                                                            child: Text(
+                                                              language.close,
                                                             ),
                                                           ),
                                                         ],
@@ -1300,7 +1315,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                             child:
                                                 documentPhoto == null
                                                     ? Text(
-                                                      "No photo selected",
+                                                      language.noPhotoSelected,
                                                       style: TextStyle(
                                                         color: Colors.black54,
                                                         fontStyle:
@@ -1325,7 +1340,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                           width: 8,
                                                         ),
                                                         Text(
-                                                          "Photo selected",
+                                                          language
+                                                              .photoSelected,
                                                           style: TextStyle(
                                                             color: Colors.green,
                                                             fontWeight:
@@ -1341,7 +1357,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           ),
                                           TextButton.icon(
                                             icon: const Icon(Icons.upload_file),
-                                            label: const Text("Upload Photo"),
+                                            label: Text(language.uploadPhoto),
                                             onPressed: () => _showImagePicker(),
                                           ),
                                         ],
@@ -1376,7 +1392,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    "Approvers (${approvers.length})",
+                                                    language.approvers,
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.w700,
@@ -1507,7 +1523,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         )
                                         : const Icon(Icons.send),
                                 label: Text(
-                                  isSubmitting ? "Submitting..." : "Submit",
+                                  isSubmitting
+                                      ? language.submitting
+                                      : language.submit,
                                 ),
                                 onPressed:
                                     isSubmitting ? null : _submitLeaveRequest,

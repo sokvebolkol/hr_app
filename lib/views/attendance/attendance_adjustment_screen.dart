@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../models/attendance_adjustment_model.dart';
 import '../../viewmodels/attendance_adjustment_viewmodel.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import 'attendance_adjustment_detail_screen.dart';
 
 class AttendanceAdjustmentScreen extends StatefulWidget {
@@ -18,6 +21,23 @@ class _AttendanceAdjustmentScreenState
   AttendanceMissing? _selectedAttendance;
   String _selectedAdjustmentType = '';
   AttendanceAdjustmentViewModel? _viewModel;
+  Language language = Language();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +50,7 @@ class _AttendanceAdjustmentScreenState
       child: Scaffold(
         backgroundColor: Colors.grey[100],
         appBar: AppBar(
-          title: const Text('Adjustment Request'),
+          title: Text(language.adjustmentRequest),
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
@@ -42,9 +62,7 @@ class _AttendanceAdjustmentScreenState
         body: Consumer<AttendanceAdjustmentViewModel>(
           builder: (context, viewModel, child) {
             if (viewModel.isLoading && viewModel.data == null) {
-              return const Center(
-                child: CircularProgressIndicator(color: primary),
-              );
+              return const Center(child: SpinKitFadingCircle(color: primary));
             }
 
             if (viewModel.errorMessage.isNotEmpty && viewModel.data == null) {
@@ -69,7 +87,7 @@ class _AttendanceAdjustmentScreenState
                             );
                         viewModel.refresh();
                       },
-                      child: const Text('Retry'),
+                      child: Text(language.retry),
                     ),
                   ],
                 ),
@@ -91,11 +109,11 @@ class _AttendanceAdjustmentScreenState
           // Request Limit Header - Fancy version
           if (viewModel.data?.requestLimit != null)
             _buildFancyRequestLimitCard(viewModel),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Select date for adjustment *',
-              style: TextStyle(
+              language.selectDateForAdjustment,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
@@ -121,10 +139,10 @@ class _AttendanceAdjustmentScreenState
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'No attendance records found',
-            style: TextStyle(color: Colors.grey),
+            language.noAttendanceRecordsFound,
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
       );
@@ -361,9 +379,9 @@ class _AttendanceAdjustmentScreenState
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           disabledBackgroundColor: Colors.grey[300],
         ),
-        child: const Text(
-          'Request',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        child: Text(
+          language.request,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -463,7 +481,7 @@ class _AttendanceAdjustmentScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Monthly Request Limit',
+                        language.monthlyRequestLimit,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

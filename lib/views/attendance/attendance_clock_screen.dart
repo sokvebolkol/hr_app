@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/attendance_clock_viewmodel.dart';
 import '../../models/attendance_model.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
+import '../../widgets/date_section.dart';
 
 class AttendanceClock extends StatefulWidget {
   const AttendanceClock({super.key});
@@ -18,10 +21,12 @@ class _AttendanceClockState extends State<AttendanceClock>
   late AttendanceClockViewModel _viewModel;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  Language language = Language();
 
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     _viewModel = AttendanceClockViewModel();
     _viewModel.initialize();
 
@@ -34,6 +39,16 @@ class _AttendanceClockState extends State<AttendanceClock>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     _pulseController.repeat(reverse: true);
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -69,8 +84,8 @@ class _AttendanceClockState extends State<AttendanceClock>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text(
-        'Attendance Clock',
+      title: Text(
+        language.attendanceClock,
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       backgroundColor: primary,
@@ -148,9 +163,9 @@ class _AttendanceClockState extends State<AttendanceClock>
       child: Card(
         elevation: 0,
         color: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               Row(
@@ -251,16 +266,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                           size: 18,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          DateFormat(
-                            'EEEE, MMMM dd, yyyy',
-                          ).format(DateTime.now()),
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        DateSection(),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -293,7 +299,7 @@ class _AttendanceClockState extends State<AttendanceClock>
     if (isFingerprinted && nextClockType == 'Out') {
       return Container(
         child: Text(
-          'You have already scanned your fingerprint on the machine',
+          language.alreadyScannedFingerprint,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w400,
@@ -328,8 +334,8 @@ class _AttendanceClockState extends State<AttendanceClock>
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Select Branch',
+                  Text(
+                    language.selectBranch,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -354,9 +360,9 @@ class _AttendanceClockState extends State<AttendanceClock>
                     children: [
                       Icon(Icons.warning_rounded, color: secondary, size: 24),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'No branches have coordinate data available',
+                          language.noBranchesHaveCoordinateData,
                           style: TextStyle(
                             color: secondary,
                             fontWeight: FontWeight.w600,
@@ -452,7 +458,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                                     ),
                                     if (!hasCoordinates)
                                       Text(
-                                        'No coordinates available',
+                                        language.noCoordinatesAvailable,
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: secondary,
@@ -577,7 +583,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                   child: TextButton.icon(
                     onPressed: () => viewModel.refreshLocation(),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('Refresh Location'),
+                    label: Text(language.refreshLocation),
                     style: TextButton.styleFrom(
                       foregroundColor: primary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -628,7 +634,9 @@ class _AttendanceClockState extends State<AttendanceClock>
                         )
                         : const Icon(Icons.login_rounded, size: 28),
                 label: Text(
-                  viewModel.isClockingInOut ? 'Processing...' : 'Clock In',
+                  viewModel.isClockingInOut
+                      ? language.processing
+                      : language.clockIn,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -734,8 +742,8 @@ class _AttendanceClockState extends State<AttendanceClock>
             children: [
               Row(
                 children: [
-                  const Text(
-                    "Today's Attendance",
+                  Text(
+                    language.todayAttendance,
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -811,7 +819,9 @@ class _AttendanceClockState extends State<AttendanceClock>
                               Row(
                                 children: [
                                   Text(
-                                    'Clock ${record.clockType}',
+                                    record.clockType == 'In'
+                                        ? language.checkIn
+                                        : language.checkOut,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -904,8 +914,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Something went wrong',
+              Text(
+                language.somethingWentWrong,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
@@ -927,7 +937,7 @@ class _AttendanceClockState extends State<AttendanceClock>
                     viewModel.loadAttendanceData();
                   },
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
+                  label: Text(language.tryAgain),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
@@ -998,8 +1008,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Success!',
+                Text(
+                  language.success,
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
@@ -1021,8 +1031,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'OK',
+                    child: Text(
+                      language.ok,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -1071,8 +1081,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Error',
+                Text(
+                  language.error,
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
@@ -1094,8 +1104,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      'OK',
+                    child: Text(
+                      language.ok,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

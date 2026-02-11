@@ -3,6 +3,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../viewmodels/attendance_calendar_viewmodel.dart';
 import '../../models/attendance_calendar_model.dart';
 
@@ -16,18 +18,35 @@ class AttendanceCalendarScreen extends StatefulWidget {
 
 class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
   late AttendanceCalendarViewModel _viewModel;
+  late Language language;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
 
   @override
   void initState() {
     super.initState();
     _viewModel = AttendanceCalendarViewModel();
     _viewModel.initialize();
+    _initializeLanguage();
   }
 
   @override
   void dispose() {
     // Don't manually dispose _viewModel here as ChangeNotifierProvider will handle it
     super.dispose();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -56,9 +75,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text(
-        'Attendance Report',
-        style: TextStyle(fontWeight: FontWeight.bold),
+      title: Text(
+        language.attendanceReport,
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       backgroundColor: primary,
       foregroundColor: Colors.white,
@@ -129,9 +148,12 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Error Loading Report',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                language.errorLoadingReport,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
@@ -152,7 +174,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     viewModel.loadCurrentMonthAttendance();
                   },
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
+                  label: Text(language.tryAgain),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
@@ -239,23 +261,26 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Monthly Summary',
-                        style: TextStyle(
+                        language.monthlySummary,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Your attendance overview',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        language.yourAttendanceOverview,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -270,7 +295,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${summary.totalDays} Days',
+                    '${summary.totalDays} ${language.days}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -291,7 +316,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                   children: [
                     Expanded(
                       child: _buildStatItem(
-                        'Present',
+                        language.present,
                         statusCounts['Present'].toString(),
                         Icons.check_circle_rounded,
                         Colors.green,
@@ -300,7 +325,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildStatItem(
-                        'Absent',
+                        language.absent,
                         statusCounts['Absent'].toString(),
                         Icons.cancel_rounded,
                         Colors.red,
@@ -313,7 +338,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                   children: [
                     Expanded(
                       child: _buildStatItem(
-                        'Late',
+                        language.late,
                         statusCounts['Late'].toString(),
                         Icons.access_time_rounded,
                         Colors.orange,
@@ -322,7 +347,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildStatItem(
-                        'Leave',
+                        language.leave,
                         statusCounts['On Leave'].toString(),
                         Icons.beach_access_rounded,
                         Colors.blue,
@@ -416,7 +441,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
           Icon(Icons.date_range_rounded, color: primary, size: 20),
           const SizedBox(width: 8),
           Text(
-            'Period: ',
+            '${language.period}: ',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Colors.grey[700],
@@ -429,7 +454,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
             ),
           ),
           Text(
-            '${summary.totalDays} days',
+            '${summary.totalDays} ${language.days}',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[600],
@@ -458,7 +483,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'No attendance data found',
+                language.noAttendanceDataFound,
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.grey[600],
@@ -503,9 +528,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
               children: [
                 Icon(Icons.table_chart_rounded, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
-                const Text(
-                  'Attendance Report',
-                  style: TextStyle(
+                Text(
+                  language.attendanceReport,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -513,7 +538,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                 ),
                 const Spacer(),
                 Text(
-                  '${reports.length} records',
+                  '${reports.length} ${language.records}',
                   style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ],
@@ -538,41 +563,56 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                     color: primary,
                     fontSize: 11,
                   ),
-                  columns: const [
+                  columns: [
                     DataColumn(
                       label: SizedBox(
                         width: 25,
-                        child: Text('Date', textAlign: TextAlign.center),
+                        child: Text(language.date, textAlign: TextAlign.center),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
                         width: 55,
-                        child: Text('Finger In', textAlign: TextAlign.center),
+                        child: Text(
+                          language.fingerIn,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
                         width: 55,
-                        child: Text('Finger Out', textAlign: TextAlign.center),
+                        child: Text(
+                          language.fingerOut,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
                         width: 55,
-                        child: Text('Clock In', textAlign: TextAlign.center),
+                        child: Text(
+                          language.clockIn,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
                         width: 55,
-                        child: Text('Clock Out', textAlign: TextAlign.center),
+                        child: Text(
+                          language.clockOut,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                     DataColumn(
                       label: SizedBox(
                         width: 65,
-                        child: Text('Status', textAlign: TextAlign.center),
+                        child: Text(
+                          language.status,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                   ],
@@ -679,7 +719,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
           Icon(icon, size: 14, color: Colors.grey[400]),
           const SizedBox(height: 2),
           Text(
-            'N/A',
+            language.notAvailable,
             style: TextStyle(
               fontSize: 10,
               color: Colors.grey[500],

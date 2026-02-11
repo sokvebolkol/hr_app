@@ -5,7 +5,10 @@ import '../localization/language.dart';
 import '../localization/language_logic.dart';
 
 class DateSection extends StatefulWidget {
-  const DateSection({super.key});
+  final DateTime? date;
+  final TextStyle? style;
+
+  const DateSection({super.key, this.date, this.style});
 
   @override
   State<DateSection> createState() => _DateSectionState();
@@ -43,24 +46,27 @@ class _DateSectionState extends State<DateSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isInitialized ? _getFormattedDate() : '',
-          style: const TextStyle(
-            fontSize: 16.0,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
+          _isInitialized ? _getFormattedDate(widget.date) : '',
+          style:
+              widget.style ??
+              const TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
         ),
       ],
     );
   }
 
-  String _getFormattedDate() {
+  String _getFormattedDate([DateTime? date]) {
+    DateTime targetDate = date ?? DateTime.now();
     if (language.code == 'KH') {
       // Khmer date format
-      return "ថ្ងៃ${DateFormat('EEEE, d MMMM y', 'km').format(DateTime.now())}";
+      return "ថ្ងៃ${DateFormat('EEEE, d MMMM y', 'km').format(targetDate)}";
     } else {
       // English date format
-      return DateFormat('EEEE, dd MMMM yyyy').format(DateTime.now());
+      return DateFormat('EEEE, dd MMMM yyyy').format(targetDate);
     }
   }
 }

@@ -4,13 +4,21 @@ import 'custom_progress_bar.dart';
 
 class AnnualLeaveBalanceWidget extends StatelessWidget {
   final String usedLeave;
+  final String title;
+  final String viewDetailsText;
   final String availableLeave;
+  final String usedLeaveText;
+  final String availableLeaveText;
   final VoidCallback? onViewDetails;
 
   const AnnualLeaveBalanceWidget({
     super.key,
     required this.usedLeave,
+    required this.title,
+    required this.viewDetailsText,
     required this.availableLeave,
+    required this.usedLeaveText,
+    required this.availableLeaveText,
     this.onViewDetails,
   });
 
@@ -33,8 +41,8 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Remaining Leave Balance',
+              Text(
+                title,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -43,8 +51,8 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
               ),
               TextButton(
                 onPressed: onViewDetails,
-                child: const Text(
-                  'View Details >',
+                child: Text(
+                  viewDetailsText,
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ),
@@ -80,7 +88,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 16),
                                   Text(
-                                    'Used Leave: $usedLeave days',
+                                    '$usedLeaveText: $usedLeave days',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,
@@ -103,7 +111,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 16),
                                   Text(
-                                    'Available Leave: $availableLeave days',
+                                    '$availableLeaveText: $availableLeave days',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.white,

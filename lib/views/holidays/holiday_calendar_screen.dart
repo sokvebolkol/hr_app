@@ -3,6 +3,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../models/holiday_model.dart';
 import '../../repositories/holiday_repository.dart';
 
@@ -20,6 +22,8 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
   DateTime? _selectedDay;
   bool _isLoading = true;
 
+  Language language = Language();
+
   List<HolidayModel> _currentMonthHolidays = [];
 
   bool isCeoUser = false;
@@ -31,6 +35,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
     super.initState();
     _loadHolidays();
     _checkUserRole();
+    _initializeLanguage();
   }
 
   Future<void> _loadHolidays() async {
@@ -45,6 +50,16 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
     } finally {
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
       });
     }
   }
@@ -115,7 +130,10 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                     }
                   },
                 ),
-        title: const Text("Calendar", style: TextStyle(color: Colors.white)),
+        title: Text(
+          language.calendar,
+          style: const TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
       ),
       body:
@@ -236,8 +254,8 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                             width: MediaQuery.of(context).size.width,
                             height: 56,
                             color: themeColor,
-                            child: const Text(
-                              "Holidays",
+                            child: Text(
+                              language.holidays,
                               textAlign: TextAlign.start,
                               style: TextStyle(
                                 color: Colors.white,

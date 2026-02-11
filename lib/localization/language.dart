@@ -254,6 +254,150 @@ class Language {
   String get october => "October";
   String get november => "November";
   String get december => "December";
+
+  // Attendance Adjustment
+  String get adjustmentRequest => "Adjustment Request";
+  String get selectDateForAdjustment => "Select date for adjustment *";
+  String get noAttendanceRecordsFound => "No attendance records found";
+  String get request => "Request";
+  String get monthlyRequestLimit => "Monthly Request Limit";
+  String get missedScan => "Missed scan";
+  String get leaveEarly => "Leave early";
+  String get lateScan => "Late scan";
+  String get noCheckOut => "No Check-Out";
+  String get requestLimit => "Request Limit";
+  String get requestsRemaining => "requests remaining";
+  String get requestsUsed => "requests used";
+  String get cannotRequestMore => "Cannot request more this month";
+  String get attendanceAdjustment => "Attendance Adjustment";
+
+  // Dashboard Functions
+  String get clockInOut => "Clock In | Out";
+  String get attendanceLogs => "Attendance Logs";
+  String get attendanceRequests => "Attendance Requests";
+
+  // Attendance Report Screen
+  String get attendanceReport => "Attendance Report";
+  String get monthlySummary => "Monthly Summary";
+  String get yourAttendanceOverview => "Your attendance overview";
+  String get days => "Days";
+  String get period => "Period";
+  String get errorLoadingReport => "Error Loading Report";
+  String get noAttendanceDataFound => "No attendance data found";
+  String get records => "records";
+  String get date => "Date";
+  String get fingerIn => "Finger In";
+  String get fingerOut => "Finger Out";
+  String get clockIn => "Clock In";
+  String get clockOut => "Clock Out";
+  String get status => "Status";
+  String get notAvailable => "N/A";
+  String get historyRequests => "History Requests";
+  String get holidays => "Holidays";
+  String get recentlyLeaveRequest => "Recently Leave Request";
+  String get requestSubmitted => "Request submitted successfully";
+  String get requestFailed => "Failed to submit request";
+  String get pleaseProvideReason =>
+      "Please provide a reason for the adjustment request";
+  String get confirmAdjustmentRequest => "Confirm Adjustment Request";
+  String get reviewRequestDetails =>
+      "Please review your request details before submitting";
+  String get adjustmentType => "Adjustment Type";
+  String get reason => "Reason";
+  String get attachment => "Attachment";
+  String get photoAttached => "Photo attached";
+  String get submittingRequest => "Submitting Request";
+  String get pleaseWaitProcessing =>
+      "Please wait while we process your adjustment request";
+  String get submitRequest => "Submit Request";
+
+  // Additional UI strings for attendance adjustment detail screen
+  String get checkIn => "Check In";
+  String get checkOut => "Check Out";
+  String get reasonRequired => "Reason *";
+  String get provideDetailedReason =>
+      "Please provide a detailed reason for your adjustment request...";
+  String get optional => "Optional";
+  String get uploadPhoto => "Upload Photo";
+  String get tapToSelectPhoto => "Tap to select photo from camera or gallery";
+  String get photoSelected => "Photo selected";
+  String get readyToSubmit => "Ready to submit";
+  String get change => "Change";
+  String get approvers => "Approvers";
+  String get noApproversAssigned => "No approvers assigned";
+  String get selectPhotoSource => "Select Photo Source";
+  String get takeNewPhoto => "Take a new photo";
+  String get chooseFromGallery => "Choose from gallery";
+  String get takeFromPhoto => "Take from photo";
+  String get removePhoto => "Remove Photo";
+  String get clearSelectedPhoto => "Clear selected photo";
+  String get photoRemoved => "Photo removed";
+
+  // Attendance Clock screen strings
+  String get attendanceClock => "Attendance Clock";
+  String get selectBranch => "Select Branch";
+  String get noBranchesHaveCoordinateData =>
+      "No branches have coordinate data available";
+  String get noCoordinatesAvailable => "No coordinates available";
+  String get refreshLocation => "Refresh Location";
+  String get alreadyScannedFingerprint =>
+      "You have already scanned your fingerprint on the machine";
+  String get processing => "Processing...";
+  String get todayAttendance => "Today's Attendance";
+  String get somethingWentWrong => "Something went wrong";
+  String get success => "Success!";
+
+  // Leave Request screen strings
+  String get leaveRequest => "Leave Request";
+  String get loadingLeaveRequestData => "Loading leave request data...";
+  String get leaveType => "Leave Type";
+  String get selectLeaveType => "Select leave type";
+  String get pleaseSelectLeaveType => "Please select leave type";
+  String get leaveDate => "Leave Date";
+  String get pleaseSelectLeaveDate => "Please select leave date";
+  String get totalLeave => "Total Leave";
+  String get day => "day";
+  String get leaveFor => "Leave For";
+  String get leaveNote => "Leave Note";
+  String get enterYourReason => "Enter your reason";
+  String get pleaseEnterReason => "Please enter reason";
+  String get documentSupport => "Document Support";
+  String get viewSample => "View Sample";
+  String get sampleDocument => "Sample Document";
+  String get failedToLoadSampleDocument => "Failed to load sample document";
+  String get close => "Close";
+  String get noPhotoSelected => "No photo selected";
+  String get submit => "Submit";
+  String get submitting => "Submitting...";
+  String get takeANewPhoto => "Take a new photo";
+  String get chooseFromPhotos => "Choose from photos";
+  String get processingImage => "Processing image...";
+  String get documentSupportRequired =>
+      "Document support is required for this leave type";
+  String get selectedFileNotExist =>
+      "Selected file does not exist. Please select again.";
+  String get pleaseSelectValidImageFile =>
+      "Please select a valid image file (JPG, JPEG, PNG, PDF)";
+  String get fileSizeTooLarge => "File size must be less than 5MB";
+  String get fileTooLarge => "File too large";
+  String get maxSize => "Max: 5MB\nPlease choose a smaller image.";
+  String get calendar => "Calendar";
+  String get total => "Total";
+  String get pending => "Pending";
+  String get leaveBalance => "Leave Balance";
+  String get annualLeaveSummary => "Annual Leave Summary";
+  String get used => "Used";
+  String get balance => "Balance";
+  String get entitlement => "Entitlement";
+  String get leaveBalanceDetails => "Leave Balance Details";
+  String get selectYear => "Select Year";
+  String get loadingLeaveBalance => "Loading leave balance...";
+  String get errorLoadingLeaveBalance => "Error loading leave balance";
+  String get daysUsed => "days used";
+  String get leaveRequestStatistics => "Leave Request Statistics";
+  String get remainingLeaveBalance => "Remaining Leave Balance";
+  String get usedLeave => "Used Leave";
+  String get availableLeave => "Available Leave";
 }
 
 class Khmer implements Language {
@@ -742,4 +886,274 @@ class Khmer implements Language {
   String get november => "វិច្ឆិកា";
   @override
   String get december => "ធ្នូ";
+
+  // Attendance Adjustment
+  @override
+  String get adjustmentRequest => "ស្នើសុំកែតម្រូវ";
+  @override
+  String get selectDateForAdjustment => "ជ្រើសរើសកាលបរិច្ឆេទសម្រាប់កែតម្រូវ *";
+  @override
+  String get noAttendanceRecordsFound => "មិនមានកំណត់ត្រាវត្តមាន";
+  @override
+  String get request => "ស្នើសុំ";
+  @override
+  String get monthlyRequestLimit => "កំណត់ការស្នើសុំប្រចាំខែ";
+  @override
+  String get missedScan => "ខកស្កេន";
+  @override
+  String get leaveEarly => "ចេញមុន";
+  @override
+  String get lateScan => "ស្កេនយឺត";
+  @override
+  String get noCheckOut => "មិនបានចេញ";
+  @override
+  String get requestLimit => "កំណត់ការស្នើសុំ";
+  @override
+  String get requestsRemaining => "ការស្នើសុំនៅសល់";
+  @override
+  String get requestsUsed => "ការស្នើសុំបានប្រើ";
+  @override
+  String get cannotRequestMore => "មិនអាចស្នើសុំបន្ថែមទៀតខែនេះ";
+  @override
+  String get attendanceAdjustment => "កែតម្រូវវត្តមាន";
+
+  // Dashboard Functions
+  @override
+  String get clockInOut => "ចូល | ចេញ";
+  @override
+  String get attendanceLogs => "កំណត់ត្រាវត្តមាន";
+  @override
+  String get attendanceRequests => "ស្នើសុំវត្តមាន";
+
+  // Attendance Report Screen
+  @override
+  String get attendanceReport => "របាយការណ៍វត្តមាន";
+  @override
+  String get monthlySummary => "សង្ខេបប្រចាំខែ";
+  @override
+  String get yourAttendanceOverview => "ទិដ្ឋភាពទូទៅវត្តមានរបស់អ្នក";
+  @override
+  String get days => "ថ្ងៃ";
+  @override
+  String get period => "រយៈពេល";
+  @override
+  String get errorLoadingReport => "កំហុសក្នុងការផ្ទុករបាយការណ៍";
+  @override
+  String get noAttendanceDataFound => "រកមិនឃើញទិន្នន័យវត្តមាន";
+  @override
+  String get records => "កំណត់ត្រា";
+  @override
+  String get date => "កាលបរិច្ឆេទ";
+  @override
+  String get fingerIn => "ចូលម្រាមដៃ";
+  @override
+  String get fingerOut => "ចេញម្រាមដៃ";
+  @override
+  String get clockIn => "ចូលការ";
+  @override
+  String get clockOut => "ចេញការ";
+  @override
+  String get status => "ស្ថានភាព";
+  @override
+  String get notAvailable => "គ្មាន";
+  @override
+  String get historyRequests => "ប្រវត្តិស្នើសុំ";
+  @override
+  String get holidays => "ថ្ងៃបុណ្យ";
+  @override
+  String get recentlyLeaveRequest => "ការស្នើសុំឈប់សម្រាកថ្មីៗ";
+  @override
+  String get requestSubmitted => "ការស្នើសុំត្រូវបានដាក់ស្នើដោយជោគជ័យ";
+  @override
+  String get requestFailed => "បរាជ័យក្នុងការដាក់ស្នើ";
+  @override
+  String get pleaseProvideReason => "សូមផ្តល់ហេតុផលសម្រាប់ការស្នើសុំកែតម្រូវ";
+  @override
+  String get confirmAdjustmentRequest => "បញ្ជាក់ការស្នើសុំកែតម្រូវ";
+  @override
+  String get reviewRequestDetails =>
+      "សូមពិនិត្យលម្អិតការស្នើសុំរបស់អ្នកមុនពេលដាក់ស្នើ";
+  @override
+  String get adjustmentType => "ប្រភេទកែតម្រូវ";
+  @override
+  String get reason => "មូលហេតុ";
+  @override
+  String get attachment => "ឯកសារភ្ជាប់";
+  @override
+  String get photoAttached => "រូបភាពបានភ្ជាប់";
+  @override
+  String get submittingRequest => "កំពុងដាក់ស្នើ";
+  @override
+  String get pleaseWaitProcessing =>
+      "សូមរង់ចាំ យើងកំពុងដំណើរការស្នើសុំកែតម្រូវរបស់អ្នក";
+  @override
+  String get submitRequest => "ដាក់ស្នើ";
+
+  // Additional UI strings for attendance adjustment detail screen
+  @override
+  String get checkIn => "ចូល";
+  @override
+  String get checkOut => "ចេញ";
+  @override
+  String get reasonRequired => "មូលហេតុ *";
+  @override
+  String get provideDetailedReason =>
+      "សូមផ្តល់ហេតុផលលម្អិតសម្រាប់កំណែទម្រង់មានវត្តមានរបស់អ្នក...";
+  @override
+  String get optional => "ជម្រើស";
+  @override
+  String get uploadPhoto => "ផ្ទុករូបភាព";
+  @override
+  String get tapToSelectPhoto => "ចុចដើម្បីជ្រើសរើសរូបថតពីកាមេរ៉ា ឬវិចិត្រសាល";
+  @override
+  String get photoSelected => "រូបថតត្រូវបានជ្រើសរើស";
+  @override
+  String get readyToSubmit => "រួចរាល់ដាក់ស្នើ";
+  @override
+  String get change => "ផ្លាស់ប្តូរ";
+  @override
+  String get approvers => "អ្នកអនុម័ត";
+  @override
+  String get noApproversAssigned => "មិនមានអ្នកអនុម័ត";
+  @override
+  String get selectPhotoSource => "ជ្រើសរើសប្រភពរូបភាព";
+  @override
+  String get takeNewPhoto => "ថតរូបថ្មី";
+  @override
+  String get chooseFromGallery => "ជ្រើសរើសពីវិចិត្រសាល";
+  @override
+  String get takeFromPhoto => "ថតពីរូបថត";
+  @override
+  String get removePhoto => "យករូបភាពចេញ";
+  @override
+  String get clearSelectedPhoto => "សម្អាតរូបភាពដែលបានជ្រើសរើស";
+  @override
+  String get photoRemoved => "រូបភាពត្រូវបានយកចេញ";
+
+  // Attendance Clock screen strings
+  @override
+  String get attendanceClock => "Clock វត្តមាន";
+  @override
+  String get selectBranch => "ជ្រើសរើសសាខា";
+  @override
+  String get noBranchesHaveCoordinateData => "គ្មានសាខាមានទិន្នន័យកូអរដោនេ";
+  @override
+  String get noCoordinatesAvailable => "គ្មានកូអរដោនេ";
+  @override
+  String get refreshLocation => "ធ្វើឱ្យទីតាំងទាន់សម័យ";
+  @override
+  String get alreadyScannedFingerprint =>
+      "អ្នកបានស្កែនស្នាមម្រាមដៃរបស់អ្នកនៅលើម៉ាស៊ីនហើយ";
+  @override
+  String get processing => "កំពុងដំណើរការ...";
+  @override
+  @override
+  String get todayAttendance => "វត្តមានថ្ងៃនេះ";
+  @override
+  String get somethingWentWrong => "មានអ្វីមួយខុស";
+  @override
+  String get success => "ជោគជ័យ!";
+
+  // Leave Request screen strings
+  @override
+  String get leaveRequest => "សំណើច្បាប់";
+  @override
+  String get loadingLeaveRequestData => "កំពុងផ្ទុកទិន្នន័យសំណើច្បាប់...";
+  @override
+  String get leaveType => "ប្រភេទច្បាប់";
+  @override
+  String get selectLeaveType => "ជ្រើសរើសប្រភេទច្បាប់";
+  @override
+  String get pleaseSelectLeaveType => "សូមជ្រើសរើសប្រភេទច្បាប់";
+  @override
+  String get leaveDate => "កាលបរិច្ឆេទច្បាប់";
+  @override
+  String get pleaseSelectLeaveDate => "សូមជ្រើសរើសកាលបរិច្ឆេទច្បាប់";
+  @override
+  String get totalLeave => "ច្បាប់សរុប";
+  @override
+  String get day => "ថ្ងៃ";
+  @override
+  String get leaveFor => "ច្បាប់សម្រាប់";
+  @override
+  String get leaveNote => "កំណត់ចំណាំច្បាប់";
+  @override
+  String get enterYourReason => "បញ្ចូលមូលហេតុរបស់អ្នក";
+  @override
+  String get pleaseEnterReason => "សូមបញ្ចូលមូលហេតុ";
+  @override
+  String get documentSupport => "ឯកសារគាំទ្រ";
+  @override
+  String get viewSample => "មើលគំរូ";
+  @override
+  String get sampleDocument => "ឯកសារគំរូ";
+  @override
+  String get failedToLoadSampleDocument => "បរាជ័យក្នុងការផ្ទុកឯកសារគំរូ";
+  @override
+  String get close => "បិទ";
+  @override
+  String get noPhotoSelected => "មិនបានជ្រើសរើសរូបថត";
+  @override
+  @override
+  @override
+  @override
+  String get submit => "ដាក់ស្នើ";
+  @override
+  String get submitting => "កំពុងដាក់ស្នើ...";
+  @override
+  String get takeANewPhoto => "ថតរូបថ្មី";
+  @override
+  String get chooseFromPhotos => "ជ្រើសរើសពីរូបថត";
+  @override
+  @override
+  String get processingImage => "កំពុងដំណើរការរូបភាព...";
+  @override
+  String get documentSupportRequired =>
+      "ត្រូវការឯកសារគាំទ្រសម្រាប់ប្រភេទច្បាប់នេះ";
+  @override
+  String get selectedFileNotExist =>
+      "ឯកសារដែលបានជ្រើសរើសមិនមាន។ សូមជ្រើសរើសម្តងទៀត។";
+  @override
+  String get pleaseSelectValidImageFile =>
+      "សូមជ្រើសរើសឯកសាររូបភាពត្រឹមត្រូវ (JPG, JPEG, PNG, PDF)";
+  @override
+  String get fileSizeTooLarge => "ទំហំឯកសារត្រូវតែតិចជាង 5MB";
+  @override
+  String get fileTooLarge => "ឯកសារធំពេក";
+  @override
+  String get maxSize => "អតិបរមា: 5MB\nសូមជ្រើសរើសរូបភាពតូចជាងនេះ។";
+  @override
+  String get calendar => "ប្រតិទិន";
+  @override
+  String get total => "សរុប";
+  @override
+  String get pending => "កំពុងរង់ចាំ";
+  @override
+  String get leaveBalance => "សមតុល្យច្បាប់";
+  @override
+  String get annualLeaveSummary => "សង្ខេបច្បាប់ប្រចាំឆ្នាំ";
+  @override
+  String get used => "បានប្រើ";
+  @override
+  String get balance => "នៅសល់";
+  @override
+  String get entitlement => "សិទ្ធិច្បាប់សរុប";
+  @override
+  String get leaveBalanceDetails => "ព័ត៌មានលម្អិតសមតុល្យច្បាប់";
+  @override
+  String get selectYear => "ជ្រើសរើសឆ្នាំ";
+  @override
+  String get loadingLeaveBalance => "កំពុងផ្ទុកសមតុល្យច្បាប់...";
+  @override
+  String get errorLoadingLeaveBalance => "មានបញ្ហាក្នុងការផ្ទុកសមតុល្យច្បាប់";
+  @override
+  String get daysUsed => "ថ្ងៃបានប្រើ";
+  @override
+  String get leaveRequestStatistics => "ស្ថិតិសំណើច្បាប់";
+  @override
+  String get remainingLeaveBalance => "សមតុល្យច្បាប់នៅសល់";
+  @override
+  String get usedLeave => "ច្បាប់បានប្រើ";
+  @override
+  String get availableLeave => "ច្បាប់នៅសល់";
 }

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/constant.dart';
+import '../../../localization/language.dart';
+import '../../../localization/language_logic.dart';
 import '../../../widgets/leave_balance_item.dart';
 import '../../../viewmodels/leave_balance_viewmodel.dart';
 
@@ -16,6 +18,7 @@ class LeaveBalanceDetailScreen extends StatefulWidget {
 
 class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
   late LeaveBalanceViewModel _viewModel;
+  Language language = Language();
 
   @override
   void initState() {
@@ -24,6 +27,17 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
 
     // Fetch initial data
     _viewModel.fetchLeaveBalance();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   void _showYearPicker() {
@@ -50,10 +64,10 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 16.0),
                       child: Text(
-                        'Select Year',
+                        language.selectYear,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -129,9 +143,12 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            'Leave Balance',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          title: Text(
+            language.leaveBalance,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           actions: [
             Consumer<LeaveBalanceViewModel>(
@@ -189,13 +206,16 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
   }
 
   Widget _buildLoadingContent() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SpinKitFadingCircle(color: primary),
           SizedBox(height: 16),
-          Text('Loading leave balance...'),
+          Text(
+            language.loadingLeaveBalance,
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -209,7 +229,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           Text(
-            'Error loading leave balance',
+            language.errorLoadingLeaveBalance,
             style: TextStyle(fontSize: 18, color: Colors.grey[700]),
           ),
           const SizedBox(height: 8),
@@ -258,7 +278,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Annual Leave Summary',
+              language.annualLeaveSummary,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -270,21 +290,21 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
               children: [
                 Expanded(
                   child: _buildSummaryItem(
-                    'Used',
+                    language.used,
                     viewModel.annualLeaveUsed,
                     Colors.red[400]!,
                   ),
                 ),
                 Expanded(
                   child: _buildSummaryItem(
-                    'Balance',
+                    language.balance,
                     viewModel.annualLeaveBalance,
                     Colors.green[400]!,
                   ),
                 ),
                 Expanded(
                   child: _buildSummaryItem(
-                    'Entitlement',
+                    language.entitlement,
                     viewModel.annualLeaveEntitlement,
                     Colors.blue[400]!,
                   ),
@@ -324,7 +344,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Leave Balance Details',
+              language.leaveBalanceDetails,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -334,7 +354,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
             const SizedBox(height: 16),
             LeaveBalanceItem(
               icon: Icons.beach_access,
-              title: 'Annual Leave',
+              title: language.annualLeave,
               remainingDays: double.tryParse(viewModel.annualLeaveBalance) ?? 0,
               totalDays: double.tryParse(viewModel.annualLeaveEntitlement) ?? 0,
               color: Colors.blue[600]!,
@@ -343,7 +363,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
             const DividerItem(),
             LeaveBalanceItem(
               icon: Icons.local_hospital,
-              title: 'Sick Leave',
+              title: language.sickLeave,
               remainingDays: double.tryParse(viewModel.sickLeaveBalance) ?? 0,
               totalDays: double.tryParse(viewModel.sickLeaveEntitlement) ?? 0,
               color: Colors.red[600]!,
@@ -352,7 +372,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
             const DividerItem(),
             LeaveBalanceItem(
               icon: Icons.star,
-              title: 'Special Leave',
+              title: language.specialLeave,
               remainingDays:
                   double.tryParse(viewModel.specialLeaveBalance) ?? 0,
               totalDays:
@@ -363,7 +383,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
             const DividerItem(),
             LeaveBalanceItem(
               icon: Icons.child_care,
-              title: 'Maternity Leave',
+              title: language.maternityLeave,
               remainingDays:
                   double.tryParse(viewModel.maternityLeaveBalance) ?? 0,
               totalDays:
@@ -374,12 +394,12 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
             const DividerItem(),
             LeaveBalanceItem(
               icon: Icons.money_off,
-              title: 'Unpaid Leave',
-              label: 'days used',
+              title: language.unpaidLeave,
+              label: language.daysUsed,
               remainingDays: double.tryParse(viewModel.unpaidLeaveUsed) ?? 0,
               totalDays: 0,
               color: Colors.grey[600]!,
-              barColor: Colors.grey[400]!,
+              barColor: const Color.fromARGB(255, 39, 31, 31),
               isNoUsedItem: false,
             ),
           ],
@@ -398,7 +418,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Leave Request Statistics',
+              language.leaveRequestStatistics,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -410,7 +430,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
               children: [
                 Expanded(
                   child: _buildStatCard(
-                    'Approved',
+                    language.approved,
                     viewModel.approvedLeaveRequest,
                     Colors.green,
                     Icons.check_circle,
@@ -419,7 +439,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
-                    'Pending',
+                    language.pending,
                     viewModel.pendingLeaveRequest,
                     Colors.orange,
                     Icons.hourglass_empty,
@@ -428,7 +448,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
-                    'Rejected',
+                    language.rejected,
                     viewModel.rejectedLeaveRequest,
                     Colors.red,
                     Icons.cancel,

@@ -1,7 +1,9 @@
+import 'package:chokchey_hr_app/localization/language.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/constant.dart';
+import '../../../localization/language_logic.dart';
 import '../../../utils/file_helper.dart';
 import '../../../viewmodels/leave_history_viewmodel.dart';
 import '../../../models/leave_history_model.dart';
@@ -18,6 +20,7 @@ class LeaveHistoryScreen extends StatefulWidget {
 
 class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
   late LeaveHistoryViewModel _viewModel;
+  Language language = Language();
 
   DateTimeRange? _selectedDateRange;
   String _selectedType = 'All';
@@ -27,6 +30,17 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     super.initState();
     _viewModel = LeaveHistoryViewModel();
     _viewModel.fetchLeaveHistory();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -42,8 +56,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: const Text(
-            'History Requests',
+          title: Text(
+            language.historyRequests,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -726,7 +740,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Total: ${leave.numleav} day${leave.numberOfDays > 1 ? 's' : ''}${leave.isFullDay ? '' : ' (Half Day)'}',
+                            '${language.total}: ${leave.numleav} day${leave.numberOfDays > 1 ? 's' : ''}${leave.isFullDay ? '' : ' (Half Day)'}',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -829,10 +843,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _stat('Total', total, Colors.blue),
-          _stat('Pending', pending, Colors.orange),
-          _stat('Approved', approved, Colors.green),
-          _stat('Rejected', rejected, Colors.red),
+          _stat(language.total, total, Colors.blue),
+          _stat(language.pending, pending, Colors.orange),
+          _stat(language.approved, approved, Colors.green),
+          _stat(language.rejected, rejected, Colors.red),
         ],
       ),
     );
@@ -842,7 +856,6 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
     return Column(
       children: [
         Container(
-          
           width: 40,
           height: 40,
           alignment: Alignment.center,

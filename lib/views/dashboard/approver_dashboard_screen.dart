@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import 'package:chokchey_hr_app/models/leave_model.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -47,6 +49,8 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
   double screenHeight = 0.0;
   late ApproverDashboardViewModel _dashboardViewModel;
 
+  late Language language = Language();
+
   final List<Widget> _screens = [
     const _DashboardHomeContent(),
     const HolidayCalendarScreen(),
@@ -61,6 +65,7 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = ApproverDashboardViewModel();
     _dashboardViewModel.initialize();
+    _initializeLanguage();
     // Listen for profile updates
     ProfileViewModel.onProfileUpdated = () {
       if (mounted && _currentIndex == 0) {
@@ -92,6 +97,16 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
       },
     );
     return false;
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -377,6 +392,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   int _currentScrollIndex = 0;
   late TabController _tabController;
 
+  late Language language = Language();
+
   final List<Map<String, dynamic>> _functionButtons = [
     {
       'icon': Icons.access_time,
@@ -419,6 +436,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     _tabController = TabController(length: 2, vsync: this);
 
     _startAutoSlide();
+    _initializeLanguage();
   }
 
   void _startAutoSlide() {
@@ -437,6 +455,16 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         );
       }
     });
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -479,6 +507,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: AnnualLeaveBalanceWidget(
+        title: language.remainingLeaveBalance,
+        viewDetailsText: language.viewDetails,
+        availableLeaveText: language.availableLeave,
+        usedLeaveText: language.usedLeave,
         usedLeave: viewModel.usedLeave,
         availableLeave: viewModel.availableLeave,
         onViewDetails: () {

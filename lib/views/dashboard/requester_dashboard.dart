@@ -29,6 +29,8 @@ import '../menu/menu_screen.dart';
 import '../../models/leave_model.dart';
 import '../../utils/file_helper.dart';
 import '../../widgets/custom_alert_dialog.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../notifications/requester_notification_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -46,12 +48,14 @@ class _DashboardScreenState extends State<DashboardScreen>
   double screenWidth = 0.0;
   double screenHeight = 0.0;
   late DashboardViewModel _dashboardViewModel;
+  Language language = Language();
 
   final List<Widget> _screens = [const DashboardScreen(), const MenuScreen()];
 
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
     _dashboardViewModel.initialize();
@@ -62,6 +66,16 @@ class _DashboardScreenState extends State<DashboardScreen>
         _dashboardViewModel.refreshProfile();
       }
     };
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   Future<bool> _onBackPressed() async {
@@ -199,10 +213,10 @@ class _DashboardScreenState extends State<DashboardScreen>
           shadowColor: Colors.grey[200],
           color: primary,
           style: TabStyle.react,
-          items: const [
-            TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.home, title: 'Request Leave'),
-            TabItem(icon: Icons.menu, title: 'Menu'),
+          items: [
+            TabItem(icon: Icons.home, title: language.home),
+            TabItem(icon: Icons.home, title: language.leaveRequest),
+            TabItem(icon: Icons.menu, title: language.menu),
           ],
           initialActiveIndex: _currentIndex == 0 ? 0 : 2,
           onTap: (int i) {
@@ -433,68 +447,84 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   late ScrollController _scrollController;
   late Timer _timer;
   int _currentScrollIndex = 0;
+  Language language = Language();
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
+  }
 
   // Function buttons data
-  final List<Map<String, dynamic>> _functionButtons = [
-    {
-      'icon': Icons.access_time,
-      'label': 'Clock In | Out',
-      'onPressed':
-          (BuildContext context) => Navigator.push(
+  List<Map<String, dynamic>> _getFunctionButtons(BuildContext context) {
+    return [
+      {
+        'icon': Icons.access_time,
+        'label': language.clockInOut,
+        'onPressed':
+            (BuildContext context) => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AttendanceClock()),
+            ),
+      },
+      {
+        'icon': Icons.event_available,
+        'label': language.attendanceLogs,
+        'onPressed': (BuildContext context) {
+          Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AttendanceClock()),
-          ),
-    },
-    {
-      'icon': Icons.event_available,
-      'label': 'Attendance Logs',
-      'onPressed': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AttendanceCalendarScreen(),
-          ),
-        );
+            MaterialPageRoute(
+              builder: (context) => const AttendanceCalendarScreen(),
+            ),
+          );
+        },
       },
-    },
-    {
-      'icon': Icons.edit_calendar_outlined,
-      'label': 'Attendance Requests',
-      'onPressed': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AttendanceAdjustmentScreen(),
-          ),
-        );
-      },
-    },
-    {
-      'icon': Icons.history,
-      'label': 'History Requests',
-      'onPressed':
-          (BuildContext context) => Navigator.push(
+      {
+        'icon': Icons.edit_calendar_outlined,
+        'label': language.attendanceRequests,
+        'onPressed': (BuildContext context) {
+          Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const LeaveHistoryScreen()),
-          ),
-    },
-    {
-      'icon': Icons.calendar_month,
-      'label': 'Holidays',
-      'onPressed': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HolidayCalendarScreen(),
-          ),
-        );
+            MaterialPageRoute(
+              builder: (context) => const AttendanceAdjustmentScreen(),
+            ),
+          );
+        },
       },
-    },
-  ];
+      {
+        'icon': Icons.history,
+        'label': language.historyRequests,
+        'onPressed':
+            (BuildContext context) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LeaveHistoryScreen(),
+              ),
+            ),
+      },
+      {
+        'icon': Icons.calendar_month,
+        'label': language.holidays,
+        'onPressed': (BuildContext context) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HolidayCalendarScreen(),
+            ),
+          );
+        },
+      },
+    ];
+  }
 
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     _scrollController = ScrollController();
 
     // Start auto-slide after 3 seconds delay
@@ -513,10 +543,12 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   void _startAutoSlide() {
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (_scrollController.hasClients && _functionButtons.length > 3) {
+      if (_scrollController.hasClients &&
+          _getFunctionButtons(context).length > 3) {
         // Calculate the next scroll position
         _currentScrollIndex =
-            (_currentScrollIndex + 1) % (_functionButtons.length - 2);
+            (_currentScrollIndex + 1) %
+            (_getFunctionButtons(context).length - 2);
 
         // Each item width (110) + spacing (16)
         const double itemWidth = 110.0 + 16.0;
@@ -576,8 +608,12 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: AnnualLeaveBalanceWidget(
+        title: language.remainingLeaveBalance,
         usedLeave: viewModel.usedLeave,
+        viewDetailsText: language.viewDetails,
         availableLeave: viewModel.availableLeave,
+        usedLeaveText: language.usedLeave,
+        availableLeaveText: language.availableLeave,
         onViewDetails: () {
           Navigator.push(
             context,
@@ -595,6 +631,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   }
 
   Widget _buildFunctionButtons(BuildContext context) {
+    final functionButtons = _getFunctionButtons(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(
@@ -604,7 +641,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           scrollDirection: Axis.horizontal,
           child: Row(
             children:
-                _functionButtons.asMap().entries.map((entry) {
+                functionButtons.asMap().entries.map((entry) {
                   final index = entry.key;
                   final button = entry.value;
 
@@ -619,7 +656,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                         ),
                       ),
                       // Add spacing between items except for the last one
-                      if (index < _functionButtons.length - 1)
+                      if (index < functionButtons.length - 1)
                         const SizedBox(width: 16),
                     ],
                   );
@@ -634,11 +671,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.all(16.0),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Text(
-            "Recently Leave Request",
-            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+            language.recentlyLeaveRequest,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
           ),
         ),
         SizedBox(

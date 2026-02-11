@@ -1,13 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
 import '../../constants/constant.dart';
 import '../../models/attendance_adjustment_model.dart';
 import '../../repositories/attendance_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/horizontal_approver_flow.dart';
+import '../../widgets/date_section.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 
 class AttendanceAdjustmentDetailScreen extends StatefulWidget {
   final AttendanceMissing selectedAttendance;
@@ -33,9 +37,26 @@ class _AttendanceAdjustmentDetailScreenState
   String? _attachedFileName;
   XFile? documentPhoto;
   final ImagePicker _picker = ImagePicker();
+  Language language = Language();
 
   // ✅ File size limit constant
   static const int maxFileSizeInBytes = 5 * 1024 * 1024; // 5MB
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -48,7 +69,7 @@ class _AttendanceAdjustmentDetailScreenState
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Adjustment Request'),
+        title: Text(language.adjustmentRequest),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -111,8 +132,10 @@ class _AttendanceAdjustmentDetailScreenState
                   children: [
                     Icon(Icons.calendar_month, color: primary, size: 20),
                     const SizedBox(width: 6),
-                    Text(
-                      "${widget.selectedAttendance.dayOfWeek} ${widget.selectedAttendance.formattedDate}",
+                    DateSection(
+                      date:
+                          DateTime.tryParse(widget.selectedAttendance.date) ??
+                          DateTime.now(),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -121,9 +144,19 @@ class _AttendanceAdjustmentDetailScreenState
                   ],
                 ),
               ),
-              Text(
-                widget.adjustmentType,
-                style: TextStyle(color: primary, fontWeight: FontWeight.w600),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.5),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  widget.adjustmentType,
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -131,20 +164,20 @@ class _AttendanceAdjustmentDetailScreenState
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
             margin: const EdgeInsets.only(top: 16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildTimeInfo(
-                  'Check In',
+                  language.checkIn,
                   FileHelper().formatTime(widget.selectedAttendance.checkedIn),
                   Icons.login,
                   Colors.green,
                 ),
                 _buildTimeInfo(
-                  'Check Out',
+                  language.checkOut,
                   FileHelper().formatTime(widget.selectedAttendance.checkedOut),
                   Icons.logout,
                   Colors.red,
@@ -179,9 +212,9 @@ class _AttendanceAdjustmentDetailScreenState
             children: [
               Icon(Icons.edit_note, color: primary, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Reason *',
-                style: TextStyle(
+              Text(
+                language.reasonRequired,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -194,8 +227,7 @@ class _AttendanceAdjustmentDetailScreenState
             controller: _reasonController,
             maxLines: 2,
             decoration: InputDecoration(
-              hintText:
-                  'Please provide a detailed reason for your adjustment request...',
+              hintText: language.provideDetailedReason,
               hintStyle: TextStyle(color: Colors.grey[500], fontSize: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -236,8 +268,8 @@ class _AttendanceAdjustmentDetailScreenState
             children: [
               Icon(Icons.attach_file, color: primary, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Attachment',
+              Text(
+                language.attachment,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -246,7 +278,7 @@ class _AttendanceAdjustmentDetailScreenState
               ),
               const Spacer(),
               Text(
-                'Optional',
+                language.optional,
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[500],
@@ -282,7 +314,7 @@ class _AttendanceAdjustmentDetailScreenState
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Upload Photo',
+                      language.uploadPhoto,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -291,7 +323,7 @@ class _AttendanceAdjustmentDetailScreenState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tap to select photo from camera or gallery',
+                      language.tapToSelectPhoto,
                       style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                       textAlign: TextAlign.center,
                     ),
@@ -391,8 +423,8 @@ class _AttendanceAdjustmentDetailScreenState
             children: [
               Icon(Icons.people, color: primary, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Approvers',
+              Text(
+                language.approvers,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -466,7 +498,7 @@ class _AttendanceAdjustmentDetailScreenState
           color: canSubmit ? Colors.white : Colors.grey[500],
         ),
         label: Text(
-          'Submit Request',
+          language.submitRequest,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -515,7 +547,7 @@ class _AttendanceAdjustmentDetailScreenState
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(),
+                        SpinKitFadingCircle(color: primary),
                         SizedBox(height: 16),
                         Text("Processing image..."),
                       ],
@@ -780,8 +812,8 @@ class _AttendanceAdjustmentDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "Select Photo Source",
+                      Text(
+                        language.selectPhotoSource,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -803,13 +835,13 @@ class _AttendanceAdjustmentDetailScreenState
                       ),
                       child: const Icon(Icons.camera_alt, color: Colors.blue),
                     ),
-                    title: const Text(
-                      "Camera",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    title: Text(
+                      language.takeNewPhoto,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: const Text(
-                      "Take a new photo",
-                      style: TextStyle(fontSize: 12),
+                    subtitle: Text(
+                      language.takeNewPhoto,
+                      style: const TextStyle(fontSize: 12),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -829,13 +861,13 @@ class _AttendanceAdjustmentDetailScreenState
                         color: Colors.green,
                       ),
                     ),
-                    title: const Text(
-                      "Gallery",
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    title: Text(
+                      language.chooseFromGallery,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    subtitle: const Text(
-                      "Choose from photos",
-                      style: TextStyle(fontSize: 12),
+                    subtitle: Text(
+                      language.takeFromPhoto,
+                      style: const TextStyle(fontSize: 12),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -853,19 +885,19 @@ class _AttendanceAdjustmentDetailScreenState
                         ),
                         child: const Icon(Icons.delete, color: Colors.red),
                       ),
-                      title: const Text(
-                        "Remove Photo",
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      title: Text(
+                        language.removePhoto,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      subtitle: const Text(
-                        "Clear selected photo",
-                        style: TextStyle(fontSize: 12),
+                      subtitle: Text(
+                        language.clearSelectedPhoto,
+                        style: const TextStyle(fontSize: 12),
                       ),
                       onTap: () {
                         Navigator.pop(context);
                         setState(() => documentPhoto = null);
                         _showSnackBar(
-                          "Photo removed",
+                          language.photoRemoved,
                           Colors.orange,
                           Icons.delete,
                         );
@@ -1157,10 +1189,7 @@ class _AttendanceAdjustmentDetailScreenState
                         color: primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(28),
                       ),
-                      child: const CircularProgressIndicator(
-                        color: primary,
-                        strokeWidth: 3,
-                      ),
+                      child: const SpinKitFadingCircle(color: primary),
                     ),
                     const SizedBox(height: 24),
                     const Text(
