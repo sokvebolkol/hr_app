@@ -28,6 +28,7 @@ import '../leaves/leave_history/manager_leave_history_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
 import '../memo/memo_screen.dart';
+import '../menu/menu_screen.dart';
 import '../notifications/approver_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
@@ -56,7 +57,7 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
     const HolidayCalendarScreen(),
     const _DashboardHomeContent(),
     const MemoScreen(),
-    const ProfilePage(),
+    const MenuScreen(),
   ];
 
   @override
@@ -83,12 +84,12 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
   Future<bool> _onBackPressed() async {
     await CustomAlertDialog.show(
       context,
-      title: 'Information',
-      message: 'Do you want to exit?',
+      title: language.information,
+      message: language.doYouWantToExit,
       icon: Icons.exit_to_app,
       iconColor: primary,
-      primaryButtonText: 'No',
-      secondaryButtonText: 'Yes',
+      primaryButtonText: language.no,
+      secondaryButtonText: language.yes,
       onPrimaryPressed: () async {
         Navigator.of(context).pop();
       },
@@ -141,13 +142,13 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
                     );
                   }
                 });
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SpinKitFadingCircle(color: primary),
                       SizedBox(height: 16),
-                      Text("Your account is inactive. Logging out..."),
+                      Text(language.yourAccountIsInactiveLoggingOut),
                     ],
                   ),
                 );
@@ -184,14 +185,14 @@ class _ApproverDashboardScreenState extends State<ApproverDashboardScreen>
           color: primary,
           style: TabStyle.react,
           items: [
-            TabItem(icon: Icons.home, title: 'Home'),
-            TabItem(icon: Icons.calendar_month, title: 'Holiday'),
+            TabItem(icon: Icons.home, title: language.home),
+            TabItem(icon: Icons.calendar_month, title: language.holidays),
             TabItem(
               icon: Container(width: 24, height: 24, color: Colors.transparent),
               title: '',
             ),
-            TabItem(icon: Icons.campaign, title: 'Memo'),
-            TabItem(icon: Icons.more_horiz_sharp, title: 'More'),
+            TabItem(icon: Icons.campaign, title: language.memo),
+            TabItem(icon: Icons.more_horiz_sharp, title: language.more),
           ],
           initialActiveIndex: _currentIndex,
           onTap: (int i) {
@@ -394,40 +395,64 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   late Language language = Language();
 
-  final List<Map<String, dynamic>> _functionButtons = [
-    {
-      'icon': Icons.access_time,
-      'label': 'Clock In | Out',
-      'onPressed':
-          (BuildContext context) => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AttendanceClock()),
-          ),
-    },
-    {
-      'icon': Icons.history,
-      'label': 'Leaves History',
-      'onPressed':
-          (BuildContext context) => Navigator.push(
+  List<Map<String, dynamic>> _getFunctionButtons() {
+    return [
+      {
+        'icon': Icons.access_time,
+        'label': language.clockInOut,
+        'onPressed':
+            (BuildContext context) => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AttendanceClock()),
+            ),
+      },
+      {
+        'icon': Icons.event_available,
+        'label': language.attendances,
+        'onPressed': (BuildContext context) {
+          Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ManagerLeaveHistoryScreen(),
+              builder: (context) => const AttendanceCalendarScreen(),
             ),
-          ),
-    },
-    {
-      'icon': Icons.event_available,
-      'label': 'Attendances',
-      'onPressed': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AttendanceCalendarScreen(),
-          ),
-        );
+          );
+        },
       },
-    },
-  ];
+      {
+        'icon': Icons.history,
+        'label': language.leaveHistory,
+        'onPressed':
+            (BuildContext context) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ManagerLeaveHistoryScreen(),
+              ),
+            ),
+      },
+      {
+        'icon': Icons.edit_calendar,
+        'label': language.attendanceAdjustment,
+        'onPressed':
+            (BuildContext context) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ManagerLeaveHistoryScreen(),
+              ),
+            ),
+      },
+      {
+        'icon': Icons.history_edu,
+        'label': language.attendanceAdjustmentsHistory,
+        'onPressed':
+            (BuildContext context) => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ManagerLeaveHistoryScreen(),
+              ),
+            ),
+      },
+    ];
+  }
 
   @override
   void initState() {
@@ -441,9 +466,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   void _startAutoSlide() {
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_scrollController.hasClients && _functionButtons.length > 3) {
+      final functionButtons = _getFunctionButtons();
+      if (_scrollController.hasClients && functionButtons.length > 3) {
         _currentScrollIndex =
-            (_currentScrollIndex + 1) % (_functionButtons.length - 2);
+            (_currentScrollIndex + 1) % (functionButtons.length - 2);
 
         const double itemWidth = 110.0 + 16.0;
         final double targetOffset = _currentScrollIndex * itemWidth;
@@ -489,7 +515,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const DateSection(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, left: 16),
+                  child: DateSection(),
+                ),
                 SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),
@@ -531,6 +560,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   Widget _buildFunctionButtons(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    final functionButtons = _getFunctionButtons();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(
@@ -540,20 +570,20 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           scrollDirection: Axis.horizontal,
           child: Row(
             children:
-                _functionButtons.asMap().entries.map((entry) {
+                functionButtons.asMap().entries.map((entry) {
                   final index = entry.key;
                   final button = entry.value;
                   return Row(
                     children: [
                       SizedBox(
-                        width: screenWidth / 3.6,
+                        width: screenWidth / 3,
                         child: FunctionIconCardWidget(
                           iconData: button['icon'] as IconData,
                           label: button['label'] as String,
                           onPressed: () => button['onPressed'](context),
                         ),
                       ),
-                      if (index < _functionButtons.length - 1)
+                      if (index < functionButtons.length - 1)
                         const SizedBox(width: 16),
                     ],
                   );
@@ -622,7 +652,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Pending Approval',
+                                  language.pendingApproval,
                                   style: TextStyle(
                                     color:
                                         isSelected
@@ -705,7 +735,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                             children: [
                               Flexible(
                                 child: Text(
-                                  'My Leave Request',
+                                  language.myLeaveRequest,
                                   style: TextStyle(
                                     color:
                                         isSelected
@@ -789,7 +819,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 16),
             Text(
-              'No Pending Requests',
+              language.noPendingRequests,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -798,7 +828,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 8),
             Text(
-              'No leave requests found',
+              language.noLeaveRequestsFound,
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -867,7 +897,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             Icon(Icons.beach_access, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No Leave Requests',
+              language.myLeaveRequest,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -876,7 +906,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 8),
             Text(
-              'No leave requests found',
+              language.noLeaveRequestsFound,
               style: TextStyle(color: Colors.grey[500], fontSize: 14),
               textAlign: TextAlign.center,
             ),

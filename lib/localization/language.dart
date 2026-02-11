@@ -294,6 +294,13 @@ class Language {
   String get notAvailable => "N/A";
   String get historyRequests => "History Requests";
   String get holidays => "Holidays";
+  String get memo => "Memo";
+  String get more => "More";
+  String get leaveHistory => "Leave History";
+  String get attendanceAdjustmentsHistory => "Attendance Adjustment History";
+  String get attendances => "Attendances";
+  String get myLeaveRequest => "My Leave Request";
+  String get noLeaveRequestsFound => "No leave requests found";
   String get recentlyLeaveRequest => "Recently Leave Request";
   String get requestSubmitted => "Request submitted successfully";
   String get requestFailed => "Failed to submit request";
@@ -398,6 +405,10 @@ class Language {
   String get remainingLeaveBalance => "Remaining Leave Balance";
   String get usedLeave => "Used Leave";
   String get availableLeave => "Available Leave";
+  String get accountInactiveLoggingOut =>
+      "Your account is inactive. Logging out...";
+  String get updateAvailable => "Update Required";
+  String get viewRequestedHistory => "View Requested History";
 }
 
 class Khmer implements Language {
@@ -961,6 +972,20 @@ class Khmer implements Language {
   @override
   String get holidays => "ថ្ងៃបុណ្យ";
   @override
+  String get memo => "សារកំណត់";
+  @override
+  String get more => "ច្រើនទៀត";
+  @override
+  String get leaveHistory => "ប្រវត្តិឈប់សម្រាក";
+  @override
+  String get attendanceAdjustmentsHistory => "ប្រវត្តិកែតម្រូវវត្តមាន";
+  @override
+  String get attendances => "វត្តមាន";
+  @override
+  String get myLeaveRequest => "ការស្នើសុំឈប់សម្រាករបស់ខ្ញុំ";
+  @override
+  String get noLeaveRequestsFound => "រកមិនឃើញសំណើឈប់សម្រាក";
+  @override
   String get recentlyLeaveRequest => "ការស្នើសុំឈប់សម្រាកថ្មីៗ";
   @override
   String get requestSubmitted => "ការស្នើសុំត្រូវបានដាក់ស្នើដោយជោគជ័យ";
@@ -1156,4 +1181,11 @@ class Khmer implements Language {
   String get usedLeave => "ច្បាប់បានប្រើ";
   @override
   String get availableLeave => "ច្បាប់នៅសល់";
+  @override
+  String get accountInactiveLoggingOut =>
+      "គណនីរបស់អ្នកមិនសកម្ម។ កំពុងចេញពីប្រព័ន្ធ...";
+  @override
+  String get updateAvailable => "មានការធ្វើបច្ចុប្បន្នភាព!";
+  @override
+  String get viewRequestedHistory => "មើលប្រវត្តិស្នើសុំដែលបានស្នើសុំ";
 }

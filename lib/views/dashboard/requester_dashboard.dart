@@ -15,6 +15,7 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
+import '../../widgets/leave_card_widget.dart';
 import '../../widgets/leave_request.dart';
 import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
@@ -81,12 +82,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<bool> _onBackPressed() async {
     await CustomAlertDialog.show(
       context,
-      title: 'Information',
-      message: 'Do you want to exit?',
+      title: language.doYouWantToExit,
+      message: language.doYouWantToExit,
       icon: Icons.exit_to_app,
       iconColor: primary,
-      primaryButtonText: 'No',
-      secondaryButtonText: 'Yes',
+      primaryButtonText: language.no,
+      secondaryButtonText: language.yes,
       onPrimaryPressed: () async {
         Navigator.of(context).pop();
       },
@@ -105,6 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     // Set the home content dynamically
     _screens[0] = const _DashboardHomeContent();
 
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
@@ -124,6 +126,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   await viewModel.forceLogout();
                   if (mounted) {
                     Navigator.pushAndRemoveUntil(
+                      // ignore: use_build_context_synchronously
                       context,
                       MaterialPageRoute(
                         builder: (BuildContext context) => const LoginScreen(),
@@ -132,13 +135,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                     );
                   }
                 });
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SpinKitFadingCircle(color: primary),
                       SizedBox(height: 16),
-                      Text("Your account is inactive. Logging out..."),
+                      Text(language.accountInactiveLoggingOut),
                     ],
                   ),
                 );
@@ -157,9 +160,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                     CustomAlertDialog.show(
                       // ignore: use_build_context_synchronously
                       context,
-                      title: 'Update Required',
+                      title: language.updateAvailable,
                       message:
-                          'A new version ${viewModel.appVersion?.version} is available and must be installed to continue using the app.\n\n${viewModel.appVersion?.releaseNotes ?? ''}',
+                          '${language.aNewVersion} ${viewModel.appVersion?.version} ${language.isAvailableAndMustBeInstalled}\n\n${viewModel.appVersion?.releaseNotes ?? ''}',
                       icon: Icons.system_update,
                       iconColor: primary,
                       primaryButtonText: 'Update Now',
@@ -671,12 +674,38 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            language.recentlyLeaveRequest,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: TextButton(
+                style: TextButton.styleFrom(foregroundColor: secondary),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LeaveHistoryScreen(),
+                    ),
+                  );
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      language.viewRequestedHistory,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.chevron_right, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
         SizedBox(
           height: 330,
@@ -704,15 +733,14 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                     }
                   });
                 },
-                child: LeaveRequestWidget(
+                child: LeaveCardWidget(
                   reason: leave.reason,
                   status: leave.statuText,
+                  totalLabel: language.total,
+                  leaveType: leave.ltyp,
                   fromDate: leave.frdat,
                   toDate: leave.todat,
-                  requesterName: leave.dname,
                   totalDays: leave.numleav,
-                  currentUserName: viewModel.username,
-                  currentUserProfileImageUrl: viewModel.profileImageUrl,
                   prioList:
                       sortedPrioList
                           .map(

@@ -163,7 +163,7 @@ class FileHelper {
       case "Rejected":
         return Colors.red;
       case "Pending":
-        return Colors.orangeAccent;
+        return logoPink;
       case "Cancelled":
         return Colors.grey;
       default:
