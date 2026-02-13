@@ -16,7 +16,6 @@ import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
 import '../../widgets/leave_card_widget.dart';
-import '../../widgets/leave_request.dart';
 import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../attendance/attendance_adjustment_screen.dart';
@@ -34,15 +33,16 @@ import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../notifications/requester_notification_screen.dart';
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class RequesterDashboardScreen extends StatefulWidget {
+  final bool hideBottomNav;
+
+  const RequesterDashboardScreen({super.key, this.hideBottomNav = false});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _DashboardScreenState createState() => _DashboardScreenState();
+  State<RequesterDashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
+class _DashboardScreenState extends State<RequesterDashboardScreen>
     with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
@@ -51,7 +51,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   late DashboardViewModel _dashboardViewModel;
   Language language = Language();
 
-  final List<Widget> _screens = [const DashboardScreen(), const MenuScreen()];
+  final List<Widget> _screens = [
+    const RequesterDashboardScreen(),
+    const MenuScreen(),
+  ];
 
   @override
   void initState() {
@@ -63,7 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     // Listen for profile updates
     ProfileViewModel.onProfileUpdated = () {
-      if (mounted && _currentIndex == 0) {
+      if (mounted && (_currentIndex == 0 || widget.hideBottomNav)) {
         _dashboardViewModel.refreshProfile();
       }
     };
@@ -111,7 +114,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       onWillPop: _onBackPressed,
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: const Color.fromARGB(237, 255, 255, 255),
+
+        backgroundColor: Colors.grey[100],
         body: ChangeNotifierProvider.value(
           value: _dashboardViewModel,
           child: Consumer<DashboardViewModel>(
@@ -120,13 +124,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                 return const Center(child: SpinKitFadingCircle(color: primary));
               }
 
-              // Check if user is inactive and force logout
+              // Force logout if inactive
               if (viewModel.isUserInactive) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
                   await viewModel.forceLogout();
                   if (mounted) {
                     Navigator.pushAndRemoveUntil(
-                      // ignore: use_build_context_synchronously
                       context,
                       MaterialPageRoute(
                         builder: (BuildContext context) => const LoginScreen(),
@@ -135,22 +138,24 @@ class _DashboardScreenState extends State<DashboardScreen>
                     );
                   }
                 });
+
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SpinKitFadingCircle(color: primary),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(language.accountInactiveLoggingOut),
                     ],
                   ),
                 );
               }
 
-              // Check for force update
+              // Force update check
               if (viewModel.appVersion != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
                   final shouldUpdate = await viewModel.shouldForceUpdate();
+
                   if (shouldUpdate && mounted) {
                     final updateUrl =
                         Platform.isAndroid
@@ -158,11 +163,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                             : viewModel.appVersion!.iosUrl;
 
                     CustomAlertDialog.show(
-                      // ignore: use_build_context_synchronously
                       context,
                       title: language.updateAvailable,
                       message:
-                          '${language.aNewVersion} ${viewModel.appVersion?.version} ${language.isAvailableAndMustBeInstalled}\n\n${viewModel.appVersion?.releaseNotes ?? ''}',
+                          '${language.aNewVersion} ${viewModel.appVersion?.version} '
+                          '${language.isAvailableAndMustBeInstalled}\n\n'
+                          '${viewModel.appVersion?.releaseNotes ?? ''}',
                       icon: Icons.system_update,
                       iconColor: primary,
                       primaryButtonText: 'Update Now',
@@ -181,6 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 });
               }
 
+              // Error handling
               if (viewModel.errorMessage != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   ErrorHandler.showErrorDialog(
@@ -196,63 +203,79 @@ class _DashboardScreenState extends State<DashboardScreen>
                 });
               }
 
-              // Show screens with header for home page
-              if (_currentIndex == 0) {
+              // Home screen with sticky header
+              if (_currentIndex == 0 || widget.hideBottomNav) {
                 return Column(
                   children: [
                     _buildStickyHeader(viewModel),
-                    Expanded(child: _screens[_currentIndex]),
+                    Expanded(
+                      child: _screens[0],
+                    ), // Always show home content when hideBottomNav is true
                   ],
                 );
               }
+
               return _screens[_currentIndex];
             },
           ),
         ),
-        bottomNavigationBar: ConvexAppBar(
-          key: ValueKey(_currentIndex),
-          backgroundColor: Colors.white,
-          activeColor: primary,
-          shadowColor: Colors.grey[200],
-          color: primary,
-          style: TabStyle.react,
-          items: [
-            TabItem(icon: Icons.home, title: language.home),
-            TabItem(icon: Icons.home, title: language.leaveRequest),
-            TabItem(icon: Icons.menu, title: language.menu),
-          ],
-          initialActiveIndex: _currentIndex == 0 ? 0 : 2,
-          onTap: (int i) {
-            if (i == 1) return;
 
-            final newIndex = i == 2 ? 1 : 0;
+        /// ✅ Hide / Show Bottom Navigation
+        bottomNavigationBar:
+            widget.hideBottomNav
+                ? null
+                : ConvexAppBar(
+                  key: ValueKey(_currentIndex),
+                  backgroundColor: Colors.white,
+                  activeColor: primary,
+                  shadowColor: Colors.grey[200],
+                  color: primary,
+                  style: TabStyle.react,
+                  items: [
+                    TabItem(icon: Icons.home, title: language.home),
+                    TabItem(icon: Icons.home, title: language.leaveRequest),
+                    TabItem(icon: Icons.menu, title: language.menu),
+                  ],
+                  initialActiveIndex: _currentIndex == 0 ? 0 : 2,
+                  onTap: (int i) {
+                    if (i == 1) return;
 
-            // If switching back to home (dashboard), refresh the profile data
-            if (_currentIndex != 0 && newIndex == 0) {
-              _dashboardViewModel.refreshProfile();
-            }
-            setState(() {
-              _currentIndex = newIndex;
-            });
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: primary,
-          child: const Icon(Icons.add, color: Colors.white),
-          onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LeaveRequestScreen(),
-              ),
-            );
-            // If a leave was requested, refresh the dashboard
-            if (result == true && mounted) {
-              _dashboardViewModel.refresh();
-            }
-          },
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+                    final newIndex = i == 2 ? 1 : 0;
+
+                    if (_currentIndex != 0 && newIndex == 0) {
+                      _dashboardViewModel.refreshProfile();
+                    }
+
+                    setState(() {
+                      _currentIndex = newIndex;
+                    });
+                  },
+                ),
+
+        floatingActionButton:
+            widget.hideBottomNav
+                ? null
+                : FloatingActionButton(
+                  backgroundColor: primary,
+                  child: const Icon(Icons.add, color: Colors.white),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LeaveRequestScreen(),
+                      ),
+                    );
+
+                    if (result == true && mounted) {
+                      _dashboardViewModel.refresh();
+                    }
+                  },
+                ),
+
+        floatingActionButtonLocation:
+            widget.hideBottomNav
+                ? null
+                : FloatingActionButtonLocation.centerDocked,
       ),
     );
   }
@@ -425,7 +448,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     super.didChangeAppLifecycleState(state);
 
     // Refresh profile data when app resumes (user might have updated profile in another part of the app)
-    if (state == AppLifecycleState.resumed && _currentIndex == 0) {
+    if (state == AppLifecycleState.resumed &&
+        (_currentIndex == 0 || widget.hideBottomNav)) {
       _dashboardViewModel.refreshProfile();
     }
   }
@@ -678,7 +702,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 16.0),
+              padding: const EdgeInsets.only(
+                right: 16.0,
+                bottom: 8.0,
+                top: 8.0,
+              ),
               child: TextButton(
                 style: TextButton.styleFrom(foregroundColor: secondary),
                 onPressed: () {

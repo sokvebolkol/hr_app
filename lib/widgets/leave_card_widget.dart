@@ -43,7 +43,7 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
         (widget.prioList?.length == 2
             ? screenWidth * 0.731
             : (screenWidth / 2) * 0.70);
-            
+
     final days = widget.totalDays ?? '';
     // Sort prioList by prio ascending
     final sortedPrioList =
@@ -203,7 +203,12 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
                           : Container(
                             margin:
                                 (sortedPrioList.length == 2 && index == 1)
-                                    ? EdgeInsets.only(left: screenWidth * 0.55)
+                                    ? EdgeInsets.only(
+                                      left:
+                                          p['prio_text'] == 'HR'
+                                              ? screenWidth * 0.55
+                                              : screenWidth * 0.35,
+                                    )
                                     : EdgeInsets.zero,
                             child: Text(
                               p['prio_text'] ?? '',

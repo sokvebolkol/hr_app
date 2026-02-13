@@ -1,8 +1,8 @@
 import 'package:chokchey_hr_app/views/leaves/leave_request/leave_request_screen.dart';
-import 'package:chokchey_hr_app/views/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../constants/constant.dart';
+import '../menu/menu_screen.dart';
 import 'requester_dashboard.dart';
 import 'staff_dashboard_screen.dart';
 
@@ -21,30 +21,55 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(),
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: Text(
-        _showStaffView ? 'Staff Dashboard' : 'Personal Dashboard',
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      backgroundColor: primary,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      flexibleSpace: Container(
+      floatingActionButton: Container(
+        width: 74,
+        height: 74,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [primary, primary.withOpacity(0.8)],
+          shape: BoxShape.circle,
+          color: Colors.white,
+          boxShadow: [
+            // Main soft shadow
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 25,
+              offset: const Offset(0, 10),
+            ),
+
+            // Ambient light
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+            // Primary glow
+            BoxShadow(
+              color: primary.withOpacity(0.18),
+              blurRadius: 20,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Center(
+          child: FloatingActionButton(
+            elevation: 0,
+            backgroundColor: primary,
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+            onPressed: () async {
+              HapticFeedback.mediumImpact();
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LeaveRequestScreen(),
+                ),
+              );
+            },
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -53,9 +78,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
       case 0:
         return _buildDashboardView();
       case 1:
-        return const LeaveRequestScreen();
-      case 2:
-        return const ProfilePage();
+        return const MenuScreen();
       default:
         return _buildDashboardView();
     }
@@ -78,43 +101,57 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
       },
       child:
           _showStaffView
-              ? const StaffDashboardView(key: ValueKey('staff'))
-              : const DashboardScreen(key: ValueKey('personal')),
+              ? const StaffDashboardScreen(key: ValueKey('staff'))
+              : const RequesterDashboardScreen(
+                key: ValueKey('personal'),
+                hideBottomNav: true,
+              ),
     );
   }
 
   Widget _buildBottomNavigationBar() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white.withOpacity(0.95), Colors.white],
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: primary.withOpacity(0.05),
+            blurRadius: 40,
+            offset: const Offset(0, -4),
+            spreadRadius: 0,
           ),
         ],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // ✅ Toggle Switch Button
-              _buildToggleSwitchNavItem(),
-              _buildNavItem(
-                icon: Icons.add_circle_rounded,
-                label: 'Request Leave',
-                index: 1,
-              ),
-              _buildNavItem(
-                icon: Icons.more_horiz_rounded,
-                label: 'More',
-                index: 2,
-              ),
-            ],
-          ),
+      child: Container(
+        constraints: BoxConstraints(
+          minHeight: isSmallScreen ? 80 : 90,
+          maxHeight: isSmallScreen ? 85 : 95,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // ✅ Toggle Switch Button
+            _buildToggleSwitchNavItem(),
+            SizedBox(width: isSmallScreen ? 80 : 100), // Space for FAB
+            _buildNavItem(icon: Icons.menu_rounded, label: 'Menu', index: 1),
+          ],
         ),
       ),
     );
@@ -125,45 +162,62 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
     final isSelected = _currentIndex == 0;
 
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (_currentIndex != 0) {
-            setState(() => _currentIndex = 0);
-            HapticFeedback.lightImpact();
-          } else {
-            // Toggle between views when already on dashboard
-            setState(() => _showStaffView = !_showStaffView);
-            HapticFeedback.mediumImpact();
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          decoration: BoxDecoration(
-            color: isSelected ? primary.withOpacity(0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        child: GestureDetector(
+          onTap: () {
+            if (_currentIndex != 0) {
+              setState(() => _currentIndex = 0);
+              HapticFeedback.lightImpact();
+            } else {
+              // Toggle between views when already on dashboard
+              setState(() => _showStaffView = !_showStaffView);
+              HapticFeedback.mediumImpact();
+            }
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Toggle Switch Container
-              Container(
-                width: 60,
-                height: 32,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: 64,
+                height: 34,
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                     colors:
                         _showStaffView
-                            ? [Colors.green, Colors.green.shade600]
-                            : [Colors.blue, Colors.blue.shade600],
+                            ? [
+                              secondary,
+                              secondary.withOpacity(0.8),
+                              secondary.withOpacity(0.9),
+                            ]
+                            : [
+                              primary,
+                              primary.withOpacity(0.8),
+                              primary.withOpacity(0.9),
+                            ],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: (_showStaffView ? Colors.green : Colors.blue)
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                      color: (_showStaffView ? secondary : primary).withOpacity(
+                        0.4,
+                      ),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                      spreadRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: (_showStaffView ? secondary : primary).withOpacity(
+                        0.2,
+                      ),
+                      blurRadius: 6,
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),
@@ -171,23 +225,32 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                   children: [
                     // Animated sliding circle
                     AnimatedAlign(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOutCubic,
                       alignment:
                           _showStaffView
                               ? Alignment.centerRight
                               : Alignment.centerLeft,
                       child: Container(
-                        width: 26,
-                        height: 26,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Colors.white, Color(0xFFFAFAFA)],
+                          ),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black26,
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: 4,
-                              offset: Offset(0, 2),
+                              offset: const Offset(0, 1),
                             ),
                           ],
                         ),
@@ -196,24 +259,28 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                               ? Icons.groups_rounded
                               : Icons.person_rounded,
                           size: 16,
-                          color: _showStaffView ? Colors.green : Colors.blue,
+                          color: _showStaffView ? secondary : primary,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               // Label
-              Text(
-                _showStaffView ? 'Staff' : 'Personal',
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
                 style: TextStyle(
                   color: isSelected ? primary : Colors.grey[600],
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: 0.5,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  _showStaffView ? 'Staff' : 'Personal',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -231,31 +298,64 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
     final color = isSelected ? primary : Colors.grey[600];
 
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() => _currentIndex = index);
-          HapticFeedback.lightImpact();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? primary.withOpacity(0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        child: GestureDetector(
+          onTap: () {
+            setState(() => _currentIndex = index);
+            HapticFeedback.lightImpact();
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 4),
-              Text(
-                label,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient:
+                      isSelected
+                          ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              primary.withOpacity(0.2),
+                              primary.withOpacity(0.1),
+                            ],
+                          )
+                          : null,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: primary.withOpacity(0.15),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                          : null,
+                ),
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 150),
+                  scale: isSelected ? 1.1 : 1.0,
+                  child: Icon(icon, color: color, size: 24),
+                ),
+              ),
+              const SizedBox(height: 6),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
                 style: TextStyle(
                   color: color,
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  letterSpacing: 0.5,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),

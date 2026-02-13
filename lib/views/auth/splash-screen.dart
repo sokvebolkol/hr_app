@@ -1,4 +1,5 @@
 import 'package:chokchey_hr_app/constants/constant.dart';
+import 'package:chokchey_hr_app/views/dashboard/manager_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -163,9 +164,9 @@ class _SplashScreenState extends State<SplashScreen> {
         if (isCeoUser) {
           targetScreen = const CeoDashboardScreen();
         } else if (isApprover) {
-          targetScreen = const ApproverDashboardScreen();
+          targetScreen = const ManagerDashboard();
         } else {
-          targetScreen = const DashboardScreen();
+          targetScreen = const RequesterDashboardScreen();
         }
 
         Navigator.pushReplacement(

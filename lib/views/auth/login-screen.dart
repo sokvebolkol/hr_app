@@ -15,7 +15,6 @@ import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
 import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
-import '../dashboard/approver_dashboard_screen.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import 'confirm-password-screen.dart';
 import 'forgot-password.dart';
@@ -230,9 +229,9 @@ class _LoginScreenState extends State<LoginScreen>
         if (ceoUser) {
           targetScreen = const CeoDashboardScreen();
         } else if (isApprover) {
-          targetScreen = const ApproverDashboardScreen();
+          targetScreen = const ManagerDashboard();
         } else {
-          targetScreen = const DashboardScreen();
+          targetScreen = const RequesterDashboardScreen();
         }
 
         if (!mounted) return;
