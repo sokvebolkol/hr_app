@@ -82,6 +82,49 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     }
   }
 
+  Future<Language> _getCurrentLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    return languageLogic.language;
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? primary : Colors.grey[600],
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? primary : Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<bool> _onBackPressed() async {
     await CustomAlertDialog.show(
       context,
@@ -106,177 +149,202 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
 
-    // Set the home content dynamically
-    _screens[0] = const _DashboardHomeContent();
+    return FutureBuilder<Language>(
+      future: _getCurrentLanguage(),
+      builder: (context, languageSnapshot) {
+        if (languageSnapshot.hasData) {
+          language = languageSnapshot.data!;
+        }
 
-    // ignore: deprecated_member_use
-    return WillPopScope(
-      onWillPop: _onBackPressed,
-      child: Scaffold(
-        key: _scaffoldKey,
+        // Set the home content dynamically
+        _screens[0] = const _DashboardHomeContent();
+        // Set menu screen dynamically to ensure it rebuilds with language changes
+        _screens[1] = MenuScreen(key: ValueKey(language.home));
 
-        backgroundColor: Colors.grey[100],
-        body: ChangeNotifierProvider.value(
-          value: _dashboardViewModel,
-          child: Consumer<DashboardViewModel>(
-            builder: (context, viewModel, child) {
-              if (viewModel.isLoading) {
-                return const Center(child: SpinKitFadingCircle(color: primary));
-              }
+        // ignore: deprecated_member_use
+        return WillPopScope(
+          onWillPop: _onBackPressed,
+          child: Scaffold(
+            key: _scaffoldKey,
 
-              // Force logout if inactive
-              if (viewModel.isUserInactive) {
-                WidgetsBinding.instance.addPostFrameCallback((_) async {
-                  await viewModel.forceLogout();
-                  if (mounted) {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => const LoginScreen(),
-                      ),
-                      (route) => false,
+            backgroundColor: Colors.grey[100],
+            body: ChangeNotifierProvider.value(
+              value: _dashboardViewModel,
+              child: Consumer<DashboardViewModel>(
+                builder: (context, viewModel, child) {
+                  if (viewModel.isLoading) {
+                    return const Center(
+                      child: SpinKitFadingCircle(color: primary),
                     );
                   }
-                });
 
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SpinKitFadingCircle(color: primary),
-                      const SizedBox(height: 16),
-                      Text(language.accountInactiveLoggingOut),
-                    ],
-                  ),
-                );
-              }
+                  // Force logout if inactive
+                  if (viewModel.isUserInactive) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      await viewModel.forceLogout();
+                      if (mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (BuildContext context) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    });
 
-              // Force update check
-              if (viewModel.appVersion != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) async {
-                  final shouldUpdate = await viewModel.shouldForceUpdate();
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SpinKitFadingCircle(color: primary),
+                          const SizedBox(height: 16),
+                          Text(language.accountInactiveLoggingOut),
+                        ],
+                      ),
+                    );
+                  }
 
-                  if (shouldUpdate && mounted) {
-                    final updateUrl =
-                        Platform.isAndroid
-                            ? viewModel.appVersion!.androidUrl
-                            : viewModel.appVersion!.iosUrl;
+                  // Force update check
+                  if (viewModel.appVersion != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      final shouldUpdate = await viewModel.shouldForceUpdate();
 
-                    CustomAlertDialog.show(
-                      context,
-                      title: language.updateAvailable,
-                      message:
-                          '${language.aNewVersion} ${viewModel.appVersion?.version} '
-                          '${language.isAvailableAndMustBeInstalled}\n\n'
-                          '${viewModel.appVersion?.releaseNotes ?? ''}',
-                      icon: Icons.system_update,
-                      iconColor: primary,
-                      primaryButtonText: 'Update Now',
-                      onPrimaryPressed: () async {
-                        final uri = Uri.parse(updateUrl);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
+                      if (shouldUpdate && mounted) {
+                        final updateUrl =
+                            Platform.isAndroid
+                                ? viewModel.appVersion!.androidUrl
+                                : viewModel.appVersion!.iosUrl;
+
+                        CustomAlertDialog.show(
+                          context,
+                          title: language.updateAvailable,
+                          message:
+                              '${language.aNewVersion} ${viewModel.appVersion?.version} '
+                              '${language.isAvailableAndMustBeInstalled}\n\n'
+                              '${viewModel.appVersion?.releaseNotes ?? ''}',
+                          icon: Icons.system_update,
+                          iconColor: primary,
+                          primaryButtonText: 'Update Now',
+                          onPrimaryPressed: () async {
+                            final uri = Uri.parse(updateUrl);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            }
+                          },
+                          barrierDismissible: false,
+                        );
+                      }
+                    });
+                  }
+
+                  // Error handling
+                  if (viewModel.errorMessage != null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      ErrorHandler.showErrorDialog(
+                        context,
+                        message: viewModel.errorMessage!,
+                        onRetry: () {
+                          _dashboardViewModel.fetchDashboard();
+                        },
+                        onDismiss: () {
+                          viewModel.clearError();
+                        },
+                      );
+                    });
+                  }
+
+                  // Home screen with sticky header
+                  if (_currentIndex == 0 || widget.hideBottomNav) {
+                    return Column(
+                      children: [
+                        _buildStickyHeader(viewModel),
+                        Expanded(
+                          child: _screens[0],
+                        ), // Always show home content when hideBottomNav is true
+                      ],
+                    );
+                  }
+
+                  return _screens[_currentIndex];
+                },
+              ),
+            ),
+
+            /// ✅ Hide / Show Bottom Navigation
+            bottomNavigationBar:
+                widget.hideBottomNav
+                    ? null
+                    : Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildNavItem(
+                            icon: Icons.home,
+                            label: language.home,
+                            isSelected: _currentIndex == 0,
+                            onTap: () {
+                              setState(() {
+                                _currentIndex = 0;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 60), // Space for FAB
+                          _buildNavItem(
+                            icon: Icons.menu,
+                            label: language.menu,
+                            isSelected: _currentIndex == 1,
+                            onTap: () {
+                              setState(() {
+                                _currentIndex = 1;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+            floatingActionButton:
+                widget.hideBottomNav
+                    ? null
+                    : FloatingActionButton(
+                      backgroundColor: primary,
+                      child: const Icon(Icons.add, color: Colors.white),
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LeaveRequestScreen(),
+                          ),
+                        );
+
+                        if (result == true && mounted) {
+                          _dashboardViewModel.refresh();
                         }
                       },
-                      barrierDismissible: false,
-                    );
-                  }
-                });
-              }
+                    ),
 
-              // Error handling
-              if (viewModel.errorMessage != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ErrorHandler.showErrorDialog(
-                    context,
-                    message: viewModel.errorMessage!,
-                    onRetry: () {
-                      _dashboardViewModel.fetchDashboard();
-                    },
-                    onDismiss: () {
-                      viewModel.clearError();
-                    },
-                  );
-                });
-              }
-
-              // Home screen with sticky header
-              if (_currentIndex == 0 || widget.hideBottomNav) {
-                return Column(
-                  children: [
-                    _buildStickyHeader(viewModel),
-                    Expanded(
-                      child: _screens[0],
-                    ), // Always show home content when hideBottomNav is true
-                  ],
-                );
-              }
-
-              return _screens[_currentIndex];
-            },
+            floatingActionButtonLocation:
+                widget.hideBottomNav
+                    ? null
+                    : FloatingActionButtonLocation.centerDocked,
           ),
-        ),
-
-        /// ✅ Hide / Show Bottom Navigation
-        bottomNavigationBar:
-            widget.hideBottomNav
-                ? null
-                : ConvexAppBar(
-                  key: ValueKey(_currentIndex),
-                  backgroundColor: Colors.white,
-                  activeColor: primary,
-                  shadowColor: Colors.grey[200],
-                  color: primary,
-                  style: TabStyle.react,
-                  items: [
-                    TabItem(icon: Icons.home, title: language.home),
-                    TabItem(icon: Icons.home, title: language.leaveRequest),
-                    TabItem(icon: Icons.menu, title: language.menu),
-                  ],
-                  initialActiveIndex: _currentIndex == 0 ? 0 : 2,
-                  onTap: (int i) {
-                    if (i == 1) return;
-
-                    final newIndex = i == 2 ? 1 : 0;
-
-                    if (_currentIndex != 0 && newIndex == 0) {
-                      _dashboardViewModel.refreshProfile();
-                    }
-
-                    setState(() {
-                      _currentIndex = newIndex;
-                    });
-                  },
-                ),
-
-        floatingActionButton:
-            widget.hideBottomNav
-                ? null
-                : FloatingActionButton(
-                  backgroundColor: primary,
-                  child: const Icon(Icons.add, color: Colors.white),
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LeaveRequestScreen(),
-                      ),
-                    );
-
-                    if (result == true && mounted) {
-                      _dashboardViewModel.refresh();
-                    }
-                  },
-                ),
-
-        floatingActionButtonLocation:
-            widget.hideBottomNav
-                ? null
-                : FloatingActionButtonLocation.centerDocked,
-      ),
+        );
+      },
     );
   }
 

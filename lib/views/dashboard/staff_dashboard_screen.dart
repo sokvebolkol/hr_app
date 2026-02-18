@@ -13,6 +13,9 @@ import '../../localization/language_logic.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import '../../viewmodels/manager_dashboard_viewmodel.dart';
+import '../../viewmodels/notification_viewmodel.dart';
+import '../../models/ceo_dashboard_model.dart';
 import '../../widgets/ceo_leave_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
@@ -20,7 +23,6 @@ import '../../widgets/statistics_card.dart';
 import '../attendance/staff_attendance_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
-import '../leaves/approval_history_screen.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
 import '../menu/menu_screen.dart';
 import '../notifications/ceo_notifcation_screen.dart';
@@ -39,11 +41,16 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
 
+  final List<Widget> _screens = [
+    const StaffDashboardScreen(),
+    ProfilePage(currentIndex: 1),
+    const MenuScreen(),
+  ];
 
   double screenWidth = 0.0;
   double screenHeight = 0.0;
   late DashboardViewModel _dashboardViewModel;
-  late CeoDashboardViewModel _ceoDashboardViewModel;
+  late ManagerDashboardViewModel _managerDashboardViewModel;
   Language language = Language();
   bool _hasShownUpdateDialog = false;
 
@@ -52,17 +59,17 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
-    _ceoDashboardViewModel = CeoDashboardViewModel();
+    _managerDashboardViewModel = ManagerDashboardViewModel();
     _initializeLanguage();
 
     _dashboardViewModel.initialize();
-    _ceoDashboardViewModel.initialize();
+    _managerDashboardViewModel.initialize();
 
     // Listen for profile updates
     ProfileViewModel.onProfileUpdated = () {
       if (mounted && _currentIndex == 0) {
         _dashboardViewModel.refreshProfile();
-        _ceoDashboardViewModel.refresh();
+        _managerDashboardViewModel.refresh();
       }
     };
   }
@@ -101,6 +108,12 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
 
+    // Set the home content dynamically
+    _screens[0] = _StaffDashboardHomeContent(
+      dashboardViewModel: _dashboardViewModel,
+      managerViewModel: _managerDashboardViewModel,
+    );
+
     return WillPopScope(
       onWillPop: _onBackPressed,
       child: Scaffold(
@@ -109,10 +122,11 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
         body: MultiProvider(
           providers: [
             ChangeNotifierProvider.value(value: _dashboardViewModel),
-            ChangeNotifierProvider.value(value: _ceoDashboardViewModel),
+            ChangeNotifierProvider.value(value: _managerDashboardViewModel),
+            ChangeNotifierProvider(create: (_) => NotificationViewModel()),
           ],
-          child: Consumer2<DashboardViewModel, CeoDashboardViewModel>(
-            builder: (context, dashboardViewModel, ceoViewModel, child) {
+          child: Consumer2<DashboardViewModel, ManagerDashboardViewModel>(
+            builder: (context, dashboardViewModel, managerViewModel, child) {
               if (dashboardViewModel.isLoading) {
                 return const Center(
                   child: SpinKitFadingCircle(color: secondary),
@@ -507,7 +521,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
     WidgetsBinding.instance.removeObserver(this);
     ProfileViewModel.onProfileUpdated = null;
     _dashboardViewModel.dispose();
-    _ceoDashboardViewModel.dispose();
+    _managerDashboardViewModel.dispose();
     super.dispose();
   }
 
@@ -517,7 +531,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
 
     if (state == AppLifecycleState.resumed && _currentIndex == 0) {
       _dashboardViewModel.refreshProfile();
-      _ceoDashboardViewModel.refresh();
+      _managerDashboardViewModel.refresh();
     }
   }
 
@@ -528,21 +542,21 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
   }
 }
 
-class _CeoDashboardHomeContent extends StatefulWidget {
+class _StaffDashboardHomeContent extends StatefulWidget {
   final DashboardViewModel dashboardViewModel;
-  final CeoDashboardViewModel ceoViewModel;
+  final ManagerDashboardViewModel managerViewModel;
 
-  const _CeoDashboardHomeContent({
+  const _StaffDashboardHomeContent({
     required this.dashboardViewModel,
-    required this.ceoViewModel,
+    required this.managerViewModel,
   });
 
   @override
-  State<_CeoDashboardHomeContent> createState() =>
-      _CeoDashboardHomeContentState();
+  State<_StaffDashboardHomeContent> createState() =>
+      _StaffDashboardHomeContentState();
 }
 
-class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
+class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _progressAnimationController;
@@ -572,7 +586,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     // Refresh data when dashboard content is first created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.dashboardViewModel.refreshProfile();
-      widget.ceoViewModel.refresh();
+      widget.managerViewModel.refresh();
     });
   }
 
@@ -595,13 +609,13 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CeoDashboardViewModel>(
-      builder: (context, ceoViewModel, child) {
+    return Consumer<ManagerDashboardViewModel>(
+      builder: (context, managerViewModel, child) {
         return RefreshIndicator(
           onRefresh: () async {
             await Future.wait([
               widget.dashboardViewModel.refresh(),
-              ceoViewModel.refresh(),
+              managerViewModel.refresh(),
             ]);
           },
           color: secondary,
@@ -625,10 +639,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                               ),
                         ),
                       ),
-                  child: _buildTodayAttendanceCard(ceoViewModel),
+                  child: _buildTodayAttendanceCard(managerViewModel),
                 ),
                 _buildFunctionButtons(context),
-                _buildLeaveManagementTabs(ceoViewModel),
+                _buildLeaveManagementTabs(managerViewModel),
               ],
             ),
           ),
@@ -637,7 +651,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildTodayAttendanceCard(CeoDashboardViewModel viewModel) {
+  Widget _buildTodayAttendanceCard(ManagerDashboardViewModel viewModel) {
     if (viewModel.errorMessage != null) {
       return Container(
         margin: const EdgeInsets.all(16),
@@ -668,10 +682,16 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  viewModel.errorMessage!,
-                  style: TextStyle(color: Colors.red[700], fontSize: 12),
-                  textAlign: TextAlign.center,
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      viewModel.errorMessage!.length > 200
+                          ? '${viewModel.errorMessage!.substring(0, 200)}...'
+                          : viewModel.errorMessage!,
+                      style: TextStyle(color: Colors.red[700], fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -869,7 +889,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildPresentWithProgress(CeoDashboardViewModel viewModel) {
+  Widget _buildPresentWithProgress(ManagerDashboardViewModel viewModel) {
     final totalStaff =
         viewModel.presentCount + viewModel.onLeaveCount + viewModel.absentCount;
     final progress = totalStaff > 0 ? viewModel.presentCount / totalStaff : 0.0;
@@ -961,7 +981,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildLeaveManagementTabs(CeoDashboardViewModel viewModel) {
+  Widget _buildLeaveManagementTabs(ManagerDashboardViewModel viewModel) {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1302,7 +1322,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildApprovedLeavesTab(CeoDashboardViewModel viewModel) {
+  Widget _buildApprovedLeavesTab(ManagerDashboardViewModel viewModel) {
     // Get data from viewmodel
     final approvedLeaves = viewModel.approvedLeaves;
     final rejectedLeaves = viewModel.rejectedLeaves;
@@ -1398,16 +1418,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 count: approvedCount,
                 color: Colors.green,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ApprovalHistoryScreen(
-                            filterType: 'approved',
-                            viewModel: viewModel,
-                            initialMonth: _selectedMonth,
-                          ),
-                    ),
+                  // TODO: Implement manager-specific approval history
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Approved leaves: $approvedCount')),
                   );
                 },
               ),
@@ -1417,16 +1430,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 count: rejectedCount,
                 color: Colors.red,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ApprovalHistoryScreen(
-                            filterType: 'rejected',
-                            viewModel: viewModel,
-                            initialMonth: _selectedMonth,
-                          ),
-                    ),
+                  // TODO: Implement manager-specific approval history
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Rejected leaves: $rejectedCount')),
                   );
                 },
               ),
@@ -1886,7 +1892,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         // Handle the result if action was taken
         if (result != null && mounted) {
           // Refresh the CEO dashboard data
-          widget.ceoViewModel.refresh();
+          widget.managerViewModel.refresh();
         }
       },
       child: Container(

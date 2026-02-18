@@ -32,23 +32,14 @@ class LeaveCardWidget extends StatefulWidget {
 }
 
 class _LeaveCardWidgetState extends State<LeaveCardWidget> {
-  double screenWidth = 0;
-  double lineWidth = 0;
-
   @override
   Widget build(BuildContext context) {
-    screenWidth = MediaQuery.of(context).size.width;
-    lineWidth =
-        widget.lineWidth ??
-        (widget.prioList?.length == 2
-            ? screenWidth * 0.731
-            : (screenWidth / 2) * 0.70);
-
     final days = widget.totalDays ?? '';
+
     // Sort prioList by prio ascending
-    final sortedPrioList =
-        (widget.prioList ?? [])
-          ..sort((a, b) => (a['prio'] as int).compareTo(b['prio'] as int));
+    final sortedPrioList = List<Map<String, dynamic>>.from(
+      widget.prioList ?? [],
+    )..sort((a, b) => (a['prio'] as int).compareTo(b['prio'] as int));
 
     return Card(
       color: Colors.white,
@@ -56,9 +47,11 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            /// TOP ROW
             Row(
               children: [
                 Expanded(
@@ -72,48 +65,42 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
                     borderRadius: 7,
                   ),
                 ),
+
                 const SizedBox(width: 12),
+
                 Expanded(
                   flex: 3,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.reason,
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       Text(
-                        days.isNotEmpty
-                            ? '${widget.totalLabel} $days day(s)'
-                            : '',
+                        widget.reason,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: secondary,
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+
+                      const SizedBox(height: 8),
+
+                      if (days.isNotEmpty)
+                        Text(
+                          '${widget.totalLabel} $days day(s)',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: secondary,
+                          ),
+                        ),
                     ],
                   ),
                 ),
+
                 Expanded(
                   flex: 2,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
@@ -121,11 +108,14 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
                           horizontal: 6,
                           vertical: 2,
                         ),
+
                         decoration: BoxDecoration(
                           color: FileHelper()
                               .getLeaveTypeColor(widget.leaveType)
                               .withOpacity(0.15),
+
                           borderRadius: BorderRadius.circular(6),
+
                           border: Border.all(
                             color: FileHelper()
                                 .getLeaveTypeColor(widget.leaveType)
@@ -133,6 +123,7 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
                             width: 0.5,
                           ),
                         ),
+
                         child: Text(
                           widget.leaveType,
                           style: TextStyle(
@@ -144,16 +135,20 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 40),
                     ],
                   ),
                 ),
               ],
             ),
+
+            /// STATUS TEXT
             Padding(
-              padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+              padding: const EdgeInsets.only(top: 16, bottom: 8),
               child: Text(
                 widget.status == "Pending" ? "Pending ..." : widget.status,
+
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -161,63 +156,50 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
                 ),
               ),
             ),
+
+            /// STEP PROGRESS
             if (sortedPrioList.isNotEmpty)
               Column(
                 children: [
+                  /// CIRCLES + LINES
                   Row(
-                    children: [
-                      ...List.generate(
-                        sortedPrioList.length,
-                        (i) => Row(
-                          children: [
-                            _buildCircle(
-                              sortedPrioList[i]['apstatu_text'] ?? "Pending...",
-                            ),
-                            if (i < sortedPrioList.length - 1)
-                              _buildConnectingLine(),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                    ],
+                    children: List.generate(sortedPrioList.length * 2 - 1, (
+                      index,
+                    ) {
+                      if (index.isEven) {
+                        final i = index ~/ 2;
+
+                        return _buildCircle(
+                          sortedPrioList[i]['apstatu_text'] ?? "Pending...",
+                        );
+                      } else {
+                        return Expanded(child: _buildConnectingLine());
+                      }
+                    }),
                   ),
+
                   const SizedBox(height: 8),
+
+                  /// LABELS
                   Row(
                     children: List.generate(sortedPrioList.length, (index) {
-                      final p = sortedPrioList[index];
+                      return Expanded(
+                        child: Text(
+                          sortedPrioList[index]['prio_text'] ?? '',
 
-                      return sortedPrioList.length == 3
-                          ? Container(
-                            margin:
-                                (sortedPrioList.length == 3 && index == 1)
-                                    ? const EdgeInsets.only(left: 40, right: 85)
-                                    : EdgeInsets.zero,
-                            child: Text(
-                              p['prio_text'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black,
-                              ),
-                            ),
-                          )
-                          : Container(
-                            margin:
-                                (sortedPrioList.length == 2 && index == 1)
-                                    ? EdgeInsets.only(
-                                      left:
-                                          p['prio_text'] == 'HR'
-                                              ? screenWidth * 0.55
-                                              : screenWidth * 0.35,
-                                    )
-                                    : EdgeInsets.zero,
-                            child: Text(
-                              p['prio_text'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black,
-                              ),
-                            ),
-                          );
+                          textAlign:
+                              index == 0
+                                  ? TextAlign.left
+                                  : index == sortedPrioList.length - 1
+                                  ? TextAlign.right
+                                  : TextAlign.center,
+
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
                     }),
                   ),
                 ],
@@ -228,18 +210,23 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
     );
   }
 
+  /// BUILD CIRCLE
   Widget _buildCircle(String status) {
     Color color;
+
     switch (status) {
       case "Approved":
         color = Colors.green;
         break;
+
       case "Rejected":
         color = Colors.red;
         break;
+
       default:
         color = logoPink;
     }
+
     return Container(
       width: 10,
       height: 10,
@@ -247,7 +234,8 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
     );
   }
 
+  /// BUILD CONNECTING LINE (FULLY FLEXIBLE)
   Widget _buildConnectingLine() {
-    return Container(width: lineWidth, height: 2, color: Colors.grey[400]);
+    return Container(height: 2, color: Colors.grey[400]);
   }
 }

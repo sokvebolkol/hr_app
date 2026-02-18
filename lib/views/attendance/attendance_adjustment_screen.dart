@@ -183,7 +183,7 @@ class _AttendanceAdjustmentScreenState
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            // Date column
+            // Date column (keep fixed size)
             Container(
               width: 50,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -208,22 +208,25 @@ class _AttendanceAdjustmentScreenState
                 ],
               ),
             ),
-            const SizedBox(width: 6),
-            // Time in
-            SizedBox(
-              width: 70,
+
+            const SizedBox(width: 8),
+
+            // Time in (Expanded)
+            Expanded(
+              flex: 2,
               child: Text(
                 _formatTime(attendance.checkedIn),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            // Time out or status
-            SizedBox(
-              width: 80,
+            // Time out or status (Expanded)
+            Expanded(
+              flex: 3,
               child: Text(
                 _getTimeOutDisplay(attendance),
                 style: TextStyle(
@@ -231,34 +234,38 @@ class _AttendanceAdjustmentScreenState
                   fontWeight: FontWeight.w500,
                   color: _getTimeOutColor(attendance),
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
 
-            const Spacer(),
-
-            // Radio button and label
-            GestureDetector(
-              onTap: () => _selectAttendance(attendance, adjustmentType),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Radio<String>(
-                    value: attendance.date,
-                    groupValue: _selectedAttendance?.date,
-                    onChanged:
-                        (value) =>
-                            _selectAttendance(attendance, adjustmentType),
-                    activeColor: primary,
-                  ),
-                  Text(
-                    adjustmentType,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _getAdjustmentTypeColor(adjustmentType),
-                      fontWeight: FontWeight.w500,
+            // Radio and label (Expanded)
+            Expanded(
+              flex: 4,
+              child: GestureDetector(
+                onTap: () => _selectAttendance(attendance, adjustmentType),
+                child: Row(
+                  children: [
+                    Radio<String>(
+                      value: attendance.date,
+                      groupValue: _selectedAttendance?.date,
+                      onChanged:
+                          (value) =>
+                              _selectAttendance(attendance, adjustmentType),
+                      activeColor: primary,
                     ),
-                  ),
-                ],
+                    Flexible(
+                      child: Text(
+                        adjustmentType,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _getAdjustmentTypeColor(adjustmentType),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

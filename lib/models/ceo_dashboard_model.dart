@@ -5,10 +5,18 @@ class CeoDashboardResponse {
   CeoDashboardResponse({required this.success, required this.data});
 
   factory CeoDashboardResponse.fromJson(Map<String, dynamic> json) {
-    return CeoDashboardResponse(
-      success: json['success'] ?? false,
-      data: CeoDashboardData.fromJson(json['data']),
-    );
+    try {
+      print('CeoDashboardResponse.fromJson - Input JSON keys: ${json.keys}');
+      print('CeoDashboardResponse.fromJson - success: ${json['success']}');
+
+      return CeoDashboardResponse(
+        success: json['success'] ?? false,
+        data: CeoDashboardData.fromJson(json['data']),
+      );
+    } catch (e) {
+      print('CeoDashboardResponse.fromJson - Error: $e');
+      rethrow;
+    }
   }
 }
 
@@ -18,9 +26,19 @@ class CeoDashboardData {
   CeoDashboardData({required this.summary});
 
   factory CeoDashboardData.fromJson(Map<String, dynamic> json) {
-    return CeoDashboardData(
-      summary: AttendanceSummary.fromJson(json['summary']),
-    );
+    try {
+      print('CeoDashboardData.fromJson - Input JSON keys: ${json.keys}');
+      print(
+        'CeoDashboardData.fromJson - summary type: ${json['summary'].runtimeType}',
+      );
+
+      return CeoDashboardData(
+        summary: AttendanceSummary.fromJson(json['summary']),
+      );
+    } catch (e) {
+      print('CeoDashboardData.fromJson - Error: $e');
+      rethrow;
+    }
   }
 }
 
@@ -28,6 +46,7 @@ class AttendanceSummary {
   final String date;
   final bool isWeekend;
   final bool isHoliday;
+  final int totalStaff;
   final int presentCount;
   final int lateCount;
   final int absentCount;
@@ -43,6 +62,7 @@ class AttendanceSummary {
     required this.date,
     required this.isWeekend,
     required this.isHoliday,
+    required this.totalStaff,
     required this.presentCount,
     required this.lateCount,
     required this.absentCount,
@@ -56,30 +76,44 @@ class AttendanceSummary {
   });
 
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
-    return AttendanceSummary(
-      date: json['date']?.toString() ?? '',
-      isWeekend: json['is_weekend'] ?? false,
-      isHoliday: json['is_holiday'] ?? false,
-      presentCount: _parseToInt(json['present_count']),
-      lateCount: _parseToInt(json['late_count']),
-      absentCount: _parseToInt(json['absent_count']),
-      todayStaffLeaves: _parseToInt(json['today_staff_leaves']),
-      pendingLeavesCount: _parseToInt(json['pending_leaves_count']),
-      approvedLeavesCount: _parseToInt(json['approved_leaves_count']),
-      rejectedLeavesCount: _parseToInt(json['rejected_leaves_count']),
-      leaveNeedToApprove:
-          (json['leave_need_to_approve'] as List? ?? [])
-              .map((e) => LeaveRequest.fromJson(e))
-              .toList(),
-      approvedLeaves:
-          (json['approved_leaves'] as List? ?? [])
-              .map((e) => LeaveRequest.fromJson(e))
-              .toList(),
-      rejectedLeaves:
-          (json['rejected_leaves'] as List? ?? [])
-              .map((e) => LeaveRequest.fromJson(e))
-              .toList(),
-    );
+    try {
+      print('AttendanceSummary.fromJson - Input JSON keys: ${json.keys}');
+      print(
+        'AttendanceSummary.fromJson - total_staff value: ${json['total_staff']}',
+      );
+      print(
+        'AttendanceSummary.fromJson - present_count value: ${json['present_count']}',
+      );
+
+      return AttendanceSummary(
+        date: json['date']?.toString() ?? '',
+        isWeekend: json['is_weekend'] ?? false,
+        isHoliday: json['is_holiday'] ?? false,
+        totalStaff: _parseToInt(json['total_staff']),
+        presentCount: _parseToInt(json['present_count']),
+        lateCount: _parseToInt(json['late_count']),
+        absentCount: _parseToInt(json['absent_count']),
+        todayStaffLeaves: _parseToInt(json['today_staff_leaves']),
+        pendingLeavesCount: _parseToInt(json['pending_leaves_count']),
+        approvedLeavesCount: _parseToInt(json['approved_leaves_count']),
+        rejectedLeavesCount: _parseToInt(json['rejected_leaves_count']),
+        leaveNeedToApprove:
+            (json['leave_need_to_approve'] as List? ?? [])
+                .map((e) => LeaveRequest.fromJson(e))
+                .toList(),
+        approvedLeaves:
+            (json['approved_leaves'] as List? ?? [])
+                .map((e) => LeaveRequest.fromJson(e))
+                .toList(),
+        rejectedLeaves:
+            (json['rejected_leaves'] as List? ?? [])
+                .map((e) => LeaveRequest.fromJson(e))
+                .toList(),
+      );
+    } catch (e) {
+      print('AttendanceSummary.fromJson - Error: $e');
+      rethrow;
+    }
   }
 
   static int _parseToInt(dynamic value) {
@@ -90,8 +124,6 @@ class AttendanceSummary {
     return 0;
   }
 
-  int get totalStaff =>
-      presentCount + lateCount + absentCount + todayStaffLeaves;
   double get attendanceRate =>
       totalStaff > 0 ? ((presentCount + lateCount) / totalStaff) * 100 : 0;
 }

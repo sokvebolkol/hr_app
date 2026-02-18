@@ -54,7 +54,7 @@ class DashboardRepository {
       }
 
       // Safely parse leaves data
-      final leavesData = data['leaves'];
+      final leavesData = data['pendingLeaveRequest'];
       List<LeaveModel> leaves = [];
       if (leavesData != null && leavesData is List) {
         leaves =

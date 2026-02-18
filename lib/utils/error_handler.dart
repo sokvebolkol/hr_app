@@ -64,7 +64,7 @@ class ErrorHandler {
   static String getErrorMessage(dynamic error) {
     // Handle known app exceptions first (most specific)
     if (error is NetworkException) {
-      return 'No internet connection. Please check your network and try again';
+      return 'No internet connection. Please check your network and try again!';
     }
 
     if (error is AppException) {
@@ -82,7 +82,7 @@ class ErrorHandler {
       }
       // Failed host lookup means no internet or DNS issue
       if (errorString.contains('Failed host lookup')) {
-        return 'No internet connection. Please check your network and try again';
+        return 'No internet connection. Please check your network and try again!';
       }
       // Default for other socket exceptions
       return 'Unable to connect to server. Please check your connection';
@@ -102,7 +102,7 @@ class ErrorHandler {
 
       // Check for specific error patterns
       if (errorString.contains('NO_INTERNET')) {
-        return 'No internet connection. Please check your network and try again';
+        return 'No internet connection. Please check your network and try again!';
       }
 
       if (errorString.contains('Connection refused') ||
@@ -112,7 +112,7 @@ class ErrorHandler {
       }
 
       if (errorString.contains('Failed host lookup')) {
-        return 'No internet connection. Please check your network and try again';
+        return 'No internet connection. Please check your network and try again!';
       }
 
       if (errorString.contains('SocketException')) {
