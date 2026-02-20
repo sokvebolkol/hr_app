@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_version.dart';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
+import '../models/adjustment_request_model.dart';
 import '../models/user_model.dart';
 import '../services/global_service.dart';
 import '../services/http_service.dart';
@@ -73,6 +74,28 @@ class DashboardRepository {
                 .toList();
       }
 
+      // Safely parse adjustment requests data
+      final adjustmentRequestsData = data['adjustment_requests'];
+      List<AdjustmentRequestModel> adjustmentRequests = [];
+      if (adjustmentRequestsData != null && adjustmentRequestsData is List) {
+        adjustmentRequests =
+            adjustmentRequestsData
+                .where((e) => e != null)
+                .map((e) {
+                  try {
+                    return AdjustmentRequestModel.fromJson(
+                      e as Map<String, dynamic>,
+                    );
+                  } catch (error) {
+                    ErrorHandler.logError(error, StackTrace.current);
+                    return null;
+                  }
+                })
+                .where((e) => e != null) // Filter out failed parsing attempts
+                .cast<AdjustmentRequestModel>()
+                .toList();
+      }
+
       // Safely parse leave balance data
       final leaveBalancesData = data['leave_balance'];
       LeaveBalanceModel? leaveBalance;
@@ -113,6 +136,7 @@ class DashboardRepository {
       return DashboardData(
         user: UserModel.fromJson(userData as Map<String, dynamic>),
         leaves: leaves,
+        adjustmentRequests: adjustmentRequests,
         leaveBalance: leaveBalance,
         appVersion: appVersion,
       );
@@ -172,12 +196,14 @@ class DashboardRepository {
 class DashboardData {
   final UserModel user;
   final List<LeaveModel> leaves;
+  final List<AdjustmentRequestModel> adjustmentRequests;
   final LeaveBalanceModel leaveBalance;
   final AppVersion? appVersion;
 
   DashboardData({
     required this.user,
     required this.leaves,
+    required this.adjustmentRequests,
     required this.leaveBalance,
     this.appVersion,
   });

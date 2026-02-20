@@ -420,7 +420,11 @@ class _AttendanceAdjustmentScreenState
 
   Widget _buildFancyRequestLimitCard(AttendanceAdjustmentViewModel viewModel) {
     final limit = viewModel.data!.requestLimit;
-    final progressValue = limit.requestsUsed / limit.monthlyLimit;
+    // Safely calculate progress value to avoid division by zero
+    final progressValue =
+        (limit.monthlyLimit > 0)
+            ? (limit.requestsUsed / limit.monthlyLimit).clamp(0.0, 1.0)
+            : 0.0;
     final isLimitReached = !limit.canRequest;
 
     return Container(

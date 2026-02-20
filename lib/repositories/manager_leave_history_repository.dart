@@ -16,7 +16,7 @@ class ManagerLeaveHistoryRepository {
 
       final response = await http
           .get(
-            Uri.parse('${ServerService().baseUrl}get-leaves'),
+            Uri.parse('${ServerService().baseUrl}request-history-screens'),
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',

@@ -45,7 +45,6 @@ class AttendanceAdjustmentViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Failed to load attendance data: ${e.toString()}';
-      print('Error loading attendance data: $e');
     }
 
     _isLoading = false;

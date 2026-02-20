@@ -34,9 +34,7 @@ class _AttendanceAdjustmentDetailScreenState
     extends State<AttendanceAdjustmentDetailScreen> {
   final TextEditingController _reasonController = TextEditingController();
   final AttendanceRepository _attendanceRepository = AttendanceRepository();
-  String? _attachedFileName;
   XFile? documentPhoto;
-  final ImagePicker _picker = ImagePicker();
   Language language = Language();
 
   // ✅ File size limit constant

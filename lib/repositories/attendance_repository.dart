@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/attendance_model.dart';
@@ -25,9 +26,6 @@ class AttendanceRepository {
           'Content-Type': 'application/json',
         },
       );
-
-      print('Attendance Clock Response: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -93,15 +91,7 @@ class AttendanceRepository {
         throw Exception('Authentication token not found');
       }
 
-      final requestBody = {
-        "start_date": "2026-01-07",
-        "end_date": "2026-02-09",
-        "is_request_adjustment_att_screen": true,
-      };
-
-      print('Fetching attendance for adjustment...');
-      print('Request Body: ${json.encode(requestBody)}');
-
+      final requestBody = {"is_request_adjustment_att_screen": true};
       final response = await http.post(
         Uri.parse('${_serverService.baseUrl}attendance/all'),
         headers: {
@@ -110,10 +100,6 @@ class AttendanceRepository {
         },
         body: json.encode(requestBody),
       );
-
-      print('Attendance For Adjustment Response: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data;
@@ -128,7 +114,6 @@ class AttendanceRepository {
         }
       }
     } catch (e) {
-      print('Error in getAttendanceForAdjustment: $e');
       throw Exception('Error loading attendance data: $e');
     }
   }
@@ -219,15 +204,9 @@ class AttendanceRepository {
         throw Exception('Attachment file does not exist');
       }
 
-      print('Sending multipart adjustment request...');
-      print('Fields: ${request.fields}');
-
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
       final data = json.decode(response.body);
-
-      print('Adjustment Response: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return data;
@@ -255,9 +234,6 @@ class AttendanceRepository {
         'reason': reason,
       };
 
-      print('Sending adjustment request...');
-      print('Request Body: ${json.encode(requestBody)}');
-
       final response = await http.post(
         Uri.parse('${_serverService.baseUrl}attendance/submit-adjustment'),
         headers: {
@@ -266,9 +242,6 @@ class AttendanceRepository {
         },
         body: json.encode(requestBody),
       );
-
-      print('Adjustment Response: ${response.statusCode}');
-      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);

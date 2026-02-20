@@ -408,7 +408,7 @@ class Language {
   String get accountInactiveLoggingOut =>
       "Your account is inactive. Logging out...";
   String get updateAvailable => "Update Required";
-  String get viewRequestedHistory => "View Requested History";
+  String get viewRequestedHistory => "Requested History";
 }
 
 class Khmer implements Language {

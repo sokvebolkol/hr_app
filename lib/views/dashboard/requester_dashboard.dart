@@ -577,6 +577,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     with TickerProviderStateMixin {
   late ScrollController _scrollController;
   late Timer _timer;
+  late TabController _tabController;
   int _currentScrollIndex = 0;
   Language language = Language();
 
@@ -657,6 +658,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     super.initState();
     _initializeLanguage();
     _scrollController = ScrollController();
+    _tabController = TabController(length: 2, vsync: this);
 
     // Start auto-slide after 3 seconds delay
     Future.delayed(const Duration(seconds: 3), () {
@@ -698,6 +700,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   void dispose() {
     _timer.cancel();
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -726,7 +729,35 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),
                 _buildFunctionButtons(context),
-                _buildRecentLeaveRequests(viewModel),
+                const SizedBox(height: 20),
+                // Section Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        "My Requests",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _buildRequestTabs(viewModel),
               ],
             ),
           ),
@@ -738,14 +769,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   Widget _buildLeaveBalanceSection(DashboardViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: AnnualLeaveBalanceWidget(
-        title: language.remainingLeaveBalance,
-        usedLeave: viewModel.usedLeave,
-        viewDetailsText: language.viewDetails,
-        availableLeave: viewModel.availableLeave,
-        usedLeaveText: language.usedLeave,
-        availableLeaveText: language.availableLeave,
-        onViewDetails: () {
+      child: GestureDetector(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -757,6 +782,26 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
           );
         },
+        child: AnnualLeaveBalanceWidget(
+          title: language.remainingLeaveBalance,
+          usedLeave: viewModel.usedLeave,
+          viewDetailsText: language.viewDetails,
+          availableLeave: viewModel.availableLeave,
+          usedLeaveText: language.usedLeave,
+          availableLeaveText: language.availableLeave,
+          onViewDetails: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => ChangeNotifierProvider(
+                      create: (context) => LeaveBalanceViewModel(),
+                      child: const LeaveBalanceDetailScreen(),
+                    ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -798,21 +843,83 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     );
   }
 
-  Widget _buildRecentLeaveRequests(DashboardViewModel viewModel) {
+  Widget _buildRequestTabs(DashboardViewModel viewModel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(
-                right: 16.0,
-                bottom: 8.0,
-                top: 8.0,
+        // Enhanced Tab Bar
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              child: TextButton(
-                style: TextButton.styleFrom(foregroundColor: secondary),
+            ],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: primary,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey[600],
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                letterSpacing: 0.2,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+              tabs: const [
+                Tab(
+                  child: Text('Pending Leave', style: TextStyle(fontSize: 14)),
+                ),
+                Tab(
+                  child: Text(
+                    'Pending Adjustment',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: secondary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -821,77 +928,178 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                     ),
                   );
                 },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      language.viewRequestedHistory,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.chevron_right, size: 18),
-                  ],
+                icon: const Icon(Icons.history, size: 16, color: primary),
+                label: Text(
+                  language.viewRequestedHistory,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: primary,
+                  ),
                 ),
+              ),
+            ],
+          ),
+        ),
+
+        // Tab Content
+        SizedBox(
+          height: 330,
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildPendingLeaveTab(viewModel),
+              _buildPendingAdjustmentTab(viewModel),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPendingLeaveTab(DashboardViewModel viewModel) {
+    final pendingLeaves = viewModel.sortedLeaves;
+
+    if (pendingLeaves.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.event_available_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No pending leave requests',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
-        SizedBox(
-          height: 330,
-          child: ListView.builder(
-            itemCount: viewModel.sortedLeaves.length,
-            itemBuilder: (context, index) {
-              final leave = viewModel.sortedLeaves[index];
-              // Sort prioList by prio ascending
-              final sortedPrioList = [...leave.prioList]
-                ..sort((a, b) => a.prio.compareTo(b.prio));
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => MyLeaveDetailScreen(
-                            leaveRequest: leave.toLeaveHistoryModel(),
-                          ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: pendingLeaves.length,
+      itemBuilder: (context, index) {
+        final leave = pendingLeaves[index];
+        // Sort prioList by prio ascending
+        final sortedPrioList = [...leave.prioList]
+          ..sort((a, b) => a.prio.compareTo(b.prio));
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => MyLeaveDetailScreen(
+                      leaveRequest: leave.toLeaveHistoryModel(),
                     ),
-                  ).then((result) {
-                    // Refresh the dashboard if the leave was updated/cancelled
-                    if (result == true) {
-                      viewModel.refresh();
-                    }
-                  });
-                },
-                child: LeaveCardWidget(
-                  reason: leave.reason,
-                  status: leave.statuText,
-                  totalLabel: language.total,
-                  leaveType: leave.ltyp,
-                  fromDate: leave.frdat,
-                  toDate: leave.todat,
-                  totalDays: leave.numleav,
-                  prioList:
-                      sortedPrioList
-                          .map(
-                            (p) => {
-                              'prio': p.prio,
-                              'apstatu': p.apstatu,
-                              'apstatu_text': p.apstatuText,
-                              'prio_text': p.priText,
-                              'remark': p.remark,
-                            },
-                          )
-                          .toList(),
-                ),
-              );
-            },
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+            ).then((result) {
+              // Refresh the dashboard if the leave was updated/cancelled
+              if (result == true) {
+                viewModel.refresh();
+              }
+            });
+          },
+          child: LeaveCardWidget(
+            reason: leave.reason,
+            status: leave.statuText,
+            totalLabel: language.total,
+            leaveType: leave.ltyp,
+            fromDate: leave.frdat,
+            toDate: leave.todat,
+            totalDays: leave.numleav,
+            prioList:
+                sortedPrioList
+                    .map(
+                      (p) => {
+                        'prio': p.prio,
+                        'apstatu': p.apstatu,
+                        'apstatu_text': p.apstatuText,
+                        'prio_text': p.priText,
+                        'remark': p.remark,
+                      },
+                    )
+                    .toList(),
           ),
+        );
+      },
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+    );
+  }
+
+  Widget _buildPendingAdjustmentTab(DashboardViewModel viewModel) {
+    final adjustmentRequests = viewModel.adjustmentRequests;
+
+    if (adjustmentRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.schedule_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No pending adjustment requests',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-      ],
+      );
+    }
+
+    return ListView.builder(
+      itemCount: adjustmentRequests.length,
+      itemBuilder: (context, index) {
+        final adjustment = adjustmentRequests[index];
+        // Sort approver list by priority ascending
+        final sortedApproverList = [...adjustment.approverList]
+          ..sort((a, b) => a.priority.compareTo(b.priority));
+
+        return GestureDetector(
+          onTap: () {
+            // TODO: Navigate to adjustment detail screen when created
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Adjustment Request #${adjustment.id}'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+          child: LeaveCardWidget(
+            reason: adjustment.reason,
+            status: adjustment.statusText,
+            totalLabel: 'Request',
+            leaveType: adjustment.adjustType,
+            fromDate: adjustment.adjustDateTime,
+            toDate: adjustment.adjustDateTime,
+            totalDays: '1',
+            prioList:
+                sortedApproverList
+                    .map(
+                      (a) => {
+                        'prio': a.priority,
+                        'apstatu': a.approvalStatus,
+                        'apstatu_text': a.approvalStatusText,
+                        'prio_text': a.priorityText,
+                        'remark': a.remark ?? '',
+                      },
+                    )
+                    .toList(),
+          ),
+        );
+      },
+      padding: const EdgeInsets.symmetric(horizontal: 20),
     );
   }
 }

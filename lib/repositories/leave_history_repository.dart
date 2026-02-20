@@ -18,7 +18,7 @@ class LeaveHistoryRepository {
       }
 
       final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}get-leaves'),
+        Uri.parse('${_serverService.baseUrl}request-history-screens'),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

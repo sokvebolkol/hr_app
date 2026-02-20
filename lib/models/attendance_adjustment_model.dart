@@ -44,7 +44,7 @@ class AttendanceAdjustmentData {
               .toList() ??
           [],
       attendanceMissing:
-          (json['missing_attendance'] as List<dynamic>?)
+          (json['attendance_missing'] as List<dynamic>?)
               ?.map((item) => AttendanceMissing.fromJson(item))
               .toList() ??
           [],
