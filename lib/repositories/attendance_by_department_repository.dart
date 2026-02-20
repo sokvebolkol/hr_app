@@ -19,12 +19,11 @@ class AttendanceByDepartmentRepository {
         throw Exception('Authentication token not found');
       }
 
-      print('Attendance By Department - Fetching data');
       if (startDate != null) print('Start Date: $startDate');
       if (endDate != null) print('End Date: $endDate');
 
       // Build URL with optional date parameters
-      String url = '${_serverService.baseUrl}ceo/attendance-by-department';
+      String url = '${_serverService.baseUrl}attendance-by-department';
       List<String> queryParams = [];
 
       if (startDate != null) {

@@ -48,13 +48,13 @@ class DashboardRepository {
       }
 
       // Safely parse user data
-      final userData = data['user'];
+      final userData = data['user_info'];
       if (userData == null) {
         throw DataParseException(message: 'User data not found in response');
       }
 
       // Safely parse leaves data
-      final leavesData = data['pendingLeaveRequest'];
+      final leavesData = data['pending_leave_request'];
       List<LeaveModel> leaves = [];
       if (leavesData != null && leavesData is List) {
         leaves =
@@ -74,7 +74,7 @@ class DashboardRepository {
       }
 
       // Safely parse leave balance data
-      final leaveBalancesData = data['leaveBalances'];
+      final leaveBalancesData = data['leave_balance'];
       LeaveBalanceModel? leaveBalance;
 
       if (leaveBalancesData != null &&
