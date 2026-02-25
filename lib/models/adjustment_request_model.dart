@@ -8,7 +8,6 @@ class AdjustmentRequestModel {
   final String createdBy;
   final String createdAt;
   final String requesterName;
-  final String ecard;
   final List<AdjustmentApprover> approverList;
   final String statusText;
 
@@ -22,7 +21,6 @@ class AdjustmentRequestModel {
     required this.createdBy,
     required this.createdAt,
     required this.requesterName,
-    required this.ecard,
     required this.approverList,
     required this.statusText,
   });
@@ -38,7 +36,6 @@ class AdjustmentRequestModel {
       createdBy: json['created_by'] ?? '',
       createdAt: json['created_at'] ?? '',
       requesterName: json['requester_name'] ?? '',
-      ecard: json['ecard'] ?? '',
       approverList:
           (json['approver_list'] as List<dynamic>?)
               ?.map((e) => AdjustmentApprover.fromJson(e))
@@ -47,6 +44,12 @@ class AdjustmentRequestModel {
       statusText: json['status_text'] ?? '',
     );
   }
+  // Helper getters
+  bool get isPending => status == 2;
+  bool get isApproved => status == 1;
+  bool get isRejected => status == 0;
+  bool get isCancelled => status == 3;
+  DateTime get createdDate => DateTime.parse(createdAt);
 }
 
 class AdjustmentApprover {
@@ -79,4 +82,9 @@ class AdjustmentApprover {
       priorityText: json['priority_text'] ?? '',
     );
   }
+
+  // Helper getters
+  bool get isPending => approvalStatus == 2;
+  bool get isApproved => approvalStatus == 1;
+  bool get isRejected => approvalStatus == 0;
 }

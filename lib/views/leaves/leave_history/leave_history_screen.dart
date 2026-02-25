@@ -18,16 +18,18 @@ class LeaveHistoryScreen extends StatefulWidget {
   State<LeaveHistoryScreen> createState() => _LeaveHistoryScreenState();
 }
 
-class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
+class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
+    with SingleTickerProviderStateMixin {
   late LeaveHistoryViewModel _viewModel;
+  late TabController _tabController;
   Language language = Language();
 
   DateTimeRange? _selectedDateRange;
-  String _selectedType = 'All';
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _viewModel = LeaveHistoryViewModel();
     _viewModel.fetchLeaveHistory();
     _initializeLanguage();
@@ -45,6 +47,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -65,6 +68,31 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             ),
           ),
           backgroundColor: primary,
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: Colors.white,
+            indicatorWeight: 3,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            labelStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: const [
+              Tab(
+                icon: Icon(Icons.event_note, size: 20),
+                text: 'Leave Requests',
+              ),
+              Tab(
+                icon: Icon(Icons.access_time, size: 20),
+                text: 'Adjustment Requests',
+              ),
+            ],
+          ),
         ),
         body: Consumer<LeaveHistoryViewModel>(
           builder: (context, viewModel, child) {
@@ -76,31 +104,243 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
               return _buildErrorState(viewModel);
             }
 
-            final filteredHistory = _filterLeaveHistory(viewModel.leaveHistory);
-
-            return RefreshIndicator(
-              onRefresh: viewModel.refresh,
-              color: primary,
-              child: Column(
-                children: [
-                  _buildStatsHeader(filteredHistory),
-
-                  // ===== FILTER ROW (CEO STYLE) =====
-                  _buildFilterRow(),
-
-                  Expanded(
-                    child:
-                        filteredHistory.isEmpty
-                            ? _buildEmptyState()
-                            : _buildLeaveHistoryList(filteredHistory),
-                  ),
-                ],
-              ),
+            return TabBarView(
+              controller: _tabController,
+              children: [
+                _buildLeaveRequestTab(viewModel),
+                _buildAdjustmentRequestTab(viewModel),
+              ],
             );
           },
         ),
       ),
     );
+  }
+
+  /* =========================================================
+     TAB VIEWS
+     ========================================================= */
+
+  Widget _buildLeaveRequestTab(LeaveHistoryViewModel viewModel) {
+    final filteredHistory = _filterLeaveHistory(viewModel.leaveHistory);
+
+    return RefreshIndicator(
+      onRefresh: viewModel.refresh,
+      color: primary,
+      child: Column(
+        children: [
+          _buildStatsHeader(filteredHistory),
+          _buildFilterRow(),
+          Expanded(
+            child:
+                filteredHistory.isEmpty
+                    ? _buildEmptyState()
+                    : _buildLeaveHistoryList(filteredHistory),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdjustmentRequestTab(LeaveHistoryViewModel viewModel) {
+    final adjustmentList = viewModel.adjustmentHistory;
+
+    return RefreshIndicator(
+      onRefresh: viewModel.refresh,
+      color: primary,
+      child: Column(
+        children: [
+          Expanded(
+            child:
+                adjustmentList.isEmpty
+                    ? _buildEmptyState()
+                    : _buildAdjustmentHistoryList(adjustmentList),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdjustmentHistoryList(List<dynamic> list) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: list.length,
+      itemBuilder: (_, i) => _buildAdjustmentHistoryCard(list[i]),
+    );
+  }
+
+  Widget _buildAdjustmentHistoryCard(dynamic adjustment) {
+    final statusIcon = FileHelper.getStatusIcon(adjustment.statusText ?? '');
+    final statusColor = FileHelper.getStatusColor(adjustment.statusText ?? '');
+
+    // Parse adjustDateTime to extract month and day
+    DateTime adjustDate;
+    try {
+      adjustDate = DateTime.parse(adjustment.adjustDateTime ?? '');
+    } catch (e) {
+      adjustDate = DateTime.now();
+    }
+
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to adjustment detail screen if needed
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border:
+              adjustment.isPending
+                  ? Border.all(color: Colors.orange.withOpacity(0.3), width: 1)
+                  : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: 12,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: CalendarCardWidget(
+                        month: adjustDate.month,
+                        day: adjustDate.day,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            adjustment.reason ?? 'No reason provided',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Applied: ${FileHelper.formatDate(adjustment.createdDate)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getAdjustmentTypeColor(
+                                adjustment.adjustType ?? '',
+                              ).withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: _getAdjustmentTypeColor(
+                                  adjustment.adjustType ?? '',
+                                ).withOpacity(0.3),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              adjustment.adjustType ?? 'N/A',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: _getAdjustmentTypeColor(
+                                  adjustment.adjustType ?? '',
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 6,
+                            ),
+                            child: Icon(
+                              statusIcon,
+                              size: 22,
+                              color: statusColor,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              adjustment.statusText ?? 'N/A',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getAdjustmentTypeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'check-in':
+        return Colors.green;
+      case 'check-out':
+        return Colors.blue;
+      case 'break-in':
+        return Colors.orange;
+      case 'break-out':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 
   /* =========================================================
@@ -132,11 +372,6 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
         }
       }
 
-      if (_selectedType != 'All') {
-        if (_selectedType == 'Leave' && !item.isFullDay) return false;
-        if (_selectedType == 'Attendance' && item.isFullDay) return false;
-      }
-
       return true;
     }).toList();
   }
@@ -166,15 +401,6 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
             child: GestureDetector(
               onTap: _showDateRangePicker,
               child: _buildFilterBox(_getDateRangeText()),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: GestureDetector(
-              onTap: _showTypeFilterBottomSheet,
-              child: _buildFilterBox(_selectedType),
             ),
           ),
         ],
@@ -464,187 +690,6 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> {
                 ),
               );
             },
-          ),
-        );
-      },
-    );
-  }
-
-  /* =========================================================
-     TYPE FILTER
-     ========================================================= */
-  void _showTypeFilterBottomSheet() {
-    final types = ['All', 'Leave', 'Attendance'];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ===== HANDLE BAR =====
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-
-              // ===== HEADER =====
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: primary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.filter_alt_rounded,
-                        color: primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Filter by Type',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Select request category',
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Divider(height: 1),
-
-              // ===== TYPE LIST =====
-              ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: types.length,
-                itemBuilder: (context, index) {
-                  final type = types[index];
-                  final isSelected = _selectedType == type;
-
-                  IconData icon;
-                  if (type == 'Attendance') {
-                    icon = Icons.access_time;
-                  } else if (type == 'Leave') {
-                    icon = Icons.beach_access;
-                  } else {
-                    icon = Icons.all_inclusive;
-                  }
-
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        setState(() => _selectedType = type);
-                        Navigator.pop(context);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              isSelected
-                                  ? primary.withOpacity(0.08)
-                                  : Colors.transparent,
-                          border: Border(
-                            left: BorderSide(
-                              color: isSelected ? primary : Colors.transparent,
-                              width: 3,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            // Icon box
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? primary.withOpacity(0.15)
-                                        : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                icon,
-                                size: 20,
-                                color: isSelected ? primary : Colors.grey[600],
-                              ),
-                            ),
-
-                            const SizedBox(width: 16),
-
-                            // Text
-                            Expanded(
-                              child: Text(
-                                type,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight:
-                                      isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.w500,
-                                  color: isSelected ? primary : Colors.black87,
-                                ),
-                              ),
-                            ),
-
-                            // Selected check
-                            if (isSelected)
-                              const Icon(
-                                Icons.check_circle,
-                                color: primary,
-                                size: 20,
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-            ],
           ),
         );
       },

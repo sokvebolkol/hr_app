@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import '../models/leave_history_model.dart';
+import '../models/adjustment_request_model.dart';
 import '../repositories/leave_history_repository.dart';
 
 class LeaveHistoryViewModel extends ChangeNotifier {
   final LeaveHistoryRepository _repository = LeaveHistoryRepository();
 
   List<LeaveHistoryModel> _leaveHistory = [];
+  List<AdjustmentRequestModel> _adjustmentHistory = [];
   bool _isLoading = false;
   String? _errorMessage;
 
   // Getters
   List<LeaveHistoryModel> get leaveHistory => _leaveHistory;
+  List<AdjustmentRequestModel> get adjustmentHistory => _adjustmentHistory;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Computed properties
+  // Computed properties for leave requests
   int get pendingCount =>
       _leaveHistory.where((leave) => leave.isPending).length;
   int get approvedCount =>
@@ -34,8 +37,9 @@ class LeaveHistoryViewModel extends ChangeNotifier {
       _setLoading(true);
       _setError(null);
 
-      final history = await _repository.getLeaveHistory();
-      _leaveHistory = history;
+      final historyData = await _repository.getLeaveHistory();
+      _leaveHistory = historyData.leaveRequests;
+      _adjustmentHistory = historyData.adjustmentRequests;
 
       _setLoading(false);
     } catch (e) {

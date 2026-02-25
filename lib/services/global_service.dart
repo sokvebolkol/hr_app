@@ -10,7 +10,7 @@ class ServerService {
   static const String uatUrl =
       'http://hr-mobileapi-alb-859602875.ap-southeast-1.elb.amazonaws.com/api/'; // uat running
   static const String devUrl =
-      'http://192.168.53.32:8000/api/'; // local running
+      'http://192.168.53.130:8000/api/'; // local running
 
   String _baseUrl = devUrl;
   String _baseUrlName = "";

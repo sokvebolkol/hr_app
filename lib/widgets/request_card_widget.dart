@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../utils/file_helper.dart';
 import 'calendar_card_widget.dart';
 
-class LeaveCardWidget extends StatefulWidget {
+class RequestCardWidget extends StatefulWidget {
   final String reason;
   final String status;
   final String totalLabel;
@@ -12,9 +12,11 @@ class LeaveCardWidget extends StatefulWidget {
   final String toDate;
   final String? totalDays;
   final double? lineWidth;
+  final bool isLeave;
+  final String? appliedDate;
   final List<Map<String, dynamic>>? prioList;
 
-  const LeaveCardWidget({
+  const RequestCardWidget({
     super.key,
     required this.reason,
     required this.status,
@@ -24,14 +26,16 @@ class LeaveCardWidget extends StatefulWidget {
     required this.toDate,
     this.totalDays,
     this.lineWidth,
+    this.isLeave = true,
+    this.appliedDate,
     this.prioList,
   });
 
   @override
-  State<LeaveCardWidget> createState() => _LeaveCardWidgetState();
+  State<RequestCardWidget> createState() => _LeaveCardWidgetState();
 }
 
-class _LeaveCardWidgetState extends State<LeaveCardWidget> {
+class _LeaveCardWidgetState extends State<RequestCardWidget> {
   @override
   Widget build(BuildContext context) {
     final days = widget.totalDays ?? '';
@@ -85,15 +89,23 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
 
                       const SizedBox(height: 8),
 
-                      if (days.isNotEmpty)
-                        Text(
-                          '${widget.totalLabel} $days day(s)',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: secondary,
+                      days.isNotEmpty && widget.isLeave
+                          ? Text(
+                            '${widget.totalLabel} $days day(s)',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: secondary,
+                            ),
+                          )
+                          : Text(
+                            '${widget.appliedDate}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: secondary,
+                            ),
                           ),
-                        ),
                     ],
                   ),
                 ),
@@ -126,6 +138,8 @@ class _LeaveCardWidgetState extends State<LeaveCardWidget> {
 
                         child: Text(
                           widget.leaveType,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 10,

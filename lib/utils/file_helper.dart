@@ -188,13 +188,13 @@ class FileHelper {
 
   static IconData getStatusIcon(String status) {
     switch (status) {
-      case '0': // Rejected
+      case '0' || 'Rejected': // Rejected
         return Icons.cancel_outlined;
-      case '1': // Approved
+      case '1' || 'Approved': // Approved
         return Icons.check_circle_outline;
-      case '2': // Pending
+      case '2' || 'Pending': // Pending
         return Icons.hourglass_empty;
-      case '3': // Cancelled
+      case '3' || 'Cancelled': // Cancelled
         return Icons.block;
       default:
         return Icons.help_outline;
@@ -203,13 +203,13 @@ class FileHelper {
 
   static getStatusColor(String status) {
     switch (status) {
-      case '0':
+      case '0' || 'Rejected':
         return Colors.red;
-      case '1':
+      case '1' || 'Approved':
         return Colors.green;
-      case '2':
+      case '2' || 'Pending':
         return Colors.orange;
-      case '3':
+      case '3' || 'Cancelled':
         return Colors.grey;
       default:
         return Colors.grey;

@@ -14,7 +14,7 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../../widgets/annual_leave_card_widget.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/function_card.dart';
-import '../../widgets/leave_card_widget.dart';
+import '../../widgets/request_card_widget.dart';
 import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../attendance/attendance_adjustment_screen.dart';
@@ -1008,7 +1008,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               }
             });
           },
-          child: LeaveCardWidget(
+          child: RequestCardWidget(
             reason: leave.reason,
             status: leave.statuText,
             totalLabel: language.total,
@@ -1076,14 +1076,16 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
               ),
             );
           },
-          child: LeaveCardWidget(
+          child: RequestCardWidget(
             reason: adjustment.reason,
             status: adjustment.statusText,
-            totalLabel: 'Request',
+            isLeave: false,
+            totalLabel: '',
             leaveType: adjustment.adjustType,
             fromDate: adjustment.adjustDateTime,
             toDate: adjustment.adjustDateTime,
-            totalDays: '1',
+            totalDays: '',
+            appliedDate: 'Applied: ${FileHelper.formatDate(adjustment.createdDate)}',
             prioList:
                 sortedApproverList
                     .map(
