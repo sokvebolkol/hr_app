@@ -10,15 +10,16 @@ import '../../../models/leave_history_model.dart';
 import '../../../widgets/calendar_card_widget.dart';
 import '../../../widgets/clickable_date_card_widget.dart';
 import '../leave_detail/my_leave_detail_screen.dart';
+import '../../attendance/my_attendance_adjustment_request.screen.dart';
 
-class LeaveHistoryScreen extends StatefulWidget {
-  const LeaveHistoryScreen({super.key});
+class HistoryRequestScreen extends StatefulWidget {
+  const HistoryRequestScreen({super.key});
 
   @override
-  State<LeaveHistoryScreen> createState() => _LeaveHistoryScreenState();
+  State<HistoryRequestScreen> createState() => _LeaveHistoryScreenState();
 }
 
-class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
+class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
     with SingleTickerProviderStateMixin {
   late LeaveHistoryViewModel _viewModel;
   late TabController _tabController;
@@ -74,22 +75,26 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
             indicatorWeight: 3,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
-            labelStyle: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            ),
             tabs: const [
               Tab(
-                icon: Icon(Icons.event_note, size: 20),
-                text: 'Leave Requests',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.event_note, size: 20),
+                    SizedBox(width: 6),
+                    Text('Leave Request'),
+                  ],
+                ),
               ),
               Tab(
-                icon: Icon(Icons.access_time, size: 20),
-                text: 'Adjustment Requests',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.access_time, size: 20),
+                    SizedBox(width: 6),
+                    Text('Adjustment Request'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -143,18 +148,22 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
   }
 
   Widget _buildAdjustmentRequestTab(LeaveHistoryViewModel viewModel) {
-    final adjustmentList = viewModel.adjustmentHistory;
+    final filteredAdjustments = _filterAdjustmentHistory(
+      viewModel.adjustmentHistory,
+    );
 
     return RefreshIndicator(
       onRefresh: viewModel.refresh,
       color: primary,
       child: Column(
         children: [
+          _buildAdjustmentStatsHeader(filteredAdjustments),
+          _buildFilterRow(),
           Expanded(
             child:
-                adjustmentList.isEmpty
+                filteredAdjustments.isEmpty
                     ? _buildEmptyState()
-                    : _buildAdjustmentHistoryList(adjustmentList),
+                    : _buildAdjustmentHistoryList(filteredAdjustments),
           ),
         ],
       ),
@@ -183,7 +192,15 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
 
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to adjustment detail screen if needed
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => MyAttendanceAdjustmentRequestScreen(
+                  adjustmentRequest: adjustment,
+                ),
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -346,6 +363,40 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
   /* =========================================================
      FILTER LOGIC (BETWEEN DATE + TYPE)
      ========================================================= */
+
+  List<dynamic> _filterAdjustmentHistory(List<dynamic> history) {
+    return history.where((item) {
+      DateTime date;
+      try {
+        date = DateTime.parse(item.adjustDateTime ?? '');
+      } catch (e) {
+        date = DateTime.now();
+      }
+
+      if (_selectedDateRange != null) {
+        final start = DateTime(
+          _selectedDateRange!.start.year,
+          _selectedDateRange!.start.month,
+          _selectedDateRange!.start.day,
+        );
+
+        final end = DateTime(
+          _selectedDateRange!.end.year,
+          _selectedDateRange!.end.month,
+          _selectedDateRange!.end.day,
+          23,
+          59,
+          59,
+        );
+
+        if (date.isBefore(start) || date.isAfter(end)) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+  }
 
   List<LeaveHistoryModel> _filterLeaveHistory(List<LeaveHistoryModel> history) {
     return history.where((item) {
@@ -897,12 +948,40 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen>
     );
   }
 
+  Widget _buildAdjustmentStatsHeader(List<dynamic> filteredList) {
+    final total = filteredList.length;
+
+    final pending = filteredList.where((e) => e.isPending).length;
+
+    final approved = filteredList.where((e) => e.isApproved).length;
+
+    final rejected = filteredList.where((e) => e.isRejected).length;
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _stat(language.total, total, Colors.blue),
+          _stat(language.pending, pending, Colors.orange),
+          _stat(language.approved, approved, Colors.green),
+          _stat(language.rejected, rejected, Colors.red),
+        ],
+      ),
+    );
+  }
+
   Widget _stat(String label, int value, Color color) {
     return Column(
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 50,
+          height: 50,
           alignment: Alignment.center,
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(

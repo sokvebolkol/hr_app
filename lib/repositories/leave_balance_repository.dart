@@ -30,8 +30,8 @@ class LeaveBalanceRepository {
         final data = json.decode(response.body);
 
         if (data['success'] == true &&
-            data['data'] != null &&
-            data['data'].isNotEmpty) {
+            data['leave_balances'] != null &&
+            data['leave_balances'].isNotEmpty) {
           return LeaveBalanceResponse.fromJson(data);
         } else {
           throw Exception('No leave balance data found for year $year');

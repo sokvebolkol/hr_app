@@ -7,18 +7,21 @@ class LeaveBalanceViewModel extends ChangeNotifier {
 
   // State variables
   LeaveBalanceModel? _leaveBalance;
+  List<dynamic> _approvedLeaveRequests = [];
   bool _isLoading = false;
+  bool _isViewMaternityLeave = false;
   String? _errorMessage;
   int _selectedYear = DateTime.now().year;
   String? _joinDate;
 
   // Getters
   LeaveBalanceModel? get leaveBalance => _leaveBalance;
+  List<dynamic> get approvedLeaveRequests => _approvedLeaveRequests;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   int get selectedYear => _selectedYear;
   String? get joinDate => _joinDate;
-
+  bool get isViewMaternityLeave => _isViewMaternityLeave;
   // Get available years based on join date
   List<int> get availableYears {
     if (_joinDate == null) {
@@ -79,8 +82,8 @@ class LeaveBalanceViewModel extends ChangeNotifier {
       final sick = double.tryParse(sickLeaveUsed) ?? 0;
       final special = double.tryParse(specialLeaveUsed) ?? 0;
       final maternity = double.tryParse(maternityLeaveUsed) ?? 0;
-      final unpaid = double.tryParse(unpaidLeaveUsed) ?? 0;
-      return annual + sick + special + maternity + unpaid;
+      // final unpaid = double.tryParse(unpaidLeaveUsed) ?? 0;
+      return annual + sick + special + maternity;
     } catch (e) {
       return 0;
     }
@@ -97,10 +100,14 @@ class LeaveBalanceViewModel extends ChangeNotifier {
       if (response != null && response.data.isNotEmpty) {
         _leaveBalance =
             response.data.first; // Get the first item from data array
+        _approvedLeaveRequests = response.approvedLeaveRequest;
         _joinDate = response.joinDate; // Store join date for year filtering
+        _isViewMaternityLeave = response.isViewMaternityLeave;
       } else {
         _leaveBalance = null;
+        _approvedLeaveRequests = [];
         _joinDate = null;
+        _isViewMaternityLeave = false;
       }
 
       _setLoading(false);

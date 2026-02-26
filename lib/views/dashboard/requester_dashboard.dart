@@ -18,12 +18,13 @@ import '../../widgets/request_card_widget.dart';
 import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
 import '../attendance/attendance_adjustment_screen.dart';
+import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../leaves/leave_request/leave_request_screen.dart';
 import '../leaves/leave_balance/leave_balance.dart';
-import '../leaves/leave_history/leave_history_screen.dart';
+import '../leaves/leave_history/history_request_screen.dart';
 import '../menu/menu_screen.dart';
 import '../../models/leave_model.dart';
 import '../../utils/file_helper.dart';
@@ -628,17 +629,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         },
       },
       {
-        'icon': Icons.history,
-        'label': language.historyRequests,
-        'onPressed':
-            (BuildContext context) => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LeaveHistoryScreen(),
-              ),
-            ),
-      },
-      {
         'icon': Icons.calendar_month,
         'label': language.holidays,
         'onPressed': (BuildContext context) {
@@ -676,14 +666,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   void _startAutoSlide() {
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (_scrollController.hasClients &&
-          _getFunctionButtons(context).length > 3) {
-        // Calculate the next scroll position
-        _currentScrollIndex =
-            (_currentScrollIndex + 1) %
-            (_getFunctionButtons(context).length - 2);
+      final items = _getFunctionButtons(context);
 
-        // Each item width (110) + spacing (16)
+      if (_scrollController.hasClients && items.length > 1) {
+        _currentScrollIndex = (_currentScrollIndex + 1) % items.length;
+
         const double itemWidth = 110.0 + 16.0;
         final double targetOffset = _currentScrollIndex * itemWidth;
 
@@ -924,7 +911,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const LeaveHistoryScreen(),
+                      builder: (context) => const HistoryRequestScreen(),
                     ),
                   );
                 },
@@ -1068,11 +1055,13 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
         return GestureDetector(
           onTap: () {
-            // TODO: Navigate to adjustment detail screen when created
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Adjustment Request #${adjustment.id}'),
-                duration: const Duration(seconds: 2),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => MyAttendanceAdjustmentRequestScreen(
+                      adjustmentRequest: adjustment,
+                    ),
               ),
             );
           },
@@ -1085,7 +1074,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             fromDate: adjustment.adjustDateTime,
             toDate: adjustment.adjustDateTime,
             totalDays: '',
-            appliedDate: 'Applied: ${FileHelper.formatDate(adjustment.createdDate)}',
+            appliedDate:
+                'Applied: ${FileHelper.formatDate(adjustment.createdDate)}',
             prioList:
                 sortedApproverList
                     .map(

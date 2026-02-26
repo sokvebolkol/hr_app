@@ -6,7 +6,10 @@ import '../../../constants/constant.dart';
 import '../../../localization/language.dart';
 import '../../../localization/language_logic.dart';
 import '../../../widgets/leave_balance_item.dart';
+import '../../../widgets/calendar_card_widget.dart';
 import '../../../viewmodels/leave_balance_viewmodel.dart';
+import '../../../utils/file_helper.dart';
+import '../leave_detail/my_leave_detail_screen.dart';
 
 class LeaveBalanceDetailScreen extends StatefulWidget {
   const LeaveBalanceDetailScreen({super.key});
@@ -257,239 +260,353 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSummaryCard(viewModel),
-            const SizedBox(height: 20),
-            _buildLeaveBalanceDetails(viewModel),
-            const SizedBox(height: 20),
-            _buildLeaveRequestStats(viewModel),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(LeaveBalanceViewModel viewModel) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              language.annualLeaveSummary,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primary,
-              ),
-            ),
-            const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _buildSummaryItem(
-                    language.used,
-                    viewModel.annualLeaveUsed,
-                    Colors.red[400]!,
+                Container(
+                  width: 4,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: primary,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                Expanded(
-                  child: _buildSummaryItem(
-                    language.balance,
-                    viewModel.annualLeaveBalance,
-                    Colors.green[400]!,
-                  ),
-                ),
-                Expanded(
-                  child: _buildSummaryItem(
-                    language.entitlement,
-                    viewModel.annualLeaveEntitlement,
-                    Colors.blue[400]!,
+                const SizedBox(width: 12),
+                Text(
+                  language.leaveUsedByYearly,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primary,
+                    letterSpacing: 0.1,
                   ),
                 ),
               ],
             ),
+            SizedBox(height: 16),
+            _buildStatsHeader(viewModel),
+            _buildApprovedLeaveRequests(viewModel),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
-    );
-  }
+  Widget _buildStatsHeader(LeaveBalanceViewModel viewModel) {
+    final annualLeaveUsed = viewModel.annualLeaveUsed;
+    final sickLeaveUsed = viewModel.sickLeaveUsed;
+    final specialLeaveUsed = viewModel.specialLeaveUsed;
+    final isShowMaternityLeave = viewModel.isViewMaternityLeave;
+    final maternityLeaveUsed = viewModel.maternityLeaveUsed;
+    final totalUsed = viewModel.totalLeaveUsed;
 
-  Widget _buildLeaveBalanceDetails(LeaveBalanceViewModel viewModel) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              language.leaveBalanceDetails,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            LeaveBalanceItem(
-              icon: Icons.beach_access,
-              title: language.annualLeave,
-              remainingDays: double.tryParse(viewModel.annualLeaveBalance) ?? 0,
-              totalDays: double.tryParse(viewModel.annualLeaveEntitlement) ?? 0,
-              color: Colors.blue[600]!,
-              barColor: Colors.blue[400]!,
-            ),
-            const DividerItem(),
-            LeaveBalanceItem(
-              icon: Icons.local_hospital,
-              title: language.sickLeave,
-              remainingDays: double.tryParse(viewModel.sickLeaveBalance) ?? 0,
-              totalDays: double.tryParse(viewModel.sickLeaveEntitlement) ?? 0,
-              color: Colors.red[600]!,
-              barColor: Colors.red[400]!,
-            ),
-            const DividerItem(),
-            LeaveBalanceItem(
-              icon: Icons.star,
-              title: language.specialLeave,
-              remainingDays:
-                  double.tryParse(viewModel.specialLeaveBalance) ?? 0,
-              totalDays:
-                  double.tryParse(viewModel.specialLeaveEntitlement) ?? 0,
-              color: Colors.orange[600]!,
-              barColor: Colors.orange[400]!,
-            ),
-            const DividerItem(),
-            LeaveBalanceItem(
-              icon: Icons.child_care,
-              title: language.maternityLeave,
-              remainingDays:
-                  double.tryParse(viewModel.maternityLeaveBalance) ?? 0,
-              totalDays:
-                  double.tryParse(viewModel.maternityLeaveEntitlement) ?? 0,
-              color: Colors.pink[600]!,
-              barColor: Colors.pink[400]!,
-            ),
-            const DividerItem(),
-            LeaveBalanceItem(
-              icon: Icons.money_off,
-              title: language.unpaidLeave,
-              label: language.daysUsed,
-              remainingDays: double.tryParse(viewModel.unpaidLeaveUsed) ?? 0,
-              totalDays: 0,
-              color: Colors.grey[600]!,
-              barColor: const Color.fromARGB(255, 39, 31, 31),
-              isNoUsedItem: false,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLeaveRequestStats(LeaveBalanceViewModel viewModel) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              language.leaveRequestStatistics,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    language.approved,
-                    viewModel.approvedLeaveRequest,
-                    Colors.green,
-                    Icons.check_circle,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    language.pending,
-                    viewModel.pendingLeaveRequest,
-                    Colors.orange,
-                    Icons.hourglass_empty,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    language.rejected,
-                    viewModel.rejectedLeaveRequest,
-                    Colors.red,
-                    Icons.cancel,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String title,
-    String value,
-    Color color,
-    IconData icon,
-  ) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0, left: 16.0),
+            child: Text(
+              "${language.totalUsed}: ${totalUsed.toStringAsFixed(totalUsed % 1 == 0 ? 0 : 1)}",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _stat(
+                  language.annualLeaveUsed,
+                  annualLeaveUsed,
+                  Colors.blue,
+                ),
+              ),
+              Expanded(
+                child: _stat(language.sickLeave, sickLeaveUsed, Colors.green),
+              ),
+              Expanded(
+                child: _stat(
+                  language.specialLeave,
+                  specialLeaveUsed,
+                  Colors.deepPurple,
+                ),
+              ),
+              if (isShowMaternityLeave)
+                Expanded(
+                  child: _stat(
+                    language.maternityLeave,
+                    maternityLeaveUsed,
+                    Colors.pink,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _stat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Container(
+          width: 80,
+          height: 50,
+          alignment: Alignment.center,
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-        ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[700],
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildApprovedLeaveRequests(LeaveBalanceViewModel viewModel) {
+    final approvedRequests = viewModel.approvedLeaveRequests;
+
+    if (approvedRequests.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 150.0),
+          child: Column(
+            children: [
+              Icon(Icons.event_available, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'No Leave Requests',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You have no approved leave requests for year ${viewModel.selectedYear}',
+                style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                language.leaveRequest,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primary,
+                  letterSpacing: 0.1,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...approvedRequests.map((leave) => _buildLeaveHistoryCard(leave)),
+      ],
+    );
+  }
+
+  Widget _buildLeaveHistoryCard(dynamic leave) {
+    final statusIcon = FileHelper.getStatusIcon(leave.statu);
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MyLeaveDetailScreen(leaveRequest: leave),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: 12,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: CalendarCardWidget(
+                        month: leave.toDate.month,
+                        day: leave.toDate.day,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            leave.reason,
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            '${language.total}: ${leave.numleav} day${leave.numberOfDays > 1 ? 's' : ''}${leave.isFullDay ? '' : ' (Half Day)'}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 1,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: FileHelper()
+                                  .getLeaveTypeColor(leave.ltyp)
+                                  .withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: FileHelper()
+                                    .getLeaveTypeColor(leave.ltyp)
+                                    .withOpacity(0.3),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              leave.ltyp,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                color: FileHelper().getLeaveTypeColor(
+                                  leave.ltyp,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 6,
+                            ),
+                            child: Icon(
+                              statusIcon,
+                              size: 22,
+                              color: FileHelper.getStatusColor(leave.statu),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              leave.statusText,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

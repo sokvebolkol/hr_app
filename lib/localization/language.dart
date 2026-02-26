@@ -355,7 +355,7 @@ class Language {
   String get success => "Success!";
 
   // Leave Request screen strings
-  String get leaveRequest => "Leave Request";
+  String get leaveRequest => "Leave Requests";
   String get loadingLeaveRequestData => "Loading leave request data...";
   String get leaveType => "Leave Type";
   String get selectLeaveType => "Select leave type";
@@ -390,9 +390,12 @@ class Language {
   String get maxSize => "Max: 5MB\nPlease choose a smaller image.";
   String get calendar => "Calendar";
   String get total => "Total";
+  String get totalUsed => "Total Used";
+  String get annualLeaveUsed => "Annual Leave";
   String get pending => "Pending";
   String get leaveBalance => "Leave Balance";
   String get annualLeaveSummary => "Annual Leave Summary";
+  String get leaveUsedByYearly => "Leave Used by Year";
   String get used => "Used";
   String get balance => "Balance";
   String get entitlement => "Entitlement";
@@ -1152,11 +1155,17 @@ class Khmer implements Language {
   @override
   String get total => "សរុប";
   @override
+  String get totalUsed => "បានប្រើសរុប";
+  @override
+  String get annualLeaveUsed => "ច្បាប់ប្រចាំឆ្នាំ";
+  @override
   String get pending => "កំពុងរង់ចាំ";
   @override
   String get leaveBalance => "សមតុល្យច្បាប់";
   @override
   String get annualLeaveSummary => "សង្ខេបច្បាប់ប្រចាំឆ្នាំ";
+  @override
+  String get leaveUsedByYearly => "ច្បាប់បានប្រើតាមឆ្នាំ";
   @override
   String get used => "បានប្រើ";
   @override
