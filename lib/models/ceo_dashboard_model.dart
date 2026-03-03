@@ -77,14 +77,6 @@ class AttendanceSummary {
 
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
     try {
-      print('AttendanceSummary.fromJson - Input JSON keys: ${json.keys}');
-      print(
-        'AttendanceSummary.fromJson - total_staff value: ${json['total_staff']}',
-      );
-      print(
-        'AttendanceSummary.fromJson - present_count value: ${json['present_count']}',
-      );
-
       return AttendanceSummary(
         date: json['date']?.toString() ?? '',
         isWeekend: json['is_weekend'] ?? false,

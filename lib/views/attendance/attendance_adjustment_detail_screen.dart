@@ -1212,11 +1212,23 @@ class _AttendanceAdjustmentDetailScreenState
     }
 
     try {
+      // Format approvers list with approver_id and priority
+      final approvers =
+          widget.approvers
+              .map(
+                (approver) => {
+                  'approver_id': approver.approverId,
+                  'priority': approver.approvalLevel,
+                },
+              )
+              .toList();
+
       // Call the API
       final response = await _attendanceRepository.submitAdjustmentRequest(
         dateScan: widget.selectedAttendance.formattedDate,
         adjustType: widget.adjustmentType,
         reason: _reasonController.text.trim(),
+        approvers: approvers,
         attachmentImage: documentPhoto,
       );
 

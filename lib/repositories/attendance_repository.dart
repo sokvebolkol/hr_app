@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/attendance_model.dart';
@@ -122,12 +121,14 @@ class AttendanceRepository {
     required String dateScan,
     required String adjustType,
     required String reason,
+    required List<Map<String, int>> approvers,
     XFile? attachmentImage,
   }) async {
     print('Submitting adjustment request with data:');
     print('Date Scan: $dateScan');
     print('Adjust Type: $adjustType');
     print('Reason: $reason');
+    print('Approvers: $approvers');
     if (attachmentImage != null) {
       print('Attachment Image: ${attachmentImage.path}');
     }
@@ -145,6 +146,7 @@ class AttendanceRepository {
           dateScan: dateScan,
           adjustType: adjustType,
           reason: reason,
+          approvers: approvers,
           attachmentImage: attachmentImage,
           token: token,
         );
@@ -153,6 +155,7 @@ class AttendanceRepository {
           dateScan: dateScan,
           adjustType: adjustType,
           reason: reason,
+          approvers: approvers,
           token: token,
         );
       }
@@ -166,6 +169,7 @@ class AttendanceRepository {
     required String dateScan,
     required String adjustType,
     required String reason,
+    required List<Map<String, int>> approvers,
     required XFile attachmentImage,
     required String token,
   }) async {
@@ -187,6 +191,14 @@ class AttendanceRepository {
         'adjust_type': adjustType,
         'reason': reason,
       });
+
+      // Add approvers in indexed format: approvers[0][approver_id], approvers[0][priority], etc.
+      for (int i = 0; i < approvers.length; i++) {
+        request.fields['approvers[$i][approver_id]'] =
+            approvers[i]['approver_id'].toString();
+        request.fields['approvers[$i][priority]'] =
+            approvers[i]['priority'].toString();
+      }
 
       // Add attachment file
       final file = File(attachmentImage.path);
@@ -225,6 +237,7 @@ class AttendanceRepository {
     required String dateScan,
     required String adjustType,
     required String reason,
+    required List<Map<String, int>> approvers,
     required String token,
   }) async {
     try {
@@ -232,6 +245,7 @@ class AttendanceRepository {
         'date_scan': dateScan,
         'adjust_type': adjustType,
         'reason': reason,
+        'approvers': approvers,
       };
 
       final response = await http.post(

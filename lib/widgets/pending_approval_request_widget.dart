@@ -3,11 +3,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../utils/file_helper.dart';
 
-class CeoLeaveRequestWidget extends StatefulWidget {
+class PendingApprovalRequestWidget extends StatefulWidget {
   final String reason;
   final String status;
   final String fromDate;
   final String toDate;
+  final String? leaveDate;
   final String? requesterName;
   final String? position;
   final String? leaveType;
@@ -16,12 +17,13 @@ class CeoLeaveRequestWidget extends StatefulWidget {
   final String? currentUserProfileImageUrl;
   final String? empProfileImage;
 
-  const CeoLeaveRequestWidget({
+  const PendingApprovalRequestWidget({
     super.key,
     required this.reason,
     required this.status,
     required this.fromDate,
     required this.toDate,
+    this.leaveDate,
     this.requesterName,
     this.position,
     this.leaveType,
@@ -32,10 +34,11 @@ class CeoLeaveRequestWidget extends StatefulWidget {
   });
 
   @override
-  State<CeoLeaveRequestWidget> createState() => _LeaveRequestWidgetState();
+  State<PendingApprovalRequestWidget> createState() =>
+      _LeaveRequestWidgetState();
 }
 
-class _LeaveRequestWidgetState extends State<CeoLeaveRequestWidget> {
+class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
   double screenWidth = 0;
   String _formatDate(String dateStr) {
     try {
@@ -149,7 +152,7 @@ class _LeaveRequestWidgetState extends State<CeoLeaveRequestWidget> {
                   flex: 2,
                   child: RichText(
                     text: TextSpan(
-                      text: 'Leave Date: ',
+                      text: widget.leaveDate,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black87,
@@ -271,8 +274,7 @@ class _LeaveRequestWidgetState extends State<CeoLeaveRequestWidget> {
         child: ClipOval(
           child: FadeInImage.assetNetwork(
             placeholder: 'assets/images/profile.png',
-            image:
-                "https://hr-api.chokchey.com.kh:6070/profile_images/profile_200587_1765853981.jpg",
+            image: widget.empProfileImage!,
             fit: BoxFit.cover,
             imageErrorBuilder: (context, error, stackTrace) {
               return const CircleAvatar(

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../constants/constant.dart';
 import '../../models/ceo_dashboard_model.dart';
-import '../../viewmodels/ceo_dashboard_viewmodel.dart';
-import '../../widgets/ceo_leave_request_widget.dart';
+import '../../utils/file_helper.dart';
+import '../../widgets/pending_approval_request_widget.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 
 class ApprovalHistoryScreen extends StatefulWidget {
   final String filterType; // 'approved' or 'rejected'
-  final CeoDashboardViewModel viewModel;
+  final dynamic
+  viewModel; // Accepts CeoDashboardViewModel or ManagerDashboardViewModel
   final String? initialMonth; // Pass the current selected month from dashboard
 
   const ApprovalHistoryScreen({
@@ -86,7 +87,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
               }
               if (leaveDate == null) return false;
               final monthYear =
-                  '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -101,7 +102,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
               }
               if (leaveDate == null) return false;
               final monthYear =
-                  '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -351,7 +352,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
-            child: CeoLeaveRequestWidget(
+            child: PendingApprovalRequestWidget(
               reason: leave.reason,
               status: leave.statuText,
               fromDate: leave.fromDate.toString(),
@@ -552,7 +553,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
     );
   }
 
-  List<String> _generateMonthOptions(List<LeaveRequest> leaves) {
+  List<String> _generateMonthOptions(List<dynamic> leaves) {
     final Map<DateTime, String> monthMap = {};
 
     for (var leave in leaves) {
@@ -563,7 +564,8 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
       if (leaveDate != null) {
         final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
-        final monthYear = '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+        final monthYear =
+            '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
         monthMap[monthKey] = monthYear;
       }
     }
@@ -576,23 +578,5 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
     }
 
     return result;
-  }
-
-  String _getMonthName(int month) {
-    final monthNames = [
-      _language.january,
-      _language.february,
-      _language.march,
-      _language.april,
-      _language.may,
-      _language.june,
-      _language.july,
-      _language.august,
-      _language.september,
-      _language.october,
-      _language.november,
-      _language.december,
-    ];
-    return monthNames[month - 1];
   }
 }

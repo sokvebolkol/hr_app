@@ -41,6 +41,28 @@ class FileHelper {
     }
   }
 
+  // Helper method to get month name
+  Future<String> getMonthName(int month) async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    final Language language = languageLogic.language;
+    final monthNames = [
+      language.january,
+      language.february,
+      language.march,
+      language.april,
+      language.may,
+      language.june,
+      language.july,
+      language.august,
+      language.september,
+      language.october,
+      language.november,
+      language.december,
+    ];
+    return monthNames[month - 1];
+  }
+
   // Dollar formatter function
   static String toDollarSyntax(double number) {
     return "\$ ${number.toStringAsFixed(2)}";

@@ -6,6 +6,7 @@ import '../menu/menu_screen.dart';
 import 'requester_dashboard.dart';
 import 'staff_dashboard_screen.dart';
 
+// Combine RequesterDashboardScreen and StaffDashboardScreen into ManagerDashboard with toggle switch in bottom nav bar.
 class ManagerDashboard extends StatefulWidget {
   const ManagerDashboard({super.key});
 

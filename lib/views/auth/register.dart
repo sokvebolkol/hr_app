@@ -71,54 +71,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  void _showOptionsSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Container(
-            child: Wrap(
-              children: <Widget>[
-                ListTile(
-                  title: Center(
-                    child: Text(
-                      "Choose Image",
-                      style: const TextStyle(
-                        color: primary,
-                        fontFamily: 'Khmer OS',
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    _getImage(ImageSource.camera);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                const Divider(color: primary, thickness: 0.2),
-                ListTile(
-                  leading: const Icon(Icons.photo_camera, color: primary),
-                  title: Text("Camera"),
-                  onTap: () {
-                    _getImage(ImageSource.camera);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library, color: primary),
-                  title: Text("Gallery"),
-                  onTap: () {
-                    _getImage(ImageSource.gallery);
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;

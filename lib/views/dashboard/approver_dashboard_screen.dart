@@ -30,7 +30,6 @@ import '../leaves/leave_balance/leave_balance.dart';
 import '../memo/memo_screen.dart';
 import '../menu/menu_screen.dart';
 import '../notifications/approver_notifcation_screen.dart';
-import '../profile/profile_screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 
 class ApproverDashboardScreen extends StatefulWidget {

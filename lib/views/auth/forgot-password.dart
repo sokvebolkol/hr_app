@@ -5,7 +5,6 @@ import '../../constants/constant.dart';
 import 'otp-screen.dart';
 import '../../viewmodels/forgot_password_viewmodel.dart';
 import 'package:provider/provider.dart';
-import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 
 class ForgotPassword extends StatelessWidget {

@@ -8,7 +8,6 @@ import '../../../widgets/compact_follow_up_button.dart';
 import '../../../widgets/compact_status_card.dart';
 import '../../../widgets/action_buttons_card.dart';
 import '../../../repositories/leave_detail_repository.dart';
-import '../update_leave/update_leave_screen.dart';
 
 class MyLeaveDetailScreen extends StatefulWidget {
   final LeaveHistoryModel leaveRequest;
@@ -647,27 +646,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
         ),
       ],
     );
-  }
-
-  Future<void> _navigateToUpdateScreen() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => UpdateLeaveScreen(leaveRequest: widget.leaveRequest),
-      ),
-    );
-
-    if (result == true && mounted) {
-      Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Leave request updated successfully!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
   }
 
   void _showCancelConfirmation() {

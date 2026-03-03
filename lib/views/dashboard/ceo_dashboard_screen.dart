@@ -17,7 +17,7 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/ceo_dashboard_viewmodel.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../../models/ceo_dashboard_model.dart';
-import '../../widgets/ceo_leave_request_widget.dart';
+import '../../widgets/pending_approval_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/statistics_card.dart';
@@ -1228,7 +1228,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
 
               if (leaveDate == null) return false;
               final monthYear =
-                  '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
               return monthYear == _selectedMonthPending;
             }).toList();
 
@@ -1361,7 +1361,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
 
               if (leaveDate == null) return false;
               final monthYear =
-                  '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -1491,7 +1491,8 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       if (leaveDate != null) {
         // Create a key for the month (first day of the month)
         final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
-        final monthYear = '${_getMonthName(leaveDate.month)} ${leaveDate.year}';
+        final monthYear =
+            '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
         monthMap[monthKey] = monthYear;
       }
     }
@@ -1506,25 +1507,6 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     }
 
     return result;
-  }
-
-  // Helper method to get month name
-  String _getMonthName(int month) {
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return monthNames[month - 1];
   }
 
   // Show month filter bottom sheet
@@ -1929,7 +1911,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 1),
-        child: CeoLeaveRequestWidget(
+        child: PendingApprovalRequestWidget(
           reason: leave.reason,
           status: leave.statuText,
           fromDate: leave.fromDate.toString(),

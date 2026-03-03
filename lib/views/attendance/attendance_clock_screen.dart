@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/attendance_clock_viewmodel.dart';
 import '../../models/attendance_model.dart';
