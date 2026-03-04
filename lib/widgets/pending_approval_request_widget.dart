@@ -1,3 +1,4 @@
+import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +14,7 @@ class PendingApprovalRequestWidget extends StatefulWidget {
   final String? position;
   final String? leaveType;
   final String? totalDays;
+  final bool? isLeaveRequest;
   final String? currentUserName;
   final String? currentUserProfileImageUrl;
   final String? empProfileImage;
@@ -27,6 +29,7 @@ class PendingApprovalRequestWidget extends StatefulWidget {
     this.requesterName,
     this.position,
     this.leaveType,
+    this.isLeaveRequest = true,
     this.totalDays,
     this.currentUserName,
     this.currentUserProfileImageUrl,
@@ -121,6 +124,7 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
+                            overflow: TextOverflow.ellipsis,
                             color: FileHelper().getLeaveTypeColor(
                               widget.leaveType,
                             ),
@@ -128,14 +132,15 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'Total $days day(s)',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.black54,
+                      if (widget.isLeaveRequest == true)
+                        Text(
+                          '$days day(s)',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -148,26 +153,40 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
               children: [
                 Icon(Icons.calendar_month, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: RichText(
-                    text: TextSpan(
-                      text: widget.leaveDate,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      children: [
-                        TextSpan(
-                          text:
-                              '${_formatDate(widget.fromDate)} → ${_formatDate(widget.toDate)}',
-                          style: const TextStyle(fontWeight: FontWeight.normal),
+                widget.isLeaveRequest!
+                    ? Expanded(
+                      flex: 2,
+                      child: RichText(
+                        text: TextSpan(
+                          text: widget.leaveDate,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          children: [
+                            TextSpan(
+                              text:
+                                  '${_formatDate(widget.fromDate)} → ${_formatDate(widget.toDate)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    )
+                    : Expanded(
+                      flex: 2,
+                      child: Text(
+                        FileHelper.formatDate(DateTime.parse(widget.fromDate)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 16),

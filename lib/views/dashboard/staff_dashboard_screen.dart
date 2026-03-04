@@ -20,6 +20,7 @@ import '../../widgets/pending_approval_request_widget.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/statistics_card.dart';
+import '../attendance/attendance_adjustment_approval_detail_screen.dart';
 import '../attendance/staff_attendance_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
@@ -1250,59 +1251,6 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
 
     return Column(
       children: [
-        // Summary Cards
-        if (totalPendingCount > 0)
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [secondary, Color(0xFF1a5f7a)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: secondary.withOpacity(0.3),
-                  spreadRadius: 1,
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildSummaryItem(
-                  icon: Icons.beach_access,
-                  label: 'Leave',
-                  count: filteredLeaves.length,
-                ),
-                Container(
-                  height: 40,
-                  width: 1,
-                  color: Colors.white.withOpacity(0.3),
-                ),
-                _buildSummaryItem(
-                  icon: Icons.schedule,
-                  label: 'Attendance',
-                  count: filteredAttendance.length,
-                ),
-                Container(
-                  height: 40,
-                  width: 1,
-                  color: Colors.white.withOpacity(0.3),
-                ),
-                _buildSummaryItem(
-                  icon: Icons.assignment,
-                  label: 'Total',
-                  count: totalPendingCount,
-                  isTotal: true,
-                ),
-              ],
-            ),
-          ),
         // Month Filter
         Container(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -1408,16 +1356,19 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.beach_access,
-                                size: 20,
-                                color: secondary,
+                              Container(
+                                width: 4,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               Text(
                                 'Leave Requests (${filteredLeaves.length})',
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: secondary,
                                 ),
@@ -1438,16 +1389,19 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                           ),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.schedule,
-                                size: 20,
-                                color: secondary,
+                              Container(
+                                width: 4,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               Text(
                                 'Attendance Adjustments (${filteredAttendance.length})',
                                 style: const TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: secondary,
                                 ),
@@ -2071,166 +2025,38 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
 
   Widget _buildCompactAttendanceItem(AttendanceAdjustmentRequest request) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to attendance adjustment detail screen if needed
-        // For now, show a simple dialog or message
-        showDialog(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Attendance Adjustment'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Requester: ${request.requesterName}'),
-                    const SizedBox(height: 8),
-                    Text('Staff ID: ${request.staffId}'),
-                    const SizedBox(height: 8),
-                    Text('Type: ${request.adjustType}'),
-                    const SizedBox(height: 8),
-                    Text('Date: ${FileHelper.formatDate(request.adjustDate)}'),
-                    const SizedBox(height: 8),
-                    Text('Reason: ${request.reason}'),
-                    const SizedBox(height: 8),
-                    Text('Status: ${request.statusText}'),
-                  ],
+      onTap: () async {
+        // Navigate to attendance adjustment detail screen
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => AttendanceAdjustmentApprovalDetailScreen(
+                  request: request,
+                  isPending: request.statusText.toLowerCase() == 'pending',
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Close'),
-                  ),
-                ],
-              ),
+          ),
         );
+
+        // Refresh dashboard if attendance was approved/rejected
+        if (result != null && result['refresh'] == true) {
+          widget.managerViewModel.refresh();
+        }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with name and status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage:
-                          request.profileImageUrl != null
-                              ? NetworkImage(request.profileImageUrl!)
-                              : null,
-                      backgroundColor: secondary.withOpacity(0.1),
-                      child:
-                          request.profileImageUrl == null
-                              ? const Icon(Icons.person, color: secondary)
-                              : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          request.requesterName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          request.positionName,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        request.isPending
-                            ? Colors.orange.withOpacity(0.1)
-                            : Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    request.statusText,
-                    style: TextStyle(
-                      color: request.isPending ? Colors.orange : Colors.green,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-            // Adjustment details
-            Row(
-              children: [
-                const Icon(Icons.edit_calendar, size: 16, color: secondary),
-                const SizedBox(width: 8),
-                Text(
-                  'Type: ${request.adjustType}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: secondary),
-                const SizedBox(width: 8),
-                Text(
-                  FileHelper.formatDate(request.adjustDate),
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.description, size: 16, color: secondary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    request.reason,
-                    style: const TextStyle(fontSize: 14),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ],
+        margin: const EdgeInsets.only(bottom: 1),
+        child: PendingApprovalRequestWidget(
+          reason: request.reason,
+          status: request.statusText,
+          fromDate: request.adjustDate.toString(),
+          toDate: request.adjustDate.toString(),
+          requesterName: request.requesterName,
+          position: request.positionName,
+          leaveType: request.adjustType,
+          isLeaveRequest: false,
+          currentUserName: widget.dashboardViewModel.username,
+          currentUserProfileImageUrl: widget.dashboardViewModel.profileImageUrl,
+          empProfileImage: request.profileImageUrl,
         ),
       ),
     );
@@ -2262,40 +2088,5 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     }
 
     return result;
-  }
-
-  // Helper method to build summary items
-  Widget _buildSummaryItem({
-    required IconData icon,
-    required String label,
-    required int count,
-    bool isTotal = false,
-  }) {
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: isTotal ? 28 : 24),
-          const SizedBox(height: 8),
-          Text(
-            count.toString(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: isTotal ? 24 : 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.9),
-              fontSize: 12,
-              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

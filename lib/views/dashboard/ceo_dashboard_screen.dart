@@ -589,6 +589,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   String _selectedMonthPending =
       'All'; // Default filter for Pending Approval tab
   Language language = Language();
+  final FileHelper _fileHelper = FileHelper();
+
+  // Cache to store month string to DateTime mapping for filtering
+  final Map<String, DateTime> _monthStringToDate = {};
 
   @override
   void initState() {
@@ -1227,13 +1231,12 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               }
 
               if (leaveDate == null) return false;
-              final monthYear =
-                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
-              return monthYear == _selectedMonthPending;
+              return _isSameMonth(leaveDate, _selectedMonthPending);
             }).toList();
 
-    // Generate month options
-    final monthOptions = _generateMonthOptions(leaves);
+    _generateMonthOptions(leaves).then((monthOptions) {
+      // Store month options for later use if needed
+    });
 
     return Column(
       children: [
@@ -1255,7 +1258,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _showMonthFilterBottomSheetPending(monthOptions),
+                  onTap: () async {
+                    final monthOptions = await _generateMonthOptions(leaves);
+                    _showMonthFilterBottomSheetPending(monthOptions);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1360,9 +1366,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               }
 
               if (leaveDate == null) return false;
-              final monthYear =
-                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
-              return monthYear == _selectedMonth;
+              return _isSameMonth(leaveDate, _selectedMonth);
             }).toList();
 
     // Calculate approved and rejected counts from filtered data
@@ -1371,8 +1375,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     final rejectedCount =
         filteredLeaves.where((l) => rejectedLeaves.contains(l)).length;
 
-    // Generate month options
-    final monthOptions = _generateMonthOptions(allLeaves);
+    _generateMonthOptions(allLeaves).then((monthOptions) {
+      // Store month options for later use if needed
+    });
 
     return Column(
       children: [
@@ -1394,7 +1399,10 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _showMonthFilterBottomSheet(monthOptions),
+                  onTap: () async {
+                    final monthOptions = await _generateMonthOptions(allLeaves);
+                    _showMonthFilterBottomSheet(monthOptions);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1476,7 +1484,16 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   }
 
   // Helper method to generate month options from leaves
-  List<String> _generateMonthOptions(List<LeaveRequest> leaves) {
+  // Helper to check if a date is in the selected month
+  bool _isSameMonth(DateTime date, String selectedMonth) {
+    if (selectedMonth == 'All') return true;
+    // Check if the selected month matches this date using the cache
+    final cachedDate = _monthStringToDate[selectedMonth];
+    if (cachedDate == null) return false;
+    return date.year == cachedDate.year && date.month == cachedDate.month;
+  }
+
+  Future<List<String>> _generateMonthOptions(List<LeaveRequest> leaves) async {
     final Map<DateTime, String> monthMap = {};
 
     for (var leave in leaves) {
@@ -1491,9 +1508,11 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       if (leaveDate != null) {
         // Create a key for the month (first day of the month)
         final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
-        final monthYear =
-            '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
+        final monthName = await _fileHelper.getMonthName(leaveDate.month);
+        final monthYear = '$monthName ${leaveDate.year}';
         monthMap[monthKey] = monthYear;
+        // Cache the mapping for filtering
+        _monthStringToDate[monthYear] = monthKey;
       }
     }
 
