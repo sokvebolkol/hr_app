@@ -52,11 +52,13 @@ class AttendanceSummary {
   final int absentCount;
   final int todayStaffLeaves;
   final int pendingLeavesCount;
+  final int pendingAttendanceCount;
   final int approvedLeavesCount;
   final int rejectedLeavesCount;
   final List<LeaveRequest> leaveNeedToApprove;
   final List<LeaveRequest> approvedLeaves;
   final List<LeaveRequest> rejectedLeaves;
+  final List<AttendanceAdjustmentRequest> pendingAttendanceNeedToApprove;
 
   AttendanceSummary({
     required this.date,
@@ -68,15 +70,19 @@ class AttendanceSummary {
     required this.absentCount,
     required this.todayStaffLeaves,
     required this.pendingLeavesCount,
+    required this.pendingAttendanceCount,
     required this.approvedLeavesCount,
     required this.rejectedLeavesCount,
     required this.leaveNeedToApprove,
     required this.approvedLeaves,
     required this.rejectedLeaves,
+    required this.pendingAttendanceNeedToApprove,
   });
 
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
     try {
+      final attendanceList =
+          (json['pending_attendance_need_to_approve'] as List? ?? []);
       return AttendanceSummary(
         date: json['date']?.toString() ?? '',
         isWeekend: json['is_weekend'] ?? false,
@@ -87,6 +93,9 @@ class AttendanceSummary {
         absentCount: _parseToInt(json['absent_count']),
         todayStaffLeaves: _parseToInt(json['today_staff_leaves']),
         pendingLeavesCount: _parseToInt(json['pending_leaves_count']),
+        pendingAttendanceCount: _parseToInt(
+          json['pending_attendance_count'] ?? attendanceList.length,
+        ),
         approvedLeavesCount: _parseToInt(json['approved_leaves_count']),
         rejectedLeavesCount: _parseToInt(json['rejected_leaves_count']),
         leaveNeedToApprove:
@@ -100,6 +109,10 @@ class AttendanceSummary {
         rejectedLeaves:
             (json['rejected_leaves'] as List? ?? [])
                 .map((e) => LeaveRequest.fromJson(e))
+                .toList(),
+        pendingAttendanceNeedToApprove:
+            attendanceList
+                .map((e) => AttendanceAdjustmentRequest.fromJson(e))
                 .toList(),
       );
     } catch (e) {
@@ -118,6 +131,8 @@ class AttendanceSummary {
 
   double get attendanceRate =>
       totalStaff > 0 ? ((presentCount + lateCount) / totalStaff) * 100 : 0;
+
+  int get totalPendingApprovals => pendingLeavesCount + pendingAttendanceCount;
 }
 
 // Add ApprovalItem class for CEO dashboard
@@ -286,4 +301,126 @@ class LeaveRequest {
         return 'Unknown';
     }
   }
+}
+
+class AttendanceApproverItem {
+  final String approverName;
+  final int priority;
+  final int approvalStatus;
+  final String? remark;
+  final String approvalStatusText;
+  final String priorityText;
+
+  AttendanceApproverItem({
+    required this.approverName,
+    required this.priority,
+    required this.approvalStatus,
+    this.remark,
+    required this.approvalStatusText,
+    required this.priorityText,
+  });
+
+  factory AttendanceApproverItem.fromJson(Map<String, dynamic> json) {
+    return AttendanceApproverItem(
+      approverName: json['approver_name'] as String? ?? '',
+      priority: json['priority'] as int? ?? 0,
+      approvalStatus: json['approval_status'] as int? ?? 0,
+      remark: json['remark'] as String?,
+      approvalStatusText: json['approval_status_text'] as String? ?? '',
+      priorityText: json['priority_text'] as String? ?? '',
+    );
+  }
+}
+
+class AttendanceAdjustmentRequest {
+  final int id;
+  final String staffId;
+  final String adjustType;
+  final String adjustDatetime;
+  final String reason;
+  final int status;
+  final String? adjustmentSupportDoc;
+  final String createdBy;
+  final String createdAt;
+  final String requesterName;
+  final String ecard;
+  final String email;
+  final String? profileImage;
+  final String positionName;
+  final String departmentName;
+  final String branchShortName;
+  final String branchFullName;
+  final List<AttendanceApproverItem> approverList;
+  final String statusText;
+  final String adjustTypeText;
+  final bool hasDocument;
+  final String? documentUrl;
+  final String? profileImageUrl;
+
+  AttendanceAdjustmentRequest({
+    required this.id,
+    required this.staffId,
+    required this.adjustType,
+    required this.adjustDatetime,
+    required this.reason,
+    required this.status,
+    this.adjustmentSupportDoc,
+    required this.createdBy,
+    required this.createdAt,
+    required this.requesterName,
+    required this.ecard,
+    required this.email,
+    this.profileImage,
+    required this.positionName,
+    required this.departmentName,
+    required this.branchShortName,
+    required this.branchFullName,
+    required this.approverList,
+    required this.statusText,
+    required this.adjustTypeText,
+    required this.hasDocument,
+    this.documentUrl,
+    this.profileImageUrl,
+  });
+
+  factory AttendanceAdjustmentRequest.fromJson(Map<String, dynamic> json) {
+    return AttendanceAdjustmentRequest(
+      id: json['id'] as int? ?? 0,
+      staffId: json['staff_id']?.toString() ?? '',
+      adjustType: json['adjust_type']?.toString() ?? '',
+      adjustDatetime: json['adjust_datetime']?.toString() ?? '',
+      reason: json['reason']?.toString() ?? '',
+      status: json['status'] as int? ?? 0,
+      adjustmentSupportDoc: json['adjustment_support_doc']?.toString(),
+      createdBy: json['created_by']?.toString() ?? '',
+      createdAt: json['created_at']?.toString() ?? '',
+      requesterName: json['requester_name']?.toString() ?? '',
+      ecard: json['ecard']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      profileImage: json['profile_image']?.toString(),
+      positionName: json['position_name']?.toString() ?? '',
+      departmentName: json['department_name']?.toString() ?? '',
+      branchShortName: json['branch_short_name']?.toString() ?? '',
+      branchFullName: json['branch_full_name']?.toString() ?? '',
+      approverList:
+          (json['approver_list'] as List<dynamic>?)
+              ?.map(
+                (item) => AttendanceApproverItem.fromJson(
+                  item as Map<String, dynamic>,
+                ),
+              )
+              .toList() ??
+          [],
+      statusText: json['status_text']?.toString() ?? '',
+      adjustTypeText: json['adjust_type_text']?.toString() ?? '',
+      hasDocument: json['has_document'] as bool? ?? false,
+      documentUrl: json['document_url']?.toString(),
+      profileImageUrl: json['profile_image_url']?.toString(),
+    );
+  }
+
+  DateTime get adjustDate =>
+      DateTime.tryParse(adjustDatetime) ?? DateTime.now();
+  DateTime get requestDate => DateTime.tryParse(createdAt) ?? DateTime.now();
+  bool get isPending => status == 2;
 }

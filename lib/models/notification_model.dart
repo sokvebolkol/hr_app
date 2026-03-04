@@ -1,4 +1,4 @@
-import '../repositories/approver_dashboard_repository.dart';
+import '../repositories/manager_dashboard_repository.dart';
 import 'leave_history_model.dart';
 
 class NotificationModel {

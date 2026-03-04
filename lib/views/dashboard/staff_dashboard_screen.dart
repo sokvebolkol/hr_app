@@ -566,6 +566,10 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
   String _selectedMonthPending =
       'All'; // Default filter for Pending Approval tab
   Language language = Language();
+  final FileHelper _fileHelper = FileHelper();
+
+  // Cache to store month string to DateTime mapping for filtering
+  final Map<String, DateTime> _monthStringToDate = {};
 
   @override
   void initState() {
@@ -1055,7 +1059,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                                   ),
                                 ),
                               ),
-                              if (viewModel.pendingLeavesCount > 0) ...[
+                              if (viewModel.totalPendingApprovals > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.all(4),
@@ -1071,9 +1075,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                                     minHeight: 20,
                                   ),
                                   child: Text(
-                                    viewModel.pendingLeavesCount > 99
+                                    viewModel.totalPendingApprovals > 99
                                         ? '99+'
-                                        : viewModel.pendingLeavesCount
+                                        : viewModel.totalPendingApprovals
                                             .toString(),
                                     style: TextStyle(
                                       color:
@@ -1196,7 +1200,10 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
   }
 
   Widget _buildPendingLeavesTab(List<LeaveRequest> leaves) {
-    // Filter by month
+    final viewModel = widget.managerViewModel;
+    final attendanceRequests = viewModel.pendingAttendanceRequests;
+
+    // Filter leaves by month
     List<LeaveRequest> filteredLeaves =
         _selectedMonthPending == 'All'
             ? leaves
@@ -1210,16 +1217,92 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               }
 
               if (leaveDate == null) return false;
-              final monthYear =
-                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
-              return monthYear == _selectedMonthPending;
+              return _isSameMonth(leaveDate, _selectedMonthPending);
             }).toList();
 
-    // Generate month options
-    final monthOptions = _generateMonthOptions(leaves);
+    // Filter attendance requests by month
+    List<AttendanceAdjustmentRequest> filteredAttendance =
+        _selectedMonthPending == 'All'
+            ? attendanceRequests
+            : attendanceRequests.where((request) {
+              DateTime? requestDate = DateTime.tryParse(request.createdAt);
+              if (requestDate == null) return false;
+              return _isSameMonth(requestDate, _selectedMonthPending);
+            }).toList();
+
+    // Generate month options from both lists
+    final allDates = <DateTime>[];
+    for (var leave in leaves) {
+      final date =
+          DateTime.tryParse(leave.createdate) ?? DateTime.tryParse(leave.frdat);
+      if (date != null) allDates.add(date);
+    }
+    for (var request in attendanceRequests) {
+      final date = DateTime.tryParse(request.createdAt);
+      if (date != null) allDates.add(date);
+    }
+
+    _generateMonthOptionsFromDates(allDates).then((monthOptions) {
+      // Store month options for later use if needed
+    });
+
+    final totalPendingCount = filteredLeaves.length + filteredAttendance.length;
 
     return Column(
       children: [
+        // Summary Cards
+        if (totalPendingCount > 0)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [secondary, Color(0xFF1a5f7a)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: secondary.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildSummaryItem(
+                  icon: Icons.beach_access,
+                  label: 'Leave',
+                  count: filteredLeaves.length,
+                ),
+                Container(
+                  height: 40,
+                  width: 1,
+                  color: Colors.white.withOpacity(0.3),
+                ),
+                _buildSummaryItem(
+                  icon: Icons.schedule,
+                  label: 'Attendance',
+                  count: filteredAttendance.length,
+                ),
+                Container(
+                  height: 40,
+                  width: 1,
+                  color: Colors.white.withOpacity(0.3),
+                ),
+                _buildSummaryItem(
+                  icon: Icons.assignment,
+                  label: 'Total',
+                  count: totalPendingCount,
+                  isTotal: true,
+                ),
+              ],
+            ),
+          ),
         // Month Filter
         Container(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -1238,7 +1321,12 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _showMonthFilterBottomSheetPending(monthOptions),
+                  onTap: () async {
+                    final monthOptions = await _generateMonthOptionsFromDates(
+                      allDates,
+                    );
+                    _showMonthFilterBottomSheetPending(monthOptions);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1274,7 +1362,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
         ),
         Expanded(
           child:
-              filteredLeaves.isEmpty
+              totalPendingCount == 0
                   ? Container(
                     padding: const EdgeInsets.all(40),
                     child: Column(
@@ -1308,15 +1396,72 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                       ],
                     ),
                   )
-                  : ListView.builder(
+                  : ListView(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 8,
                     ),
-                    itemCount: filteredLeaves.length,
-                    itemBuilder:
-                        (context, index) =>
-                            _buildCompactLeaveItem(filteredLeaves[index], true),
+                    children: [
+                      // Leave Requests Section
+                      if (filteredLeaves.isNotEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.beach_access,
+                                size: 20,
+                                color: secondary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Leave Requests (${filteredLeaves.length})',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ...filteredLeaves
+                            .map((leave) => _buildCompactLeaveItem(leave, true))
+                            .toList(),
+                      ],
+                      // Attendance Adjustment Section
+                      if (filteredAttendance.isNotEmpty) ...[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: filteredLeaves.isNotEmpty ? 16 : 8,
+                            bottom: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.schedule,
+                                size: 20,
+                                color: secondary,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Attendance Adjustments (${filteredAttendance.length})',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ...filteredAttendance
+                            .map(
+                              (request) => _buildCompactAttendanceItem(request),
+                            )
+                            .toList(),
+                      ],
+                    ],
                   ),
         ),
       ],
@@ -1343,9 +1488,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               }
 
               if (leaveDate == null) return false;
-              final monthYear =
-                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
-              return monthYear == _selectedMonth;
+              return _isSameMonth(leaveDate, _selectedMonth);
             }).toList();
 
     // Calculate approved and rejected counts from filtered data
@@ -1354,8 +1497,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     final rejectedCount =
         filteredLeaves.where((l) => rejectedLeaves.contains(l)).length;
 
-    // Generate month options
-    final monthOptions = _generateMonthOptions(allLeaves);
+    _generateMonthOptions(allLeaves).then((monthOptions) {
+      // Store month options for later use if needed
+    });
 
     return Column(
       children: [
@@ -1377,7 +1521,10 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => _showMonthFilterBottomSheet(monthOptions),
+                  onTap: () async {
+                    final monthOptions = await _generateMonthOptions(allLeaves);
+                    _showMonthFilterBottomSheet(monthOptions);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -1459,7 +1606,16 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
   }
 
   // Helper method to generate month options from leaves
-  List<String> _generateMonthOptions(List<LeaveRequest> leaves) {
+  // Helper to check if a date is in the selected month
+  bool _isSameMonth(DateTime date, String selectedMonth) {
+    if (selectedMonth == 'All') return true;
+    // Check if the selected month matches this date using the cache
+    final cachedDate = _monthStringToDate[selectedMonth];
+    if (cachedDate == null) return false;
+    return date.year == cachedDate.year && date.month == cachedDate.month;
+  }
+
+  Future<List<String>> _generateMonthOptions(List<LeaveRequest> leaves) async {
     final Map<DateTime, String> monthMap = {};
 
     for (var leave in leaves) {
@@ -1474,9 +1630,11 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
       if (leaveDate != null) {
         // Create a key for the month (first day of the month)
         final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
-        final monthYear =
-            '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
+        final monthName = await _fileHelper.getMonthName(leaveDate.month);
+        final monthYear = '$monthName ${leaveDate.year}';
         monthMap[monthKey] = monthYear;
+        // Cache the mapping for filtering
+        _monthStringToDate[monthYear] = monthKey;
       }
     }
 
@@ -1907,6 +2065,236 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
           currentUserProfileImageUrl: widget.dashboardViewModel.profileImageUrl,
           empProfileImage: leave.requesterProfileImage,
         ),
+      ),
+    );
+  }
+
+  Widget _buildCompactAttendanceItem(AttendanceAdjustmentRequest request) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to attendance adjustment detail screen if needed
+        // For now, show a simple dialog or message
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text('Attendance Adjustment'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Requester: ${request.requesterName}'),
+                    const SizedBox(height: 8),
+                    Text('Staff ID: ${request.staffId}'),
+                    const SizedBox(height: 8),
+                    Text('Type: ${request.adjustType}'),
+                    const SizedBox(height: 8),
+                    Text('Date: ${FileHelper.formatDate(request.adjustDate)}'),
+                    const SizedBox(height: 8),
+                    Text('Reason: ${request.reason}'),
+                    const SizedBox(height: 8),
+                    Text('Status: ${request.statusText}'),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with name and status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage:
+                          request.profileImageUrl != null
+                              ? NetworkImage(request.profileImageUrl!)
+                              : null,
+                      backgroundColor: secondary.withOpacity(0.1),
+                      child:
+                          request.profileImageUrl == null
+                              ? const Icon(Icons.person, color: secondary)
+                              : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          request.requesterName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          request.positionName,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        request.isPending
+                            ? Colors.orange.withOpacity(0.1)
+                            : Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    request.statusText,
+                    style: TextStyle(
+                      color: request.isPending ? Colors.orange : Colors.green,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            // Adjustment details
+            Row(
+              children: [
+                const Icon(Icons.edit_calendar, size: 16, color: secondary),
+                const SizedBox(width: 8),
+                Text(
+                  'Type: ${request.adjustType}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 16, color: secondary),
+                const SizedBox(width: 8),
+                Text(
+                  FileHelper.formatDate(request.adjustDate),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.description, size: 16, color: secondary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    request.reason,
+                    style: const TextStyle(fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to generate month options from date list
+  Future<List<String>> _generateMonthOptionsFromDates(
+    List<DateTime> dates,
+  ) async {
+    final Map<DateTime, String> monthMap = {};
+
+    for (var date in dates) {
+      // Create a key for the month (first day of the month)
+      final monthKey = DateTime(date.year, date.month, 1);
+      final monthName = await _fileHelper.getMonthName(date.month);
+      final monthYear = '$monthName ${date.year}';
+      monthMap[monthKey] = monthYear;
+      // Cache the mapping for filtering
+      _monthStringToDate[monthYear] = monthKey;
+    }
+
+    // Sort months in descending order (most recent first)
+    final sortedMonths = monthMap.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    // Build the result with 'All' first, then sorted months
+    final result = <String>['All'];
+    for (var monthKey in sortedMonths) {
+      result.add(monthMap[monthKey]!);
+    }
+
+    return result;
+  }
+
+  // Helper method to build summary items
+  Widget _buildSummaryItem({
+    required IconData icon,
+    required String label,
+    required int count,
+    bool isTotal = false,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: isTotal ? 28 : 24),
+          const SizedBox(height: 8),
+          Text(
+            count.toString(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: isTotal ? 24 : 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 12,
+              fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }

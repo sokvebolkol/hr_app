@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../constants/constant.dart';
-import '../repositories/approver_dashboard_repository.dart';
 import '../models/leave_model.dart';
+import '../repositories/manager_dashboard_repository.dart';
 
 class LeaveRequestCard extends StatelessWidget {
   final dynamic leave; // Can be PendingLeaveRequest or LeaveModel

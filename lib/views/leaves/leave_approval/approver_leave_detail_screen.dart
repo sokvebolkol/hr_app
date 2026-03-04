@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
-import '../../../repositories/approver_dashboard_repository.dart';
+import '../../../repositories/manager_dashboard_repository.dart';
 import '../../../utils/file_helper.dart';
 import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../widgets/leave_action_widget.dart';
