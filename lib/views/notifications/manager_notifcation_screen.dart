@@ -6,15 +6,15 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../leaves/leave_detail/employee_leave_detail_screen.dart';
 
-class ApproverNotificationScreen extends StatefulWidget {
-  const ApproverNotificationScreen({super.key});
+class ManagerNotificationScreen extends StatefulWidget {
+  const ManagerNotificationScreen({super.key});
 
   @override
-  State<ApproverNotificationScreen> createState() =>
-      _ApproverNotificationScreenState();
+  State<ManagerNotificationScreen> createState() =>
+      _ManagerNotificationScreenState();
 }
 
-class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
+class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
   late TabController _tabController;
@@ -63,29 +63,31 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
   }
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
-    // Filter notifications based on leave status and action type
+    // Personal Tab - show approved/rejected leave requests and attendance adjustments
     _leaveRequestNotifications =
         allNotifications
             .where(
               (n) =>
-                  !n.isRead &&
-                      n.type == 'leave' &&
-                      n.data['action'] == 'new_request' ||
-                  !n.isRead &&
-                      n.type == 'leave' &&
-                      n.data['action'] == 'reminder',
-            ) // Only new leave requests
+                  n.type == 'leave' &&
+                      (n.data['action'] == 'approved' ||
+                          n.data['action'] == 'rejected') ||
+                  n.type == 'attendance_adjustment' &&
+                      (n.data['action'] == 'approved' ||
+                          n.data['action'] == 'rejected'),
+            ) // Approved/rejected/ leaves
             .toList();
 
+    // Staff Tab - show new leave requests and reminders for pending approvals
     _leaveApprovalNotifications =
         allNotifications
             .where(
               (n) =>
-                  !n.isRead &&
-                  n.type == 'leave' &&
-                  (n.data['action'] == 'approved' ||
-                      n.data['action'] == 'rejected'),
-            ) // Approved/rejected/ leaves
+                  n.type == 'leave' && n.data['action'] == 'new_request' ||
+                  n.type == 'leave' && n.data['action'] == 'reminder' ||
+                  n.type == 'attendance_adjustment' &&
+                      (n.data['action'] == 'new_request' ||
+                          n.data['action'] == 'reminder'),
+            ) // Only new leave requests and reminders
             .toList();
 
     if (mounted) {
@@ -259,8 +261,12 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                         Consumer<NotificationViewModel>(
                           builder: (context, viewModel, child) {
                             final unreadCount =
-                                _leaveRequestNotifications.length +
-                                _leaveApprovalNotifications.length;
+                                _leaveRequestNotifications
+                                    .where((n) => !n.isRead)
+                                    .length +
+                                _leaveApprovalNotifications
+                                    .where((n) => !n.isRead)
+                                    .length;
                             if (unreadCount > 0) {
                               return Container(
                                 margin: const EdgeInsets.only(left: 8),
@@ -336,11 +342,14 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                       children: [
                         const Flexible(
                           child: Text(
-                            'Leave Request',
+                            'Personal',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (_leaveRequestNotifications.isNotEmpty)
+
+                        if (_leaveRequestNotifications
+                            .where((n) => !n.isRead)
+                            .isNotEmpty)
                           Container(
                             margin: const EdgeInsets.only(left: 6),
                             padding: const EdgeInsets.symmetric(
@@ -352,7 +361,7 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${_leaveRequestNotifications.length}',
+                              '${_leaveRequestNotifications.where((n) => !n.isRead).length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -373,12 +382,11 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Flexible(
-                          child: Text(
-                            'Leave Approval',
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text('Staff', overflow: TextOverflow.ellipsis),
                         ),
-                        if (_leaveApprovalNotifications.isNotEmpty)
+                        if (_leaveApprovalNotifications
+                            .where((n) => !n.isRead)
+                            .isNotEmpty)
                           Container(
                             margin: const EdgeInsets.only(left: 6),
                             padding: const EdgeInsets.symmetric(
@@ -390,7 +398,7 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              '${_leaveApprovalNotifications.length}',
+                              '${_leaveApprovalNotifications.where((n) => !n.isRead).length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -444,7 +452,13 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
           onRefresh: _refreshNotifications,
           child: ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(
+              top: 8,
+              bottom: 80,
+              left: 0,
+              right: 0,
+            ),
             itemCount: notifications.length + (viewModel.hasMorePages ? 1 : 0),
             itemBuilder: (context, index) {
               if (index >= notifications.length) {
@@ -500,14 +514,16 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
                 ),
               ),
             ),
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+            if (!notification.isRead)
+              Container(
+                margin: const EdgeInsets.only(left: 8),
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
           ],
         ),
         subtitle: Column(
@@ -568,7 +584,7 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('❌ Failed to mark notification as read'),
+                  content: Text('Failed to mark notification as read'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -616,15 +632,12 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
         });
       } else if (action == 'approved' || action == 'rejected') {
         // For approved/rejected leaves, use EmployeeLeaveDetailScreen with LeaveHistoryModel
-        print("➡️ Navigating to EmployeeLeaveDetailScreen (LeaveHistoryModel)");
-
         if (notification.leaveData == null) {
           _showErrorDialog(
             'No leave information available for this status update',
           );
           return;
         }
-
         try {
           final leaveInfo = notification.toLeaveHistoryModel();
           Navigator.push(
@@ -640,13 +653,9 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
             }
           });
         } catch (e) {
-          print("❌ Error converting to LeaveHistoryModel: $e");
           _showErrorDialog('Error processing leave data: ${e.toString()}');
         }
       } else if (action == 'reminder') {
-        // For reminder notifications, also navigate to appropriate screen
-        print("➡️ Navigating for reminder notification");
-
         if (notification.leaveData == null) {
           _showErrorDialog('No leave information available for this reminder');
           return;
@@ -667,7 +676,6 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
             }
           });
         } catch (e) {
-          print("❌ Error processing reminder: $e");
           _showErrorDialog('Error processing reminder data: ${e.toString()}');
         }
       } else {
@@ -675,7 +683,6 @@ class _ApproverNotificationScreenState extends State<ApproverNotificationScreen>
         _showNotificationDetails(notification);
       }
     } catch (e) {
-      print("❌ Error handling leave notification: $e");
       _showErrorDialog('Error opening leave details: ${e.toString()}');
     }
   }

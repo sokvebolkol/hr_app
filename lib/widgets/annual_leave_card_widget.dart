@@ -128,7 +128,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                             availableLeave,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.right,

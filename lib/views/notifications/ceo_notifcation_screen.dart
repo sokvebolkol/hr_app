@@ -80,10 +80,6 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     if (mounted) {
       setState(() {});
     }
-
-    // Debug logging
-    print('🔄 Updated CEO notifications:');
-    print('  Leave Requests: ${_leaveRequestNotifications.length}');
   }
 
   void _onScroll() {
@@ -470,9 +466,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    '❌ ${_language.failedToMarkNotificationAsRead}',
-                  ),
+                  content: Text(_language.failedToMarkNotificationAsRead),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -511,7 +505,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
         }
       });
     } catch (e) {
-      print("❌ Error handling leave request: $e");
+      print("Error handling leave request: $e");
       _showErrorDialog('Error opening leave request: ${e.toString()}');
     }
   }

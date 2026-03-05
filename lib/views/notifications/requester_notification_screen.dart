@@ -23,6 +23,7 @@ class _RequesterNotificationScreenState
   List<NotificationModel> _leaveStatusNotifications = [];
 
   bool _isInitialized = false;
+  bool isApproverUser = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -59,20 +60,18 @@ class _RequesterNotificationScreenState
         allNotifications
             .where(
               (n) =>
-                  !n.isRead &&
                   n.type == 'leave' &&
-                  (n.data['action'] == 'approved' ||
-                      n.data['action'] == 'rejected'),
+                      (n.data['action'] == 'approved' ||
+                          n.data['action'] == 'rejected') ||
+                  n.type == 'attendance_adjustment' &&
+                      (n.data['action'] == 'approved' ||
+                          n.data['action'] == 'rejected'),
             )
             .toList();
 
     if (mounted) {
       setState(() {});
     }
-
-    // Debug logging
-    print('🔄 Updated requester notifications:');
-    print('  Leave Status Updates: ${_leaveStatusNotifications.length}');
   }
 
   void _onScroll() {
@@ -105,33 +104,9 @@ class _RequesterNotificationScreenState
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('Notifications'),
-            // Show count badge in title
-            if (_leaveStatusNotifications.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_leaveStatusNotifications.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+        title: const Text('Notification'),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -149,7 +124,7 @@ class _RequesterNotificationScreenState
                         (context) => const Center(
                           child: Card(
                             child: Padding(
-                              padding: EdgeInsets.all(20),
+                              padding: EdgeInsets.all(16),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -165,7 +140,6 @@ class _RequesterNotificationScreenState
 
                   try {
                     final success = await viewModel.markAllAsRead();
-
                     // Close loading dialog
                     if (mounted) Navigator.pop(context);
 
@@ -194,7 +168,7 @@ class _RequesterNotificationScreenState
                               children: [
                                 Icon(Icons.error, color: Colors.white),
                                 SizedBox(width: 8),
-                                Text('❌ Failed to mark all as read'),
+                                Text('Failed to mark all as read'),
                               ],
                             ),
                             backgroundColor: Colors.red,
@@ -213,7 +187,7 @@ class _RequesterNotificationScreenState
                             children: [
                               const Icon(Icons.error, color: Colors.white),
                               const SizedBox(width: 8),
-                              Expanded(child: Text('❌ Error: ${e.toString()}')),
+                              Expanded(child: Text('Error: ${e.toString()}')),
                             ],
                           ),
                           backgroundColor: Colors.red,
@@ -423,14 +397,15 @@ class _RequesterNotificationScreenState
                 ),
               ),
             ),
-            Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
+            if (!notification.isRead)
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
           ],
         ),
         subtitle: Column(
@@ -513,7 +488,7 @@ class _RequesterNotificationScreenState
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('❌ Failed to mark notification as read'),
+                  content: Text('Failed to mark notification as read'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -531,11 +506,6 @@ class _RequesterNotificationScreenState
   // Handle leave status notification tap
   void _handleLeaveStatusTap(NotificationModel notification) {
     try {
-      final action = notification.data['action']?.toString() ?? '';
-
-      print("🔔 Requester - Leave status tap - Action: $action");
-      print("🔔 Has leave data: ${notification.leaveData != null}");
-
       if (notification.leaveData == null) {
         _showErrorDialog(
           'No leave information available for this status update',
@@ -557,14 +527,11 @@ class _RequesterNotificationScreenState
           }
         });
       } catch (e) {
-        print("❌ Error converting to LeaveHistoryModel: $e");
         _showErrorDialog('Error processing leave data: ${e.toString()}');
-
         // Fallback: show notification details modal
         _showNotificationDetails(notification);
       }
     } catch (e) {
-      print("❌ Error handling leave status notification: $e");
       _showErrorDialog('Error opening leave details: ${e.toString()}');
     }
   }
@@ -606,7 +573,7 @@ class _RequesterNotificationScreenState
             height: MediaQuery.of(context).size.height * 0.75,
             decoration: const BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Column(
               children: [
@@ -623,11 +590,11 @@ class _RequesterNotificationScreenState
 
                 // Header
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: primary,
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
+                      top: Radius.circular(16),
                     ),
                   ),
                   child: Row(
@@ -666,7 +633,7 @@ class _RequesterNotificationScreenState
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -722,7 +689,7 @@ class _RequesterNotificationScreenState
 
                 // Action buttons
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(

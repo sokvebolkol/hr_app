@@ -287,14 +287,18 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: _getAdjustmentTypeColor(
-                                adjustment.adjustType ?? '',
-                              ).withOpacity(0.15),
+                              color: FileHelper()
+                                  .getAdjustmentTypeColor(
+                                    adjustment.adjustType ?? '',
+                                  )
+                                  .withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: _getAdjustmentTypeColor(
-                                  adjustment.adjustType ?? '',
-                                ).withOpacity(0.3),
+                                color: FileHelper()
+                                    .getAdjustmentTypeColor(
+                                      adjustment.adjustType ?? '',
+                                    )
+                                    .withOpacity(0.3),
                                 width: 0.5,
                               ),
                             ),
@@ -303,7 +307,8 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
-                                color: _getAdjustmentTypeColor(
+                                overflow: TextOverflow.ellipsis,
+                                color: FileHelper().getAdjustmentTypeColor(
                                   adjustment.adjustType ?? '',
                                 ),
                               ),
@@ -343,21 +348,6 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
         ),
       ),
     );
-  }
-
-  Color _getAdjustmentTypeColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'check-in':
-        return Colors.green;
-      case 'check-out':
-        return Colors.blue;
-      case 'break-in':
-        return Colors.orange;
-      case 'break-out':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
   }
 
   /* =========================================================

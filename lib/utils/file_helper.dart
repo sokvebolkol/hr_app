@@ -272,6 +272,18 @@ class FileHelper {
     }
   }
 
+  Color getAdjustmentTypeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'late | missed checked-in':
+      case 'early | missed checked-out':
+        return Colors.orange;
+      case 'missed scan':
+        return Colors.red;
+      default:
+        return primary;
+    }
+  }
+
   // Version comparison
   // Return true if currentVersion is older than latestVersion
 

@@ -73,6 +73,8 @@ class _MyAttendanceAdjustmentRequestScreenState
               const SizedBox(height: 16),
               _buildDetailsCard(),
               const SizedBox(height: 16),
+              if (_hasDocumentSupport()) _buildDocumentSupportCard(),
+              if (_hasDocumentSupport()) const SizedBox(height: 16),
               _buildApprovalWorkflowSection(),
             ],
           ),
@@ -88,7 +90,7 @@ class _MyAttendanceAdjustmentRequestScreenState
       id: widget.adjustmentRequest.id.toString(),
       duration: widget.adjustmentRequest.adjustType,
       durationType: 'Adjustment',
-      hasDocument: false,
+      hasDocument: true,
     );
   }
 
@@ -225,6 +227,212 @@ class _MyAttendanceAdjustmentRequestScreenState
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  bool _hasDocumentSupport() {
+    return widget.adjustmentRequest.hasDocument == true;
+  }
+
+  Widget _buildDocumentSupportCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.attach_file, color: primary, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Document Support',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const Spacer(),
+                if (widget.adjustmentRequest.documentUrl != null &&
+                    widget.adjustmentRequest.documentUrl!.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.fullscreen, color: Colors.blue),
+                    onPressed: () => _viewDocumentFullScreen(),
+                    tooltip: 'View Full Screen',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (widget.adjustmentRequest.documentUrl != null &&
+                widget.adjustmentRequest.documentUrl!.isNotEmpty)
+              _buildDocumentImage()
+            else
+              _buildNoDocumentPlaceholder(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentImage() {
+    return GestureDetector(
+      onTap: () => _viewDocumentFullScreen(),
+      child: Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                widget.adjustmentRequest.documentUrl!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          value:
+                              loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Loading document...'),
+                      ],
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Failed to load document',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.zoom_in, color: Colors.white, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      'Tap to view',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _viewDocumentFullScreen() {
+    if (widget.adjustmentRequest.documentUrl == null ||
+        widget.adjustmentRequest.documentUrl!.isEmpty) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => _FullScreenDocumentViewer(
+              imageUrl: widget.adjustmentRequest.documentUrl!,
+              title: 'Document Support',
+            ),
+      ),
+    );
+  }
+
+  Widget _buildNoDocumentPlaceholder() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.description_outlined, size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 12),
+          Text(
+            'Document Expected',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'This adjustment request requires supporting documents, but none were uploaded or document failed to load',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -529,6 +737,128 @@ class _MyAttendanceAdjustmentRequestScreenState
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+}
+
+class _FullScreenDocumentViewer extends StatefulWidget {
+  final String imageUrl;
+  final String title;
+
+  const _FullScreenDocumentViewer({
+    required this.imageUrl,
+    required this.title,
+  });
+
+  @override
+  State<_FullScreenDocumentViewer> createState() =>
+      _FullScreenDocumentViewerState();
+}
+
+class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
+  final TransformationController _transformationController =
+      TransformationController();
+  TapDownDetails? _doubleTapDetails;
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    _doubleTapDetails = details;
+  }
+
+  void _handleDoubleTap() {
+    if (_transformationController.value != Matrix4.identity()) {
+      _transformationController.value = Matrix4.identity();
+    } else {
+      final position = _doubleTapDetails!.localPosition;
+      _transformationController.value =
+          Matrix4.identity()
+            ..translate(-position.dx * 2, -position.dy * 2)
+            ..scale(3.0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        onDoubleTapDown: _handleDoubleTapDown,
+        onDoubleTap: _handleDoubleTap,
+        child: Center(
+          child: InteractiveViewer(
+            transformationController: _transformationController,
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: Image.network(
+              widget.imageUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Loading document...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text(
+                        'Failed to load document',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.black87,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: const Text(
+          'Pinch to zoom • Double tap to zoom in/out',
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }

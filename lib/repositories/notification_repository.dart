@@ -34,7 +34,7 @@ class NotificationRepository {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('📊 Unread count API response: ${response.statusCode}');
+      print('Unread count API response: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);

@@ -205,7 +205,7 @@ class AttendanceRepository {
       if (await file.exists()) {
         try {
           final multipartFile = await http.MultipartFile.fromPath(
-            'adjustment_support_doc',
+            'file',
             file.path,
           );
           request.files.add(multipartFile);

@@ -14,8 +14,8 @@ class NotificationModel {
   final String timeAgo;
   final bool isRecent;
   final Map<String, dynamic>?
-  staffLeaveRequest; // Changed from leaveInformation
-  final Map<String, dynamic>? ownLeaveRequestData; // New field
+  staffLeaveRequest;
+  final Map<String, dynamic>? ownLeaveRequestData; 
 
   NotificationModel({
     required this.id,
@@ -163,7 +163,7 @@ class NotificationModel {
               apstatu: prio['apstatu'] ?? 0,
               apstatuText: prio['apstatu_text']?.toString() ?? '',
               prioText:
-                  prio['prio_text']?.toString() ?? '', // Note: using prioText
+                  prio['prio_text']?.toString() ?? '', 
               remark: prio['remark']?.toString() ?? '',
             );
           }).toList();
@@ -189,8 +189,8 @@ class NotificationModel {
       statu: leave['statu']?.toString() ?? '0',
       reason: leave['reason']?.toString() ?? '',
       createdate: leave['createdate']?.toString() ?? '',
-      prioList: prioList, // Use the converted list
-      statusText: leave['statu_text']?.toString() ?? '', // Fixed field name
+      prioList: prioList, 
+      statusText: leave['statu_text']?.toString() ?? '', 
     );
   }
 }

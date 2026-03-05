@@ -54,7 +54,7 @@ class NotificationViewModel extends ChangeNotifier {
       _unreadCount = response.unreadCount;
       notifyListeners();
     } catch (e) {
-      print('❌ Error fetching unread count: $e');
+      print('Error fetching unread count: $e');
       // Don't show error to user for background updates
     }
   }
@@ -100,10 +100,8 @@ class NotificationViewModel extends ChangeNotifier {
       _unreadCount = response.summary.unread;
       _error = null;
 
-      print('✅ Loaded ${response.notifications.length} notifications');
     } catch (e) {
       _error = e.toString();
-      print('❌ Error fetching notifications: $e');
     } finally {
       _isLoading = false;
       _isLoadingMore = false;
@@ -120,7 +118,6 @@ class NotificationViewModel extends ChangeNotifier {
 
   Future<bool> markAsRead(int notificationId) async {
     try {
-      print('🔔 Attempting to mark notification $notificationId as read');
 
       final success = await _repository.markAsRead(notificationId);
 

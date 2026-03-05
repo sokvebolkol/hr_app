@@ -13,12 +13,12 @@ import '../../widgets/date_section.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 
-class AttendanceAdjustmentDetailScreen extends StatefulWidget {
+class RequestAttendanceAdjustmentScreen extends StatefulWidget {
   final AttendanceMissing selectedAttendance;
   final String adjustmentType;
   final List<Approver> approvers;
 
-  const AttendanceAdjustmentDetailScreen({
+  const RequestAttendanceAdjustmentScreen({
     super.key,
     required this.selectedAttendance,
     required this.adjustmentType,
@@ -26,12 +26,12 @@ class AttendanceAdjustmentDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<AttendanceAdjustmentDetailScreen> createState() =>
-      _AttendanceAdjustmentDetailScreenState();
+  State<RequestAttendanceAdjustmentScreen> createState() =>
+      _RequestAttendanceAdjustmentScreenState();
 }
 
-class _AttendanceAdjustmentDetailScreenState
-    extends State<AttendanceAdjustmentDetailScreen> {
+class _RequestAttendanceAdjustmentScreenState
+    extends State<RequestAttendanceAdjustmentScreen> {
   final TextEditingController _reasonController = TextEditingController();
   final AttendanceRepository _attendanceRepository = AttendanceRepository();
   XFile? documentPhoto;

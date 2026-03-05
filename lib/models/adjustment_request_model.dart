@@ -10,6 +10,8 @@ class AdjustmentRequestModel {
   final String requesterName;
   final List<AdjustmentApprover> approverList;
   final String statusText;
+  final String? documentUrl;
+  final bool? hasDocument;
 
   AdjustmentRequestModel({
     required this.id,
@@ -23,6 +25,8 @@ class AdjustmentRequestModel {
     required this.requesterName,
     required this.approverList,
     required this.statusText,
+    this.documentUrl,
+    this.hasDocument,
   });
 
   factory AdjustmentRequestModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,8 @@ class AdjustmentRequestModel {
               .toList() ??
           [],
       statusText: json['status_text'] ?? '',
+      documentUrl: json['document_url'],
+      hasDocument: json['has_document'],
     );
   }
   // Helper getters

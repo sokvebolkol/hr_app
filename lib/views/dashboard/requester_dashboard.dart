@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +18,7 @@ import '../../widgets/function_card.dart';
 import '../../widgets/request_card_widget.dart';
 import '../attendance/attendance_logs_screen.dart';
 import '../attendance/attendance_clock_screen.dart';
-import '../attendance/attendance_adjustment_screen.dart';
+import '../attendance/attendance_adjustment_listing_screen.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../auth/login-screen.dart';
 import '../holidays/holiday_calendar_screen.dart';
@@ -31,6 +32,7 @@ import '../../utils/file_helper.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
+import '../notifications/manager_notifcation_screen.dart';
 import '../notifications/requester_notification_screen.dart';
 
 class RequesterDashboardScreen extends StatefulWidget {
@@ -48,6 +50,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
   int _currentIndex = 0;
   double screenWidth = 0.0;
   double screenHeight = 0.0;
+  bool isApproverUser = false;
   late DashboardViewModel _dashboardViewModel;
   Language language = Language();
 
@@ -59,6 +62,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
   @override
   void initState() {
     super.initState();
+    _checkUserRole();
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
@@ -70,6 +74,14 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
         _dashboardViewModel.refreshProfile();
       }
     };
+  }
+
+  Future<void> _checkUserRole() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final approverUserValue = pref.getBool("isApprover") ?? false;
+    setState(() {
+      isApproverUser = approverUserValue;
+    });
   }
 
   Future<void> _initializeLanguage() async {
@@ -166,7 +178,6 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
           onWillPop: _onBackPressed,
           child: Scaffold(
             key: _scaffoldKey,
-
             backgroundColor: Colors.grey[100],
             body: ChangeNotifierProvider.value(
               value: _dashboardViewModel,
@@ -218,6 +229,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                                 : viewModel.appVersion!.iosUrl;
 
                         CustomAlertDialog.show(
+                          // ignore: use_build_context_synchronously
                           context,
                           title: language.updateAvailable,
                           message:
@@ -462,7 +474,9 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                           MaterialPageRoute(
                             builder:
                                 (context) =>
-                                    const RequesterNotificationScreen(),
+                                    isApproverUser
+                                        ? const ManagerNotificationScreen()
+                                        : const RequesterNotificationScreen(),
                           ),
                         );
                       },

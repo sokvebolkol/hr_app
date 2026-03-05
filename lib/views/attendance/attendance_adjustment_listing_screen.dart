@@ -6,7 +6,7 @@ import '../../models/attendance_adjustment_model.dart';
 import '../../viewmodels/attendance_adjustment_viewmodel.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
-import 'attendance_adjustment_detail_screen.dart';
+import 'request_attendance_adjustment_screen.dart';
 
 class AttendanceAdjustmentScreen extends StatefulWidget {
   const AttendanceAdjustmentScreen({super.key});
@@ -399,12 +399,12 @@ class _AttendanceAdjustmentScreenState
       return;
     }
 
-    // Navigate to detailed request screen
+    // Navigate to attendance request screen
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder:
-            (context) => AttendanceAdjustmentDetailScreen(
+            (context) => RequestAttendanceAdjustmentScreen(
               selectedAttendance: _selectedAttendance!,
               adjustmentType: _selectedAdjustmentType,
               approvers: _viewModel!.data?.approvers ?? [],
