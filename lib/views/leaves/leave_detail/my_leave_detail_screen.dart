@@ -52,7 +52,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text(
-          'Leave Details',
+          'Leave Detail',
           style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
         ),
         backgroundColor: primary,

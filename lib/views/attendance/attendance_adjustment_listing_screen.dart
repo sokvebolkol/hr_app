@@ -372,8 +372,9 @@ class _AttendanceAdjustmentScreenState
   }
 
   Widget _buildRequestButton() {
-    final canSubmit = _selectedAttendance != null;
-
+    final canSubmit =
+        _selectedAttendance != null &&
+        _viewModel?.data?.requestLimit.canRequest == true;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       width: double.infinity,

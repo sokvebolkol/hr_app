@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/notification_viewmodel.dart';
+import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
 
 class RequesterNotificationScreen extends StatefulWidget {
@@ -23,7 +24,6 @@ class _RequesterNotificationScreenState
   List<NotificationModel> _leaveStatusNotifications = [];
 
   bool _isInitialized = false;
-  bool isApproverUser = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -506,6 +506,12 @@ class _RequesterNotificationScreenState
   // Handle leave status notification tap
   void _handleLeaveStatusTap(NotificationModel notification) {
     try {
+      // Route attendance adjustment notifications to dedicated handler
+      if (notification.type == 'attendance_adjustment') {
+        _handleAttendanceAdjustmentStatusTap(notification);
+        return;
+      }
+
       if (notification.leaveData == null) {
         _showErrorDialog(
           'No leave information available for this status update',
@@ -533,6 +539,24 @@ class _RequesterNotificationScreenState
       }
     } catch (e) {
       _showErrorDialog('Error opening leave details: ${e.toString()}');
+    }
+  }
+
+  // Handle attendance adjustment status notification tap
+  void _handleAttendanceAdjustmentStatusTap(NotificationModel notification) {
+    try {
+      final adjustmentRequest = notification.toAdjustmentRequestModel();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => MyAttendanceAdjustmentRequestScreen(
+                adjustmentRequest: adjustmentRequest,
+              ),
+        ),
+      );
+    } catch (e) {
+      _showNotificationDetails(notification);
     }
   }
 

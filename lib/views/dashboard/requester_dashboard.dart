@@ -37,8 +37,13 @@ import '../notifications/requester_notification_screen.dart';
 
 class RequesterDashboardScreen extends StatefulWidget {
   final bool hideBottomNav;
+  final VoidCallback? onNavigateToMenu;
 
-  const RequesterDashboardScreen({super.key, this.hideBottomNav = false});
+  const RequesterDashboardScreen({
+    super.key,
+    this.hideBottomNav = false,
+    this.onNavigateToMenu,
+  });
 
   @override
   State<RequesterDashboardScreen> createState() => _DashboardScreenState();
@@ -575,9 +580,13 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
 
   // Method to navigate to profile page
   void navigateToProfile() {
-    setState(() {
-      _currentIndex = 1;
-    });
+    if (widget.hideBottomNav && widget.onNavigateToMenu != null) {
+      widget.onNavigateToMenu!();
+    } else {
+      setState(() {
+        _currentIndex = 1;
+      });
+    }
   }
 }
 

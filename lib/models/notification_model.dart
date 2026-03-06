@@ -1,3 +1,5 @@
+import '../models/adjustment_request_model.dart';
+import '../models/ceo_dashboard_model.dart';
 import '../repositories/manager_dashboard_repository.dart';
 import 'leave_history_model.dart';
 
@@ -13,9 +15,10 @@ class NotificationModel {
   final String createdAt;
   final String timeAgo;
   final bool isRecent;
-  final Map<String, dynamic>?
-  staffLeaveRequest;
-  final Map<String, dynamic>? ownLeaveRequestData; 
+  final Map<String, dynamic>? staffLeaveRequest;
+  final Map<String, dynamic>? ownLeaveRequestData;
+  final Map<String, dynamic>? staffAttendanceAdjustmentData;
+  final Map<String, dynamic>? ownAttendanceAdjustmentData;
 
   NotificationModel({
     required this.id,
@@ -31,6 +34,8 @@ class NotificationModel {
     required this.isRecent,
     this.staffLeaveRequest,
     this.ownLeaveRequestData,
+    this.staffAttendanceAdjustmentData,
+    this.ownAttendanceAdjustmentData,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -48,6 +53,10 @@ class NotificationModel {
       isRecent: json['is_recent'] ?? false,
       staffLeaveRequest: json['staff_leave_request'],
       ownLeaveRequestData: json['own_leave_request_data'],
+      staffAttendanceAdjustmentData:
+          json['staff_adjustment_request'] as Map<String, dynamic>?,
+      ownAttendanceAdjustmentData:
+          json['own_attendance_request_data'] as Map<String, dynamic>?,
     );
   }
 
@@ -66,6 +75,8 @@ class NotificationModel {
       'is_recent': isRecent,
       'staff_leave_request': staffLeaveRequest,
       'own_leave_request_data': ownLeaveRequestData,
+      'staff_adjustment_request': staffAttendanceAdjustmentData,
+      'own_attendance_request_data': ownAttendanceAdjustmentData,
     };
   }
 
@@ -84,6 +95,110 @@ class NotificationModel {
 
     // Fallback to either available data
     return staffLeaveRequest ?? ownLeaveRequestData;
+  }
+
+  // Helper to get attendance adjustment data based on notification action.
+  // Falls back to the raw `data` map so tapping always has something to show.
+  Map<String, dynamic>? get attendanceAdjustmentData {
+    final action = data['action']?.toString();
+    Map<String, dynamic>? dedicated;
+    if (action == 'new_request' || action == 'reminder') {
+      dedicated = staffAttendanceAdjustmentData ?? ownAttendanceAdjustmentData;
+    } else if (action == 'approved' || action == 'rejected') {
+      dedicated = ownAttendanceAdjustmentData ?? staffAttendanceAdjustmentData;
+    } else {
+      dedicated = staffAttendanceAdjustmentData ?? ownAttendanceAdjustmentData;
+    }
+    // Fall back to the notification data payload — always present
+    return dedicated ?? (data.isNotEmpty ? data : null);
+  }
+
+  static int _parseInt(dynamic v) =>
+      v is int ? v : int.tryParse(v?.toString() ?? '') ?? 0;
+
+  static bool? _parseBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    return v.toString().toLowerCase() == 'true';
+  }
+
+  // Convert to AdjustmentRequestModel (for MyAttendanceAdjustmentRequestScreen)
+  AdjustmentRequestModel toAdjustmentRequestModel() {
+    final adj = attendanceAdjustmentData;
+    if (adj == null) {
+      throw Exception('No attendance adjustment information available');
+    }
+    return AdjustmentRequestModel(
+      id: _parseInt(adj['id']),
+      staffId: adj['staff_id']?.toString() ?? '',
+      adjustType: adj['adjust_type']?.toString() ?? '',
+      adjustDateTime: adj['adjust_datetime']?.toString() ?? '',
+      reason: adj['reason']?.toString() ?? '',
+      status: _parseInt(adj['status']),
+      createdBy: adj['created_by']?.toString() ?? '',
+      createdAt: adj['created_at']?.toString() ?? createdAt,
+      requesterName: adj['requester_name']?.toString() ?? '',
+      approverList:
+          (adj['approver_list'] as List<dynamic>?)
+              ?.map(
+                (e) => AdjustmentApprover.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
+      statusText: adj['status_text']?.toString() ?? '',
+      documentUrl:
+          adj['document_url']?.toString() ??
+          adj['adjustment_support_doc_url']?.toString(),
+      hasDocument:
+          _parseBool(adj['has_document']) ??
+          (adj['adjustment_support_doc'] != null ||
+              adj['adjustment_support_doc_url'] != null),
+    );
+  }
+
+  // Convert to AttendanceAdjustmentRequest (for AttendanceAdjustmentApprovalDetailScreen)
+  AttendanceAdjustmentRequest toAttendanceAdjustmentRequest() {
+    final adj = attendanceAdjustmentData;
+    if (adj == null) {
+      throw Exception('No attendance adjustment information available');
+    }
+    return AttendanceAdjustmentRequest(
+      id: _parseInt(adj['id']),
+      staffId: adj['staff_id']?.toString() ?? '',
+      adjustType: adj['adjust_type']?.toString() ?? '',
+      adjustDatetime: adj['adjust_datetime']?.toString() ?? '',
+      reason: adj['reason']?.toString() ?? '',
+      status: _parseInt(adj['status']),
+      adjustmentSupportDoc: adj['adjustment_support_doc']?.toString(),
+      createdBy: adj['created_by']?.toString() ?? '',
+      createdAt: adj['created_at']?.toString() ?? createdAt,
+      requesterName: adj['requester_name']?.toString() ?? '',
+      ecard: adj['ecard']?.toString() ?? '',
+      email: adj['email']?.toString() ?? '',
+      profileImage: adj['profile_image']?.toString(),
+      positionName: adj['position_name']?.toString() ?? '',
+      departmentName: adj['department_name']?.toString() ?? '',
+      branchShortName: adj['branch_short_name']?.toString() ?? '',
+      branchFullName: adj['branch_full_name']?.toString() ?? '',
+      approverList:
+          (adj['approver_list'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    AttendanceApproverItem.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          [],
+      statusText: adj['status_text']?.toString() ?? '',
+      adjustTypeText: adj['adjust_type_text']?.toString() ?? '',
+      hasDocument:
+          _parseBool(adj['has_document']) ??
+          (adj['adjustment_support_doc'] != null ||
+              adj['adjustment_support_doc_url'] != null),
+      documentUrl:
+          adj['document_url']?.toString() ??
+          adj['adjustment_support_doc_url']?.toString(),
+      profileImageUrl: adj['profile_image_url']?.toString(),
+    );
   }
 
   // Convert to PendingLeaveRequest (for ApproverLeaveDetailScreen)
@@ -162,8 +277,7 @@ class NotificationModel {
               prio: prio['prio'] ?? 0,
               apstatu: prio['apstatu'] ?? 0,
               apstatuText: prio['apstatu_text']?.toString() ?? '',
-              prioText:
-                  prio['prio_text']?.toString() ?? '', 
+              prioText: prio['prio_text']?.toString() ?? '',
               remark: prio['remark']?.toString() ?? '',
             );
           }).toList();
@@ -189,8 +303,8 @@ class NotificationModel {
       statu: leave['statu']?.toString() ?? '0',
       reason: leave['reason']?.toString() ?? '',
       createdate: leave['createdate']?.toString() ?? '',
-      prioList: prioList, 
-      statusText: leave['statu_text']?.toString() ?? '', 
+      prioList: prioList,
+      statusText: leave['statu_text']?.toString() ?? '',
     );
   }
 }

@@ -102,10 +102,18 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
       },
       child:
           _showStaffView
-              ? const StaffDashboardScreen(key: ValueKey('staff'))
-              : const RequesterDashboardScreen(
-                key: ValueKey('personal'),
+              ? StaffDashboardScreen(
+                key: const ValueKey('staff'),
+                onNavigateToMenu: () {
+                  setState(() => _currentIndex = 1);
+                },
+              )
+              : RequesterDashboardScreen(
+                key: const ValueKey('personal'),
                 hideBottomNav: true,
+                onNavigateToMenu: () {
+                  setState(() => _currentIndex = 1);
+                },
               ),
     );
   }

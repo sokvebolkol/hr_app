@@ -99,7 +99,6 @@ class NotificationViewModel extends ChangeNotifier {
       _summary = response.summary;
       _unreadCount = response.summary.unread;
       _error = null;
-
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -118,7 +117,6 @@ class NotificationViewModel extends ChangeNotifier {
 
   Future<bool> markAsRead(int notificationId) async {
     try {
-
       final success = await _repository.markAsRead(notificationId);
 
       if (success) {
@@ -140,11 +138,13 @@ class NotificationViewModel extends ChangeNotifier {
             timeAgo: _notifications[notificationIndex].timeAgo,
             isRecent: _notifications[notificationIndex].isRecent,
             staffLeaveRequest:
-                _notifications[notificationIndex]
-                    .staffLeaveRequest, // Updated field name
+                _notifications[notificationIndex].staffLeaveRequest,
             ownLeaveRequestData:
-                _notifications[notificationIndex]
-                    .ownLeaveRequestData, // Updated field name
+                _notifications[notificationIndex].ownLeaveRequestData,
+            staffAttendanceAdjustmentData:
+                _notifications[notificationIndex].staffAttendanceAdjustmentData,
+            ownAttendanceAdjustmentData:
+                _notifications[notificationIndex].ownAttendanceAdjustmentData,
           );
 
           // Update unread count

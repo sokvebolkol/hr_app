@@ -11,8 +11,13 @@ import '../../../viewmodels/leave_action_viewmodel.dart';
 
 class ApproverLeaveDetailScreen extends StatefulWidget {
   final PendingLeaveRequest leave;
+  final bool isPending;
 
-  const ApproverLeaveDetailScreen({super.key, required this.leave});
+  const ApproverLeaveDetailScreen({
+    super.key,
+    required this.leave,
+    this.isPending = false,
+  });
 
   @override
   State<ApproverLeaveDetailScreen> createState() =>
@@ -33,7 +38,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               backgroundColor: primary,
               foregroundColor: Colors.white,
               title: const Text(
-                'Leave Details',
+                'Leave Detail',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -65,21 +70,24 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                 ],
               ),
             ),
-            floatingActionButton: Consumer<LeaveActionViewModel>(
-              builder: (context, viewModel, child) {
-                return LeaveActionButtons(
-                  leaveId: widget.leave.lreid,
-                  employeeName: widget.leave.requesterName,
-                  leaveType: widget.leave.ltyp,
-                  numLeaveDays: widget.leave.numLeaveDays,
-                  fromDate: widget.leave.fromDate,
-                  toDate: widget.leave.toDate,
-                  onAction: _handleLeaveAction,
-                  viewModel: viewModel,
-                  showApproveRemark: true,
-                );
-              },
-            ),
+            floatingActionButton:
+                widget.isPending
+                    ? Consumer<LeaveActionViewModel>(
+                      builder: (context, viewModel, child) {
+                        return LeaveActionButtons(
+                          leaveId: widget.leave.lreid,
+                          employeeName: widget.leave.requesterName,
+                          leaveType: widget.leave.ltyp,
+                          numLeaveDays: widget.leave.numLeaveDays,
+                          fromDate: widget.leave.fromDate,
+                          toDate: widget.leave.toDate,
+                          onAction: _handleLeaveAction,
+                          viewModel: viewModel,
+                          showApproveRemark: true,
+                        );
+                      },
+                    )
+                    : null,
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
           );
@@ -538,55 +546,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   ),
                 ),
               ),
-            ] else ...[
-              // For non-image files, show file icon and details
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        _getFileIcon(widget.leave.file!),
-                        color: primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getFileName(widget.leave.file!),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getFileType(widget.leave.file!),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ],
         ),
@@ -609,46 +568,6 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
         return Icons.access_time;
       default:
         return Icons.help_outline;
-    }
-  }
-
-  String _getFileName(String filePath) {
-    return filePath.split('/').last.split('\\').last;
-  }
-
-  String _getFileType(String fileName) {
-    final extension = fileName.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return 'PDF Document';
-      case 'doc':
-      case 'docx':
-        return 'Word Document';
-      case 'txt':
-        return 'Text Document';
-      case 'xls':
-      case 'xlsx':
-        return 'Excel Document';
-      default:
-        return '${extension.toUpperCase()} File';
-    }
-  }
-
-  IconData _getFileIcon(String fileName) {
-    final extension = fileName.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return Icons.picture_as_pdf;
-      case 'doc':
-      case 'docx':
-        return Icons.description;
-      case 'txt':
-        return Icons.text_snippet;
-      case 'xls':
-      case 'xlsx':
-        return Icons.table_chart;
-      default:
-        return Icons.insert_drive_file;
     }
   }
 }

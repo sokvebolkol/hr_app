@@ -25,13 +25,15 @@ import '../attendance/staff_attendance_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
 import '../leaves/approval_history_screen.dart';
-import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
+import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../menu/menu_screen.dart';
-import '../notifications/ceo_notifcation_screen.dart';
+import '../notifications/manager_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
-  const StaffDashboardScreen({super.key});
+  final VoidCallback? onNavigateToMenu;
+
+  const StaffDashboardScreen({super.key, this.onNavigateToMenu});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -440,7 +442,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const CeoNotificationScreen(),
+                            builder:
+                                (context) => const ManagerNotificationScreen(),
                           ),
                         );
                       },
@@ -538,9 +541,14 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
   }
 
   void navigateToProfile() {
-    setState(() {
-      _currentIndex = 2;
-    });
+    if (widget.onNavigateToMenu != null) {
+      // Delegate to parent (ManagerDashboard) so the bottom bar stays active.
+      widget.onNavigateToMenu!();
+    } else {
+      setState(() {
+        _currentIndex = 2;
+      });
+    }
   }
 }
 
@@ -1993,14 +2001,15 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
           context,
           MaterialPageRoute(
             builder:
-                (context) =>
-                    CeoLeaveDetailScreen(leave: leave, isPending: isPending),
+                (context) => ApproverLeaveDetailScreen(
+                  leave: leave,
+                  isPending: isPending,
+                ),
           ),
         );
 
         // Handle the result if action was taken
         if (result != null && mounted) {
-          // Refresh the CEO dashboard data
           widget.managerViewModel.refresh();
         }
       },

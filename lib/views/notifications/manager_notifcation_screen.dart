@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
 import '../../viewmodels/notification_viewmodel.dart';
+import '../attendance/attendance_adjustment_approval_detail_screen.dart';
+import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../leaves/leave_detail/employee_leave_detail_screen.dart';
 
@@ -151,7 +154,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  CircularProgressIndicator(),
+                                  SpinKitFadingCircle(
+                                    color: primary,
+                                    size: 50.0,
+                                  ),
                                   SizedBox(height: 16),
                                   Text('Marking all as read...'),
                                 ],
@@ -230,11 +236,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
+                            child: SpinKitFadingCircle(
+                              color: Colors.white,
+                              size: 16.0,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -433,7 +437,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
       builder: (context, viewModel, child) {
         // Show loading only if we haven't initialized and there are no cached notifications
         if (!_isInitialized && notifications.isEmpty && viewModel.isLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+            child: SpinKitFadingCircle(color: primary, size: 50.0),
+          );
         }
 
         // Show error only if we haven't initialized and there's an error
@@ -468,7 +474,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                   child: Center(
                     child:
                         viewModel.isLoadingMore
-                            ? const CircularProgressIndicator()
+                            ? const SpinKitFadingCircle(
+                              color: primary,
+                              size: 50.0,
+                            )
                             : const SizedBox.shrink(),
                   ),
                 );
@@ -599,20 +608,59 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     );
   }
 
+  // Handle attendance adjustment notification tap
+  void _handleAttendanceAdjustmentNotificationTap(
+    NotificationModel notification,
+    String action,
+  ) {
+    try {
+      if (action == 'new_request' || action == 'reminder') {
+        final request = notification.toAttendanceAdjustmentRequest();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => AttendanceAdjustmentApprovalDetailScreen(
+                  request: request,
+                  isPending: true,
+                ),
+          ),
+        ).then((result) {
+          if (result != null && result['refresh'] == true) {
+            _refreshNotifications();
+          }
+        });
+      } else if (action == 'approved' || action == 'rejected') {
+        final adjustmentRequest = notification.toAdjustmentRequestModel();
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => MyAttendanceAdjustmentRequestScreen(
+                  adjustmentRequest: adjustmentRequest,
+                ),
+          ),
+        );
+      } else {
+        _showNotificationDetails(notification);
+      }
+    } catch (e) {
+      _showNotificationDetails(notification);
+    }
+  }
+
   // Handle leave notification tap (works for both request and approval)
   void _handleLeaveNotificationTap(NotificationModel notification) {
     try {
       final action = notification.data['action']?.toString() ?? '';
 
-      print("🔔 Notification tap - Action: $action");
-      print("🔔 Has leave data: ${notification.leaveData != null}");
+      // Route attendance adjustment notifications to dedicated handler
+      if (notification.type == 'attendance_adjustment') {
+        _handleAttendanceAdjustmentNotificationTap(notification, action);
+        return;
+      }
 
       if (action == 'new_request') {
-        // For new leave requests, use ApproverLeaveDetailScreen with PendingLeaveRequest
-        print(
-          "➡️ Navigating to ApproverLeaveDetailScreen (PendingLeaveRequest)",
-        );
-
         if (notification.leaveData == null) {
           _showErrorDialog('No leave information available for this request');
           return;

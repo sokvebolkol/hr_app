@@ -31,7 +31,7 @@ class LeaveDetailRepository {
         final data = json.decode(response.body);
         return data['success'] == true;
       } else {
-        throw Exception('Failed to cancel leave: ${response.statusCode}');
+        throw Exception('Failed to cancel leave');
       }
     } catch (e) {
       throw Exception('Error cancelling leave: $e');
