@@ -6,15 +6,11 @@ class CeoDashboardResponse {
 
   factory CeoDashboardResponse.fromJson(Map<String, dynamic> json) {
     try {
-      print('CeoDashboardResponse.fromJson - Input JSON keys: ${json.keys}');
-      print('CeoDashboardResponse.fromJson - success: ${json['success']}');
-
       return CeoDashboardResponse(
         success: json['success'] ?? false,
         data: CeoDashboardData.fromJson(json['data']),
       );
     } catch (e) {
-      print('CeoDashboardResponse.fromJson - Error: $e');
       rethrow;
     }
   }
@@ -27,16 +23,10 @@ class CeoDashboardData {
 
   factory CeoDashboardData.fromJson(Map<String, dynamic> json) {
     try {
-      print('CeoDashboardData.fromJson - Input JSON keys: ${json.keys}');
-      print(
-        'CeoDashboardData.fromJson - summary type: ${json['summary'].runtimeType}',
-      );
-
       return CeoDashboardData(
         summary: AttendanceSummary.fromJson(json['summary']),
       );
     } catch (e) {
-      print('CeoDashboardData.fromJson - Error: $e');
       rethrow;
     }
   }

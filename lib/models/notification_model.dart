@@ -255,6 +255,63 @@ class NotificationModel {
     );
   }
 
+  // Convert to LeaveRequest (for ApproverLeaveDetailScreen)
+  LeaveRequest toLeaveRequest() {
+    final leave = leaveData;
+
+    if (leave == null) {
+      throw Exception('No leave information available');
+    }
+
+    return LeaveRequest(
+      lreid: leave['lreid']?.toString() ?? '',
+      orgid: leave['orgid']?.toString() ?? '',
+      eid: leave['eid']?.toString() ?? '',
+      staff_id: leave['staff_id']?.toString() ?? '',
+      email: leave['email']?.toString() ?? '',
+      position: leave['position_name']?.toString() ?? '',
+      department: leave['department_name']?.toString() ?? '',
+      branch:
+          leave['branch_short_name']?.toString() ??
+          leave['branch_full_name']?.toString() ??
+          '',
+      leaid: leave['leaid']?.toString() ?? '',
+      frdat: leave['frdat']?.toString() ?? '',
+      todat: leave['todat']?.toString() ?? '',
+      numleav: leave['numleav']?.toString() ?? '',
+      lfor: leave['lfor']?.toString() ?? '',
+      lnot: leave['lnot']?.toString() ?? '',
+      leaveNote: leave['leave_note']?.toString() ?? '',
+      reason: leave['reason']?.toString() ?? '',
+      remark: leave['remark']?.toString() ?? '',
+      file: leave['document_url']?.toString(),
+      createdate: leave['createdate']?.toString() ?? '',
+      statu: leave['statu']?.toString() ?? '0',
+      holiday: leave['holiday']?.toString() ?? '0',
+      ltyp: leave['ltyp']?.toString() ?? '',
+      requesterName:
+          leave['dname']?.toString() ??
+          leave['requester_name']?.toString() ??
+          '',
+      statuText: leave['statu_text']?.toString() ?? '',
+      requesterProfileImage: leave['profile_image_url']?.toString(),
+      prioList:
+          (leave['prio_list'] as List<dynamic>?)
+              ?.map(
+                (prio) => CeoApprovalItem.fromJson({
+                  'approver_name': prio['approver_name'],
+                  'prio': prio['prio'],
+                  'apstatu': prio['apstatu'],
+                  'remark': prio['remark'],
+                  'apstatu_text': prio['apstatu_text'],
+                  'prio_text': prio['prio_text'],
+                }),
+              )
+              .toList() ??
+          [],
+    );
+  }
+
   // Convert to LeaveHistoryModel (for MyLeaveDetailScreen)
   LeaveHistoryModel toLeaveHistoryModel() {
     final leave = leaveData;

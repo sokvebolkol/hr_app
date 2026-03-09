@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
 import '../../models/ceo_dashboard_model.dart';
+import '../../repositories/profile_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/attendance_adjustment_action_viewmodel.dart';
+import '../../widgets/approvalworkflowwidget.dart';
 import '../../widgets/attendance_action_widget.dart';
 
 class AttendanceAdjustmentApprovalDetailScreen extends StatefulWidget {
@@ -25,6 +26,33 @@ class AttendanceAdjustmentApprovalDetailScreen extends StatefulWidget {
 
 class _AttendanceAdjustmentApprovalDetailScreenState
     extends State<AttendanceAdjustmentApprovalDetailScreen> {
+  String? _currentUserName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final profile = await ProfileRepository().getUserProfile();
+    if (mounted && profile != null) {
+      setState(() {
+        _currentUserName = profile.fullName;
+      });
+    }
+  }
+
+  /// Returns true if the logged-in user has already acted on this request.
+  bool get _hasCurrentUserAlreadyActed {
+    if (_currentUserName == null) return false;
+    return widget.request.approverList.any(
+      (item) =>
+          item.approverName.toLowerCase() == _currentUserName!.toLowerCase() &&
+          item.approvalStatus != 2, // 2 = pending
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -39,7 +67,7 @@ class _AttendanceAdjustmentApprovalDetailScreenState
               foregroundColor: Colors.white,
               centerTitle: false,
               title: const Text(
-                'Attendance Adjustment Detail',
+                'Adjustment Detail',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -53,15 +81,38 @@ class _AttendanceAdjustmentApprovalDetailScreenState
                   const SizedBox(height: 16),
                   if (widget.request.documentUrl != null &&
                       widget.request.documentUrl!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildSupportingDocumentCard(),
+                    Padding(
+                      padding: EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                      child: _buildSupportingDocumentCard(),
+                    ),
+                  ],
+                  if (widget.request.approverList.isNotEmpty) ...[
+                    Padding(
+                      padding: EdgeInsets.only(left: 16, right: 16),
+                      child: ApprovalWorkflowWidget(
+                        approvalList:
+                            widget.request.approverList
+                                .map(
+                                  (item) => ApprovalItemData(
+                                    approverName: item.approverName,
+                                    priority: item.priority,
+                                    status: item.approvalStatus,
+                                    statusText: item.approvalStatusText,
+                                    roleText: item.priorityText,
+                                    remark: item.remark,
+                                  ),
+                                )
+                                .toList(),
+                        titleIconColor: secondary,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 100), // Space for floating buttons
                 ],
               ),
             ),
             floatingActionButton:
-                widget.isPending
+                widget.isPending && !_hasCurrentUserAlreadyActed
                     ? Consumer<AttendanceAdjustmentActionViewModel>(
                       builder: (context, vm, child) {
                         return AttendanceActionButtons(
@@ -444,163 +495,10 @@ class _AttendanceAdjustmentApprovalDetailScreenState
   }
 
   Widget _buildSupportingDocumentCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.attach_file, color: secondary, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Supporting Document',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Check if the file is an image
-            if (_isImageFile(widget.request.documentUrl!)) ...[
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    widget.request.documentUrl!,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey[100],
-                        child: const Center(
-                          child: SpinKitFadingCircle(color: secondary),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[100],
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Failed to load image',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ] else ...[
-              // For non-image files, show file icon and details
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: secondary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        _getFileIcon(widget.request.documentUrl!),
-                        color: secondary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getFileName(widget.request.documentUrl!),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getFileType(widget.request.documentUrl!),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return FileHelper.buildSupportingDocumentCard(
+      context,
+      widget.request.documentUrl!,
+      accentColor: secondary,
     );
-  }
-
-  bool _isImageFile(String url) {
-    final imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
-    final extension = url.split('.').last.toLowerCase();
-    return imageExtensions.contains(extension);
-  }
-
-  IconData _getFileIcon(String url) {
-    final extension = url.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return Icons.picture_as_pdf;
-      case 'doc':
-      case 'docx':
-        return Icons.description;
-      case 'xls':
-      case 'xlsx':
-        return Icons.table_chart;
-      default:
-        return Icons.insert_drive_file;
-    }
-  }
-
-  String _getFileName(String url) {
-    return url.split('/').last;
-  }
-
-  String _getFileType(String url) {
-    final extension = url.split('.').last.toUpperCase();
-    return '$extension Document';
   }
 }

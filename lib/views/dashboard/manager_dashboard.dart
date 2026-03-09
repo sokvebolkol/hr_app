@@ -24,52 +24,59 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
       backgroundColor: Colors.grey[50],
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavigationBar(),
-      floatingActionButton: Container(
-        width: 74,
-        height: 74,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
-          boxShadow: [
-            // Main soft shadow
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 25,
-              offset: const Offset(0, 10),
-            ),
+      floatingActionButton:
+          _showStaffView
+              ? null
+              : Container(
+                width: 74,
+                height: 74,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    // Main soft shadow
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
+                    ),
 
-            // Ambient light
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-            // Primary glow
-            BoxShadow(
-              color: primary.withOpacity(0.18),
-              blurRadius: 20,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Center(
-          child: FloatingActionButton(
-            elevation: 0,
-            backgroundColor: primary,
-            shape: const CircleBorder(),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
-            onPressed: () async {
-              HapticFeedback.mediumImpact();
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LeaveRequestScreen(),
+                    // Ambient light
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                    // Primary glow
+                    BoxShadow(
+                      color: primary.withOpacity(0.18),
+                      blurRadius: 20,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
-              );
-            },
-          ),
-        ),
-      ),
+                child: Center(
+                  child: FloatingActionButton(
+                    elevation: 0,
+                    backgroundColor: primary,
+                    shape: const CircleBorder(),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    onPressed: () async {
+                      HapticFeedback.mediumImpact();
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LeaveRequestScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }

@@ -415,7 +415,7 @@ class _AttendanceAdjustmentScreenState
 
     // If request was submitted successfully, go back to dashboard
     if (result == true && mounted) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
     }
   }
 

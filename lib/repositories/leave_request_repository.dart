@@ -247,7 +247,6 @@ class LeaveRequestRepository {
         );
       }
     } catch (e) {
-      print('Error in _submitWithFile: $e');
       rethrow;
     }
   }
@@ -274,10 +273,6 @@ class LeaveRequestRepository {
       "total_leave": totalLeave,
       "approvers": approvers,
     };
-
-    print("--------------------------");
-    print(body);
-    print("--------------------------");
 
     final response = await http.post(
       Uri.parse('${_serverService.baseUrl}request-leave'),

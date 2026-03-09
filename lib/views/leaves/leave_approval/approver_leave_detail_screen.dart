@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
-import '../../../repositories/manager_dashboard_repository.dart';
+import '../../../models/ceo_dashboard_model.dart';
+import '../../../repositories/profile_repository.dart';
 import '../../../utils/file_helper.dart';
 import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../widgets/leave_action_widget.dart';
 import '../../../viewmodels/leave_action_viewmodel.dart';
 
 class ApproverLeaveDetailScreen extends StatefulWidget {
-  final PendingLeaveRequest leave;
+  final LeaveRequest leave;
   final bool isPending;
 
   const ApproverLeaveDetailScreen({
@@ -25,6 +25,34 @@ class ApproverLeaveDetailScreen extends StatefulWidget {
 }
 
 class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
+  String? _currentUserName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final profile = await ProfileRepository().getUserProfile();
+    if (mounted && profile != null) {
+      setState(() {
+        _currentUserName = profile.fullName;
+      });
+    }
+  }
+
+  /// Returns true if the logged-in user has already approved or rejected
+  /// this leave (i.e. their entry in prioList is no longer pending).
+  bool get _hasCurrentUserAlreadyActed {
+    if (_currentUserName == null) return false;
+    return widget.leave.prioList.any(
+      (item) =>
+          item.approverName.toLowerCase() == _currentUserName!.toLowerCase() &&
+          item.apstatu != 2, // 2 = pending
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -37,6 +65,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               elevation: 0,
               backgroundColor: primary,
               foregroundColor: Colors.white,
+              centerTitle: false,
               title: const Text(
                 'Leave Detail',
                 style: TextStyle(fontWeight: FontWeight.w600),
@@ -62,7 +91,9 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         widget.leave.prioList
                             .map(
                               (approval) =>
-                                  ApprovalItemData.fromApprovalItem(approval),
+                                  ApprovalItemData.fromCeoApprovalItem(
+                                    approval,
+                                  ),
                             )
                             .toList(),
                   ),
@@ -71,7 +102,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               ),
             ),
             floatingActionButton:
-                widget.isPending
+                widget.isPending && !_hasCurrentUserAlreadyActed
                     ? Consumer<LeaveActionViewModel>(
                       builder: (context, viewModel, child) {
                         return LeaveActionButtons(
@@ -188,7 +219,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Staff ID: ${widget.leave.staffId}',
+                          'Staff ID: ${widget.leave.staff_id}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.white70,
@@ -286,19 +317,19 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   _buildInfoItem(
                     Icons.location_on_outlined,
                     'Branch',
-                    widget.leave.branchFullName,
+                    widget.leave.branch,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.work_outline,
                     'Position',
-                    widget.leave.positionName,
+                    widget.leave.position,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.business_outlined,
                     'Department',
-                    widget.leave.departmentName,
+                    widget.leave.department,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
@@ -473,89 +504,11 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
   }
 
   Widget _buildSupportingDocumentCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.attach_file, color: primary, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Supporting Document',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Check if the file is an image
-            if (_isImageFile(widget.leave.file!)) ...[
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    widget.leave.file!,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey[100],
-                        child: const Center(
-                          child: SpinKitFadingCircle(color: primary),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[100],
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Failed to load image',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+    return FileHelper.buildSupportingDocumentCard(
+      context,
+      widget.leave.file!,
+      accentColor: primary,
     );
-  }
-
-  bool _isImageFile(String fileName) {
-    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
-    return imageExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
   }
 
   IconData _getStatusIcon() {

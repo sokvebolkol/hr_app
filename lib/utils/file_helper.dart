@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -682,5 +683,236 @@ class FileHelper {
     } catch (e) {
       print('⚠️ Error removing server error toast: $e');
     }
+  }
+
+  static void viewImageFullScreen(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => Scaffold(
+              backgroundColor: Colors.black,
+              appBar: AppBar(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                title: const Text('Supporting Document'),
+              ),
+              body: Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return const Center(
+                        child: SpinKitFadingCircle(
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                      );
+                    },
+                    errorBuilder:
+                        (_, __, ___) => const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.white,
+                            size: 64,
+                          ),
+                        ),
+                  ),
+                ),
+              ),
+            ),
+      ),
+    );
+  }
+
+  static bool _isImageFile(String url) {
+    final ext = url.split('?').first.split('.').last.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(ext);
+  }
+
+  static IconData _getDocFileIcon(String url) {
+    final ext = url.split('?').first.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'xls':
+      case 'xlsx':
+        return Icons.table_chart;
+      default:
+        return Icons.insert_drive_file;
+    }
+  }
+
+  static String _getDocFileName(String url) {
+    return url.split('/').last.split('?').first;
+  }
+
+  static String _getDocFileType(String url) {
+    final ext = url.split('?').first.split('.').last.toUpperCase();
+    return '$ext Document';
+  }
+
+  /// Shared supporting-document card widget.
+  /// [accentColor] defaults to [primary] if not provided.
+  static Widget buildSupportingDocumentCard(
+    BuildContext context,
+    String fileUrl, {
+    Color? accentColor,
+  }) {
+    final color = accentColor ?? primary;
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.attach_file, color: color, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Supporting Document',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_isImageFile(fileUrl)) ...[
+              Container(
+                width: double.infinity,
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: GestureDetector(
+                  onTap: () => viewImageFullScreen(context, fileUrl),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Image.network(
+                          fileUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          loadingBuilder: (ctx, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              color: Colors.grey[100],
+                              child: Center(
+                                child: SpinKitFadingCircle(
+                                  color: color,
+                                  size: 40,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder:
+                              (ctx, _, __) => Container(
+                                color: Colors.grey[100],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.broken_image,
+                                      size: 48,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Failed to load image',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.zoom_in,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        _getDocFileIcon(fileUrl),
+                        color: color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getDocFileName(fileUrl),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getDocFileType(fileUrl),
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

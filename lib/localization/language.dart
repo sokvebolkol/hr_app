@@ -297,7 +297,7 @@ class Language {
   String get memo => "Memo";
   String get more => "More";
   String get leaveHistory => "Leave History";
-  String get attendanceAdjustmentsHistory => "Attendance Adjustment History";
+  String get attendanceAdjustmentsHistory => "Adjustment History";
   String get attendances => "Attendances";
   String get myLeaveRequest => "My Leave Request";
   String get noLeaveRequestsFound => "No leave requests found";

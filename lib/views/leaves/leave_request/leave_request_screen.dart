@@ -79,16 +79,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         userId = data.userId;
         isLoading = false;
       });
-
-      // Debug: Print approvers data
-      print('=== DEBUG: APPROVERS DATA ===');
-      print('Number of approvers received: ${approvers.length}');
-      for (var approver in approvers) {
-        print(
-          'Approver: ${approver.dname} - ID: ${approver.approverId} - Level: ${approver.approvalLevel}',
-        );
-      }
-      print('=== END APPROVERS DEBUG ===');
     } catch (e) {
       setState(() {
         errorMessage = e.toString();

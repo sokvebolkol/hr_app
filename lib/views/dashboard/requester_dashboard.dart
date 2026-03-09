@@ -616,7 +616,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   }
 
   // Function buttons data
-  List<Map<String, dynamic>> _getFunctionButtons(BuildContext context) {
+  List<Map<String, dynamic>> _getFunctionButtons(
+    BuildContext context,
+    DashboardViewModel viewModel,
+  ) {
     return [
       {
         'icon': Icons.access_time,
@@ -642,13 +645,16 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       {
         'icon': Icons.edit_calendar_outlined,
         'label': language.attendanceRequests,
-        'onPressed': (BuildContext context) {
-          Navigator.push(
+        'onPressed': (BuildContext context) async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => const AttendanceAdjustmentScreen(),
             ),
           );
+          if (result == true) {
+            viewModel.refresh();
+          }
         },
       },
       {
@@ -689,7 +695,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
 
   void _startAutoSlide() {
     _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      final items = _getFunctionButtons(context);
+      final vm = Provider.of<DashboardViewModel>(context, listen: false);
+      final items = _getFunctionButtons(context, vm);
 
       if (_scrollController.hasClients && items.length > 1) {
         _currentScrollIndex = (_currentScrollIndex + 1) % items.length;
@@ -738,7 +745,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                 const SizedBox(height: 16),
                 _buildLeaveBalanceSection(viewModel),
                 const SizedBox(height: 16),
-                _buildFunctionButtons(context),
+                _buildFunctionButtons(context, viewModel),
                 const SizedBox(height: 20),
                 // Section Header
                 Padding(
@@ -816,8 +823,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     );
   }
 
-  Widget _buildFunctionButtons(BuildContext context) {
-    final functionButtons = _getFunctionButtons(context);
+  Widget _buildFunctionButtons(
+    BuildContext context,
+    DashboardViewModel viewModel,
+  ) {
+    final functionButtons = _getFunctionButtons(context, viewModel);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SizedBox(

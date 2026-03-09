@@ -124,14 +124,6 @@ class AttendanceRepository {
     required List<Map<String, int>> approvers,
     XFile? attachmentImage,
   }) async {
-    print('Submitting adjustment request with data:');
-    print('Date Scan: $dateScan');
-    print('Adjust Type: $adjustType');
-    print('Reason: $reason');
-    print('Approvers: $approvers');
-    if (attachmentImage != null) {
-      print('Attachment Image: ${attachmentImage.path}');
-    }
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final token = pref.getString("token");

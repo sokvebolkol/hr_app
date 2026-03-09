@@ -7,7 +7,7 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../attendance/attendance_adjustment_approval_detail_screen.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
-import '../leaves/leave_detail/employee_leave_detail_screen.dart';
+import '../leaves/leave_detail/my_leave_detail_screen.dart';
 
 class ManagerNotificationScreen extends StatefulWidget {
   const ManagerNotificationScreen({super.key});
@@ -666,12 +666,15 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           return;
         }
 
-        final leaveRequest = notification.toPendingLeaveRequest();
+        final leaveRequest = notification.toLeaveRequest();
         Navigator.push(
           context,
           MaterialPageRoute(
             builder:
-                (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
+                (context) => ApproverLeaveDetailScreen(
+                  leave: leaveRequest,
+                  isPending: true,
+                ),
           ),
         ).then((result) {
           if (result == true) {
@@ -679,7 +682,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           }
         });
       } else if (action == 'approved' || action == 'rejected') {
-        // For approved/rejected leaves, use EmployeeLeaveDetailScreen with LeaveHistoryModel
+        // For approved/rejected leaves, navigate to MyLeaveDetailScreen
         if (notification.leaveData == null) {
           _showErrorDialog(
             'No leave information available for this status update',
@@ -692,8 +695,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
             context,
             MaterialPageRoute(
               builder:
-                  (context) =>
-                      EmployeeLeaveDetailScreen(leaveRequest: leaveInfo),
+                  (context) => MyLeaveDetailScreen(leaveRequest: leaveInfo),
             ),
           ).then((result) {
             if (result == true) {
@@ -711,12 +713,15 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
         try {
           // Check if it's a pending request that needs approval
-          final leaveRequest = notification.toPendingLeaveRequest();
+          final leaveRequest = notification.toLeaveRequest();
           Navigator.push(
             context,
             MaterialPageRoute(
               builder:
-                  (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
+                  (context) => ApproverLeaveDetailScreen(
+                    leave: leaveRequest,
+                    isPending: true,
+                  ),
             ),
           ).then((result) {
             if (result == true) {
