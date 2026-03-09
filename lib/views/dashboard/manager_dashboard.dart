@@ -17,6 +17,13 @@ class ManagerDashboard extends StatefulWidget {
 class _ManagerDashboardState extends State<ManagerDashboard> {
   int _currentIndex = 0;
   bool _showStaffView = false; // false = Personal, true = Staff
+  bool _triggerPersonalRefresh = false;
+
+  void _refreshPersonalDashboard() {
+    setState(() {
+      _triggerPersonalRefresh = !_triggerPersonalRefresh;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,12 +74,15 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                     ),
                     onPressed: () async {
                       HapticFeedback.mediumImpact();
-                      await Navigator.push(
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const LeaveRequestScreen(),
                         ),
                       );
+                      if (result == true) {
+                        _refreshPersonalDashboard();
+                      }
                     },
                   ),
                 ),
@@ -116,7 +126,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                 },
               )
               : RequesterDashboardScreen(
-                key: const ValueKey('personal'),
+                key: ValueKey('personal-$_triggerPersonalRefresh'),
                 hideBottomNav: true,
                 onNavigateToMenu: () {
                   setState(() => _currentIndex = 1);

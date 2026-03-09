@@ -110,4 +110,40 @@ class AttendanceAdjustmentActionRepository {
       };
     }
   }
+
+  Future<bool> sendAttendanceFollowUp(
+    String adjustmentId,
+    String approverId,
+    String message,
+  ) async {
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      final token = pref.getString('token');
+
+      if (token == null) {
+        throw Exception('Token not found in local storage');
+      }
+
+      final response = await http.post(
+        Uri.parse(
+          '${_serverService.baseUrl}attendance/adjustment/$adjustmentId/follow-up/$approverId',
+        ),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'message': message}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      } else {
+        throw Exception('Failed to send follow-up: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error sending follow-up: $e');
+    }
+  }
 }

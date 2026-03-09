@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/constant.dart';
 import '../../models/adjustment_request_model.dart';
+import '../../repositories/attendance_adjustment_action_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../widgets/approvalworkflowwidget.dart';
 import '../../widgets/compact_detail_row.dart';
@@ -25,6 +26,8 @@ class _MyAttendanceAdjustmentRequestScreenState
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  final AttendanceAdjustmentActionRepository _repository =
+      AttendanceAdjustmentActionRepository();
 
   @override
   void initState() {
@@ -633,111 +636,118 @@ class _MyAttendanceAdjustmentRequestScreenState
   }
 
   void _showFollowUpDialog(AdjustmentApprover approver) {
+    final messageController = TextEditingController();
+    bool isSending = false;
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+          (context) => StatefulBuilder(
+            builder:
+                (context, setDialogState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.notification_add, color: primary),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Follow Up',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Send a follow-up notification to:',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  title: Row(
                     children: [
-                      Text(
-                        approver.approverName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.message,
+                          color: primary,
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        approver.priorityText,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      const SizedBox(width: 12),
+                      const Text('Follow Up', style: TextStyle(fontSize: 18)),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: messageController,
+                        maxLines: 3,
+                        enabled: !isSending,
+                        decoration: InputDecoration(
+                          hintText: 'Enter your message (optional)...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'This will send a reminder notification about your pending adjustment request.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _sendFollowUp(approver);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Send Follow Up',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
+                  actions: [
+                    TextButton(
+                      onPressed:
+                          isSending ? null : () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed:
+                          isSending
+                              ? null
+                              : () async {
+                                setDialogState(() => isSending = true);
+                                try {
+                                  final success = await _repository
+                                      .sendAttendanceFollowUp(
+                                        widget.adjustmentRequest.id.toString(),
+                                        approver.approverId,
+                                        messageController.text.trim(),
+                                      );
 
-  void _sendFollowUp(AdjustmentApprover approver) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Follow-up sent to ${approver.approverName}'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        success
+                                            ? 'Follow-up sent to ${approver.approverName}'
+                                            : 'Failed to send follow-up. Please try again.',
+                                      ),
+                                      backgroundColor:
+                                          success ? Colors.green : Colors.red,
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                      style: ElevatedButton.styleFrom(backgroundColor: primary),
+                      child:
+                          isSending
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Text(
+                                'Send',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                    ),
+                  ],
+                ),
+          ),
     );
   }
 }

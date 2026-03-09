@@ -38,11 +38,13 @@ import '../notifications/requester_notification_screen.dart';
 class RequesterDashboardScreen extends StatefulWidget {
   final bool hideBottomNav;
   final VoidCallback? onNavigateToMenu;
+  final VoidCallback? onRefreshNeeded;
 
   const RequesterDashboardScreen({
     super.key,
     this.hideBottomNav = false,
     this.onNavigateToMenu,
+    this.onRefreshNeeded,
   });
 
   @override
