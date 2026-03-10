@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../models/attendance_by_department_model.dart';
 import '../../viewmodels/attendance_by_department_viewmodel.dart';
 import '../../widgets/clickable_date_card_widget.dart';
@@ -30,6 +32,9 @@ class _DepartmentAttendanceDetailScreenState
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   DateTimeRange? _selectedDateRange;
+
+  Language language = Language();
+
   String get _dateRangeText {
     if (_selectedDateRange == null) {
       return 'Today';
@@ -46,6 +51,17 @@ class _DepartmentAttendanceDetailScreenState
     _tabController.addListener(() {
       setState(() {}); // Rebuild to update tab colors
     });
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   // Get the current department data from viewModel (in case it was updated)
@@ -623,7 +639,7 @@ class _DepartmentAttendanceDetailScreenState
                                       });
                                     },
                                     child: ClickableDateCard(
-                                      label: 'Start Date',
+                                      label: language.startDate,
                                       date: tempDateRange.start,
                                       icon: Icons.event_available,
                                       color: secondary,
@@ -640,7 +656,7 @@ class _DepartmentAttendanceDetailScreenState
                                       });
                                     },
                                     child: ClickableDateCard(
-                                      label: 'End Date',
+                                      label: language.endDate,
                                       date: tempDateRange.end,
                                       icon: Icons.event_busy,
                                       color: logoPink,

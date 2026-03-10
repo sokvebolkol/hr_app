@@ -412,6 +412,91 @@ class Language {
       "Your account is inactive. Logging out...";
   String get updateAvailable => "Update Required";
   String get viewRequestedHistory => "Requested History";
+
+  // Manager Leave History Screen
+  String get myRequest => "My Request";
+  String get userApprovers => "Approvers";
+  String get myStaffRequest => "My Staff Request";
+  String get attendanceAdjustments => "Attendance Adjustments";
+  String get errorLoadingLeaveHistory => "Error loading leave history";
+  String get noStaffLeaveRequestsFound => "No staff leave requests found";
+  String get leaveRequestsWillAppearHere => "Leave requests will appear here";
+  String get filterMyRequests => "Filter My Requests";
+  String get filterStaffRequests => "Filter Staff Requests";
+  String get staffMember => "Staff Member";
+
+  // Notification Screens
+  String get loadingLeaveStatusUpdates => "Loading leave status updates...";
+  String get viewLeaveDetails => "View Leave Details";
+  String get noNewLeaveStatusUpdates =>
+      "No new leave status updates.\nYour leave requests are being processed!";
+  String get details => "Details";
+  String get personal => "Personal";
+  String get noLeaveUpdates => "No leave updates";
+  String get noLeaveStatusUpdatesAvailable =>
+      "No leave status updates available";
+  String get noLeaveRequestsEmpty => "No leave requests";
+  String get noNotificationsAvailable => "No notifications";
+  String get noNewNotificationsAvailable => "No new notifications available";
+
+  // Leave Detail / Attendance Detail Screens
+  String get applied => "Applied";
+  String get employee => "Employee";
+  String get adjustDateTime => "Adjust Date/Time";
+  String get viewFullScreen => "View Full Screen";
+  String get enterMessageOptional => "Enter your message (optional)...";
+  String get followUp => "Follow Up";
+  String get loadingDocument => "Loading document...";
+  String get cancelRequest => "Cancel Request";
+  String get duration => "Duration";
+  String get from => "From";
+  String get to => "To";
+  String get type => "Type";
+  String get remark => "Remark";
+  String get tapToView => "Tap to view";
+  String get failedToLoadDocument => "Failed to load document";
+  String get leaveInformation => "Leave Information";
+  String get adjustmentInformation => "Adjustment Information";
+  String get leaveDetail => "Leave Detail";
+  String get attendanceRequest => "Attendance Request";
+  String get documentExpected => "Document Expected";
+  String get areYouSureToCancel =>
+      "Are you sure you want to cancel this leave request? This action cannot be undone.";
+  String get yesCancelRequest => "Yes, Cancel";
+  String get send => "Send";
+  String get leaveRequestCancelledSuccessfully =>
+      "Leave request cancelled successfully";
+  String get failedToCancelLeaveRequest =>
+      "Failed to cancel leave request. Please try again.";
+  String get failedToSendFollowUp =>
+      "Failed to send follow-up. Please try again.";
+
+  // Dashboard
+  String get pendingLeave => "Pending Leave";
+  String get pendingAdjustment => "Pending Adjustment";
+  String get noPendingLeaveRequests => "No pending leave requests";
+  String get noPendingAdjustmentRequests => "No pending adjustment requests";
+
+  // Welcome Screen
+  String get welcomeBack => "Welcome Back!";
+  String get chooseHowToContinue =>
+      "Choose how you'd like to continue with\nChokchey HR Management System";
+  String get joinAsEmployee => "Join as Employee";
+  String get signInToYourAccount => "Sign in to your account";
+  String get newEmployeeRegisterHere => "New Employee? Register here";
+  String get trustedPlatform => "Trusted Platform";
+  String get employeesCount => "200+ Employees";
+
+  // Adjustment Approval Detail
+  String get adjustmentDetail => "Adjustment Detail";
+  String get employeeInformation => "Employee Information";
+  String get processed => "PROCESSED";
+  String get adjustmentDate => "Adjustment Date";
+  String get requestedOn => "Requested On";
+
+  // Misc
+  String get done => "Done";
+  String get continueToLogin => "Continue to Login";
 }
 
 class Khmer implements Language {
@@ -1197,4 +1282,154 @@ class Khmer implements Language {
   String get updateAvailable => "មានការធ្វើបច្ចុប្បន្នភាព!";
   @override
   String get viewRequestedHistory => "មើលប្រវត្តិស្នើសុំដែលបានស្នើសុំ";
+
+  // Manager Leave History Screen
+  @override
+  String get myRequest => "ការស្នើសុំរបស់ខ្ញុំ";
+  @override
+  String get userApprovers => "អ្នកអនុម័ត";
+  @override
+  String get myStaffRequest => "ការស្នើសុំបុគ្គលិករបស់ខ្ញុំ";
+  @override
+  String get attendanceAdjustments => "ការកែសម្រួលវត្តមាន";
+  @override
+  String get errorLoadingLeaveHistory =>
+      "មានបញ្ហាក្នុងការផ្ទុកប្រវត្តិឈប់សម្រាក";
+  @override
+  String get noStaffLeaveRequestsFound => "រកមិនឃើញការស្នើសុំឈប់សម្រាកបុគ្គលិក";
+  @override
+  String get leaveRequestsWillAppearHere =>
+      "ការស្នើសុំឈប់សម្រាកនឹងបង្ហាញនៅទីនេះ";
+  @override
+  String get filterMyRequests => "ច្រោះការស្នើសុំរបស់ខ្ញុំ";
+  @override
+  String get filterStaffRequests => "ច្រោះការស្នើសុំបុគ្គលិក";
+  @override
+  String get staffMember => "សមាជិកបុគ្គលិក";
+
+  // Notification Screens
+  @override
+  String get loadingLeaveStatusUpdates => "កំពុងផ្ទុកព័ត៌មានស្ថានភាពច្បាប់...";
+  @override
+  String get viewLeaveDetails => "មើលព័ត៌មានលម្អិតច្បាប់";
+  @override
+  String get noNewLeaveStatusUpdates =>
+      "គ្មានការអាប់ដេតស្ថានភាពច្បាប់ថ្មី។\nការស្នើសុំឈប់សម្រាករបស់អ្នកកំពុងត្រូវបានដំណើរការ!";
+  @override
+  String get details => "ព័ត៌មានលម្អិត";
+  @override
+  String get personal => "ផ្ទាល់ខ្លួន";
+  @override
+  String get noLeaveUpdates => "គ្មានការអាប់ដេតច្បាប់";
+  @override
+  String get noLeaveStatusUpdatesAvailable => "គ្មានការអាប់ដេតស្ថានភាពច្បាប់";
+  @override
+  String get noLeaveRequestsEmpty => "គ្មានការស្នើសុំច្បាប់";
+  @override
+  String get noNotificationsAvailable => "គ្មានការជូនដំណឹង";
+  @override
+  String get noNewNotificationsAvailable => "គ្មានការជូនដំណឹងថ្មី";
+
+  // Leave Detail / Attendance Detail Screens
+  @override
+  String get applied => "បានដាក់ស្នើ";
+  @override
+  String get employee => "បុគ្គលិក";
+  @override
+  String get adjustDateTime => "ថ្ងៃ/ម៉ោងកែតម្រូវ";
+  @override
+  String get viewFullScreen => "មើលពេញអេក្រង់";
+  @override
+  String get enterMessageOptional => "បញ្ចូលសារបស់អ្នក (ជម្រើស)...";
+  @override
+  String get followUp => "តាមដានបន្ត";
+  @override
+  String get loadingDocument => "កំពុងផ្ទុកឯកសារ...";
+  @override
+  String get cancelRequest => "បោះបង់ការស្នើសុំ";
+  @override
+  String get duration => "រយៈពេល";
+  @override
+  String get from => "ចាប់ពី";
+  @override
+  String get to => "ដល់";
+  @override
+  String get type => "ប្រភេទ";
+  @override
+  String get remark => "ចំណាំ";
+  @override
+  String get tapToView => "ចុចដើម្បីមើល";
+  @override
+  String get failedToLoadDocument => "មានបញ្ហាក្នុងការផ្ទុកឯកសារ";
+  @override
+  String get leaveInformation => "ព័ត៌មានច្បាប់";
+  @override
+  String get adjustmentInformation => "ព័ត៌មានកែសម្រួល";
+  @override
+  String get leaveDetail => "ព័ត៌មានលម្អិតច្បាប់";
+  @override
+  String get attendanceRequest => "ការស្នើសុំវត្តមាន";
+  @override
+  String get documentExpected => "ឯកសារត្រូវបានរំពឹង";
+  @override
+  String get areYouSureToCancel =>
+      "តើអ្នកប្រាកដថាចង់បោះបង់ការស្នើសុំឈប់សម្រាកនេះមែនទេ? សកម្មភាពនេះមិនអាចផ្លាស់ប្ដូរបានទេ។";
+  @override
+  String get yesCancelRequest => "បាទ/ចាស, បោះបង់";
+  @override
+  String get send => "ផ្ញើ";
+  @override
+  String get leaveRequestCancelledSuccessfully =>
+      "ការស្នើសុំឈប់សម្រាកត្រូវបានបោះបង់ដោយជោគជ័យ";
+  @override
+  String get failedToCancelLeaveRequest =>
+      "មានបញ្ហាក្នុងការបោះបង់ការស្នើសុំ។ សូមព្យាយាមម្តងទៀត។";
+  @override
+  String get failedToSendFollowUp =>
+      "មានបញ្ហាក្នុងការផ្ញើតាមដាន។ សូមព្យាយាមម្តងទៀត។";
+
+  // Dashboard
+  @override
+  String get pendingLeave => "ច្បាប់កំពុងរង់ចាំ";
+  @override
+  String get pendingAdjustment => "ការកែតម្រូវកំពុងរង់ចាំ";
+  @override
+  String get noPendingLeaveRequests => "គ្មានការស្នើសុំឈប់សម្រាក";
+  @override
+  String get noPendingAdjustmentRequests => "គ្មានការស្នើសុំកែតម្រូវវេលា";
+
+  // Welcome Screen
+  @override
+  String get welcomeBack => "សូមស្វាគមន៍ការ!";
+  @override
+  String get chooseHowToContinue =>
+      "ជ្រើសរើសវិធីដែលអ្នកចង់ប្រើ\nជាមួយប្រព័ន្ធ Chokchey HR";
+  @override
+  String get joinAsEmployee => "ចូលជាបុគ្គលិក";
+  @override
+  String get signInToYourAccount => "ចូលប្រើប្រាស់គណនីរបស់អ្នក";
+  @override
+  String get newEmployeeRegisterHere => "បុគ្គលិកថ្មី? ចុះឈ្មោះនៅទីនេះ";
+  @override
+  String get trustedPlatform => "វេទិកាដែលទុកចិត្ត";
+  @override
+  String get employeesCount => "បុគ្គលិក 200+";
+
+  // Adjustment Approval Detail
+  @override
+  String get adjustmentDetail => "ព័ត៌មានលម្អិតការកែតម្រូវ";
+  @override
+  String get employeeInformation => "ព័ត៌មានបុគ្គលិក";
+  @override
+  String get processed => "បានដំណើរការ";
+  @override
+  String get adjustmentDate => "កាលបរិច្ឆេទកែតម្រូវ";
+  @override
+  String get requestedOn => "បានស្នើសុំនៅ";
+
+  // Misc
+  @override
+  String get done => "រួចរាល់";
+  @override
+  String get continueToLogin => "បន្តទៅចូលប្រើប្រាស់";
 }

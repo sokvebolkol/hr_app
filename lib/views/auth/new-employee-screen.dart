@@ -5,6 +5,8 @@ import 'dart:convert' as convert;
 import 'dart:io' show Platform;
 import 'package:device_info_plus/device_info_plus.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
 import 'login-screen.dart';
 import 'confirm-password-screen.dart';
@@ -23,6 +25,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isFocused = false;
+  Language language = Language();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -35,6 +38,17 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
     super.initState();
     _setupAnimations();
     _startAnimations();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   void _setupAnimations() {
@@ -397,7 +411,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.login_rounded, size: 20),
-                    label: const Text('Continue to Login'),
+                    label: Text(language.continueToLogin),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,

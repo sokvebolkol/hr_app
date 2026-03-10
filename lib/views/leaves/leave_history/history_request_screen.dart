@@ -75,14 +75,14 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
             indicatorWeight: 3,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
-            tabs: const [
+            tabs: [
               Tab(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.event_note, size: 20),
-                    SizedBox(width: 6),
-                    Text('Leave Request'),
+                    const Icon(Icons.event_note, size: 20),
+                    const SizedBox(width: 6),
+                    Text(language.leaveRequest),
                   ],
                 ),
               ),
@@ -90,9 +90,9 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.access_time, size: 20),
-                    SizedBox(width: 6),
-                    Text('Adjustment Request'),
+                    const Icon(Icons.access_time, size: 20),
+                    const SizedBox(width: 6),
+                    Text(language.adjustmentRequest),
                   ],
                 ),
               ),
@@ -611,7 +611,7 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                                   });
                                 },
                                 child: ClickableDateCard(
-                                  label: 'Start Date',
+                                  label: language.startDate,
                                   date: tempDateRange.start,
                                   icon: Icons.event_available,
                                   color: secondary,
@@ -628,7 +628,7 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                                   });
                                 },
                                 child: ClickableDateCard(
-                                  label: 'End Date',
+                                  label: language.endDate,
                                   date: tempDateRange.end,
                                   icon: Icons.event_busy,
                                   color: logoPink,
@@ -691,7 +691,7 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel'),
+                                child: Text(language.cancel),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -708,14 +708,14 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                                   backgroundColor: secondary,
                                   foregroundColor: Colors.white,
                                 ),
-                                child: const Row(
+                                child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.check_circle, size: 18),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.check_circle, size: 18),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Apply',
-                                      style: TextStyle(
+                                      language.apply,
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -1004,7 +1004,7 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
     return Center(
       child: ElevatedButton(
         onPressed: vm.fetchLeaveHistory,
-        child: const Text('Retry'),
+        child: Text(language.retry),
       ),
     );
   }

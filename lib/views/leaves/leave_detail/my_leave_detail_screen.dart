@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../constants/constant.dart';
+import '../../../localization/language.dart';
+import '../../../localization/language_logic.dart';
 import '../../../models/leave_history_model.dart';
 import '../../../utils/file_helper.dart';
 import '../../../widgets/approvalworkflowwidget.dart';
@@ -25,6 +27,8 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
   final LeaveDetailRepository _repository = LeaveDetailRepository();
   bool _isCancelling = false;
 
+  Language language = Language();
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +42,17 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     );
 
     _animationController.forward();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -51,9 +66,12 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Leave Detail',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+        title: Text(
+          language.leaveDetail,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: primary,
         elevation: 0,
@@ -116,6 +134,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
 
   Widget _buildApprovalWorkflowSection() {
     return ApprovalWorkflowWidget(
+      title: language.userApprovers,
       approvalList:
           widget.leaveRequest.prioList
               .map((priority) => ApprovalItemData.fromPriorityModel(priority))
@@ -195,6 +214,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                       if (originalPriority.isPending &&
                           widget.leaveRequest.isPending)
                         CompactFollowUpButton(
+                          text: language.followUp,
                           onTap: () => _showFollowUpDialog(originalPriority),
                         )
                       else
@@ -241,7 +261,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Remark:',
+                                '${language.remark}:',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -327,9 +347,9 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
               children: [
                 Icon(Icons.attach_file, color: primary, size: 20),
                 const SizedBox(width: 8),
-                const Text(
-                  'Document Support',
-                  style: TextStyle(
+                Text(
+                  language.documentSupport,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -342,7 +362,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                   IconButton(
                     icon: const Icon(Icons.fullscreen, color: Colors.blue),
                     onPressed: () => _viewDocumentFullScreen(),
-                    tooltip: 'View Full Screen',
+                    tooltip: language.viewFullScreen,
                   ),
               ],
             ),
@@ -394,7 +414,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                                   : null,
                         ),
                         const SizedBox(height: 8),
-                        const Text('Loading document...'),
+                        Text(language.loadingDocument),
                       ],
                     ),
                   );
@@ -412,7 +432,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Failed to load document',
+                          language.failedToLoadDocument,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -473,7 +493,8 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
         builder:
             (context) => _FullScreenDocumentViewer(
               imageUrl: widget.leaveRequest.documentUrl!,
-              title: 'Document Support',
+              title: language.documentSupport,
+              language: language,
             ),
       ),
     );
@@ -493,7 +514,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
           Icon(Icons.description_outlined, size: 48, color: Colors.grey[400]),
           const SizedBox(height: 12),
           Text(
-            'Document Expected',
+            language.documentExpected,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -521,9 +542,9 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
             children: [
               Icon(Icons.info_outline, color: primary, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                'Leave Information',
-                style: TextStyle(
+              Text(
+                language.leaveInformation,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -539,13 +560,13 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                 child: Column(
                   children: [
                     CompactDetailRow(
-                      label: 'Employee',
+                      label: language.employee,
                       value: widget.leaveRequest.dname,
                       icon: Icons.person,
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
-                      label: 'From',
+                      label: language.from,
                       value: FileHelper.formatDate(
                         widget.leaveRequest.fromDate,
                       ),
@@ -553,7 +574,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
-                      label: 'Applied',
+                      label: language.applied,
                       value: FileHelper.formatDate(
                         widget.leaveRequest.createdDate,
                       ),
@@ -567,19 +588,19 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                 child: Column(
                   children: [
                     CompactDetailRow(
-                      label: 'Type',
+                      label: language.type,
                       value: widget.leaveRequest.ltyp,
                       icon: Icons.category,
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
-                      label: 'To',
+                      label: language.to,
                       value: FileHelper.formatDate(widget.leaveRequest.toDate),
                       icon: Icons.date_range,
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
-                      label: 'Duration',
+                      label: language.duration,
                       value:
                           '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
                       icon: Icons.access_time,
@@ -608,7 +629,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                       Icon(Icons.notes, size: 16, color: primary),
                       const SizedBox(width: 6),
                       Text(
-                        'Reason',
+                        language.reason,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -637,7 +658,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
       spacing: 16,
       buttons: [
         ActionButtonData(
-          label: 'Cancel',
+          label: language.cancelRequest,
           icon: Icons.cancel_outlined,
           onPressed: _showCancelConfirmation,
           backgroundColor: Colors.red,
@@ -659,23 +680,21 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  title: const Row(
+                  title: Row(
                     children: [
-                      Icon(Icons.warning, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Cancel Request'),
+                      const Icon(Icons.warning, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(language.cancelRequest),
                     ],
                   ),
-                  content: const Text(
-                    'Are you sure you want to cancel this leave request? This action cannot be undone.',
-                  ),
+                  content: Text(language.areYouSureToCancel),
                   actions: [
                     TextButton(
                       onPressed:
                           _isCancelling
                               ? null
                               : () => Navigator.of(dialogContext).pop(),
-                      child: const Text('No'),
+                      child: Text(language.no),
                     ),
                     ElevatedButton(
                       onPressed:
@@ -698,9 +717,9 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                                   strokeWidth: 2,
                                 ),
                               )
-                              : const Text(
-                                'Yes, Cancel',
-                                style: TextStyle(color: Colors.white),
+                              : Text(
+                                language.yesCancelRequest,
+                                style: const TextStyle(color: Colors.white),
                               ),
                     ),
                   ],
@@ -782,7 +801,10 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text('Follow Up', style: TextStyle(fontSize: 18)),
+                      Text(
+                        language.followUp,
+                        style: const TextStyle(fontSize: 18),
+                      ),
                     ],
                   ),
                   content: Column(
@@ -795,7 +817,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                         maxLines: 3,
                         enabled: !isSending,
                         decoration: InputDecoration(
-                          hintText: 'Enter your message (optional)...',
+                          hintText: language.enterMessageOptional,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -808,7 +830,7 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                     TextButton(
                       onPressed:
                           isSending ? null : () => Navigator.pop(context),
-                      child: const Text('Cancel'),
+                      child: Text(language.cancel),
                     ),
                     ElevatedButton(
                       onPressed:
@@ -873,9 +895,9 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
                                   strokeWidth: 2,
                                 ),
                               )
-                              : const Text(
-                                'Send',
-                                style: TextStyle(color: Colors.white),
+                              : Text(
+                                language.send,
+                                style: const TextStyle(color: Colors.white),
                               ),
                     ),
                   ],
@@ -918,10 +940,12 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
 class _FullScreenDocumentViewer extends StatefulWidget {
   final String imageUrl;
   final String title;
+  final Language language;
 
   const _FullScreenDocumentViewer({
     required this.imageUrl,
     required this.title,
+    required this.language,
   });
 
   @override
@@ -997,24 +1021,31 @@ class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
                         color: Colors.white,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Loading document...',
-                        style: TextStyle(color: Colors.white),
+                      Text(
+                        widget.language.loadingDocument,
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ],
                   ),
                 );
               },
               errorBuilder: (context, error, stackTrace) {
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      SizedBox(height: 16),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        'Failed to load document',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        widget.language.failedToLoadDocument,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),

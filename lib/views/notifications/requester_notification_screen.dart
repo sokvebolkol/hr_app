@@ -3,6 +3,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
@@ -25,6 +27,8 @@ class _RequesterNotificationScreenState
 
   bool _isInitialized = false;
 
+  Language language = Language();
+
   @override
   bool get wantKeepAlive => true;
 
@@ -33,11 +37,22 @@ class _RequesterNotificationScreenState
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _initializeLanguage();
 
     // Load notifications only once when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeNotifications();
     });
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   Future<void> _initializeNotifications() async {
@@ -106,7 +121,7 @@ class _RequesterNotificationScreenState
     super.build(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notification'),
+        title: Text(language.notifications),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -121,16 +136,16 @@ class _RequesterNotificationScreenState
                     context: context,
                     barrierDismissible: false,
                     builder:
-                        (context) => const Center(
+                        (context) => Center(
                           child: Card(
                             child: Padding(
                               padding: EdgeInsets.all(16),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  SpinKitFadingCircle(color: primary),
-                                  SizedBox(height: 16),
-                                  Text('Marking all as read...'),
+                                  const SpinKitFadingCircle(color: primary),
+                                  const SizedBox(height: 16),
+                                  Text(language.markingAllAsRead),
                                 ],
                               ),
                             ),
@@ -147,32 +162,35 @@ class _RequesterNotificationScreenState
                       _updateFilteredNotifications(viewModel.notifications);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.check_circle, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text('All notifications marked as read'),
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(language.allNotificationsMarkedAsRead),
                               ],
                             ),
                             backgroundColor: Colors.green,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
                     } else {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.error, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text('Failed to mark all as read'),
+                                const Icon(Icons.error, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Text(language.failedToMarkAllAsRead),
                               ],
                             ),
                             backgroundColor: Colors.red,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
@@ -200,10 +218,10 @@ class _RequesterNotificationScreenState
                 case 'refresh':
                   // Show loading indicator
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 16,
                             height: 16,
                             child: SpinKitFadingCircle(
@@ -211,11 +229,11 @@ class _RequesterNotificationScreenState
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Text('Refreshing notifications...'),
+                          const SizedBox(width: 12),
+                          Text(language.refreshingNotifications),
                         ],
                       ),
-                      duration: Duration(seconds: 1),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                   await _refreshNotifications();
@@ -230,7 +248,7 @@ class _RequesterNotificationScreenState
                       children: [
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
-                        const Text('Mark all as read'),
+                        Text(language.markAllAsRead),
                         // Show count badge if there are unread notifications
                         if (_leaveStatusNotifications.isNotEmpty)
                           Container(
@@ -255,13 +273,13 @@ class _RequesterNotificationScreenState
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'refresh',
                     child: Row(
                       children: [
-                        Icon(Icons.refresh, color: secondary),
-                        SizedBox(width: 8),
-                        Text('Refresh'),
+                        const Icon(Icons.refresh, color: secondary),
+                        const SizedBox(width: 8),
+                        Text(language.refresh),
                       ],
                     ),
                   ),
@@ -275,13 +293,13 @@ class _RequesterNotificationScreenState
           if (!_isInitialized &&
               _leaveStatusNotifications.isEmpty &&
               viewModel.isLoading) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SpinKitFadingCircle(color: primary),
-                  SizedBox(height: 16),
-                  Text('Loading leave status updates...'),
+                  const SpinKitFadingCircle(color: primary),
+                  const SizedBox(height: 16),
+                  Text(language.loadingLeaveStatusUpdates),
                 ],
               ),
             );
@@ -458,19 +476,19 @@ class _RequesterNotificationScreenState
         onTap: () async {
           // Show loading indicator
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 16,
                     height: 16,
                     child: SpinKitFadingCircle(size: 16, color: primary),
                   ),
-                  SizedBox(width: 12),
-                  Text('Opening leave details...'),
+                  const SizedBox(width: 12),
+                  Text(language.openingLeaveRequest),
                 ],
               ),
-              duration: Duration(seconds: 1),
+              duration: const Duration(seconds: 1),
             ),
           );
 
@@ -487,8 +505,8 @@ class _RequesterNotificationScreenState
             // Show error if marking as read failed
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Failed to mark notification as read'),
+                SnackBar(
+                  content: Text(language.failedToMarkNotificationAsRead),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -567,11 +585,11 @@ class _RequesterNotificationScreenState
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Error'),
+                const Icon(Icons.error_outline, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(language.error),
               ],
             ),
             content: Text(message),
@@ -579,7 +597,7 @@ class _RequesterNotificationScreenState
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(foregroundColor: primary),
-                child: const Text('OK'),
+                child: Text(language.ok),
               ),
             ],
           ),
@@ -722,7 +740,7 @@ class _RequesterNotificationScreenState
                         _handleLeaveStatusTap(notification);
                       },
                       icon: const Icon(Icons.visibility),
-                      label: const Text('View Leave Details'),
+                      label: Text(language.viewLeaveDetails),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
@@ -747,7 +765,7 @@ class _RequesterNotificationScreenState
             Icon(Icons.error_outline, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 24),
             Text(
-              'Failed to load notifications',
+              language.failedToLoadNotifications,
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.grey.shade600,
@@ -756,7 +774,7 @@ class _RequesterNotificationScreenState
             ),
             const SizedBox(height: 12),
             Text(
-              viewModel.error ?? 'Unknown error occurred',
+              viewModel.error ?? language.unknownErrorOccurred,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
@@ -767,7 +785,7 @@ class _RequesterNotificationScreenState
                 await _refreshNotifications();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: Text(language.tryAgain),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
@@ -804,7 +822,7 @@ class _RequesterNotificationScreenState
             ),
             const SizedBox(height: 24),
             Text(
-              'All Up to Date! 🎉',
+              language.allCaughtUp,
               style: TextStyle(
                 fontSize: 22,
                 color: Colors.grey.shade700,
@@ -813,7 +831,7 @@ class _RequesterNotificationScreenState
             ),
             const SizedBox(height: 12),
             Text(
-              'No new leave status updates.\nYour leave requests are being processed!',
+              language.noNewLeaveStatusUpdates,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade500,
@@ -825,7 +843,7 @@ class _RequesterNotificationScreenState
             OutlinedButton.icon(
               onPressed: _refreshNotifications,
               icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
+              label: Text(language.refresh),
               style: OutlinedButton.styleFrom(
                 foregroundColor: primary,
                 side: BorderSide(color: primary),

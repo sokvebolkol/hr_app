@@ -2,6 +2,8 @@ import 'package:chokchey_hr_app/views/auth/new-employee-screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import 'login-screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -20,11 +22,24 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
 
+  Language language = Language();
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
     _startAnimations();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   void _setupAnimations() {
@@ -178,7 +193,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 right: 20,
                 child: _buildFloatingBadge(
                   icon: Icons.people_rounded,
-                  label: '200+ Employees',
+                  label: language.employeesCount,
                   color: secondary,
                 ),
               ),
@@ -187,7 +202,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 left: 20,
                 child: _buildFloatingBadge(
                   icon: Icons.verified_rounded,
-                  label: 'Trusted Platform',
+                  label: language.trustedPlatform,
                   color: Colors.green,
                 ),
               ),
@@ -242,7 +257,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         child: Column(
           children: [
             Text(
-              'Welcome Back!',
+              language.welcomeBack,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -253,7 +268,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Choose how you\'d like to continue with\nChokchey HR Management System',
+              language.chooseHowToContinue,
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.grey[600],
@@ -275,8 +290,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           // Login Button
           _buildPrimaryButton(
             icon: Icons.login_rounded,
-            title: 'Login',
-            subtitle: 'Sign in to your account',
+            title: language.login,
+            subtitle: language.signInToYourAccount,
             gradient: LinearGradient(
               colors: [primary, primary.withOpacity(0.8)],
             ),
@@ -293,8 +308,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           // Join as Employee Button
           _buildSecondaryButton(
             icon: Icons.person_add_rounded,
-            title: 'Join as Employee',
-            subtitle: 'New Employee? Register here',
+            title: language.joinAsEmployee,
+            subtitle: language.newEmployeeRegisterHere,
             onTap: () {
               HapticFeedback.mediumImpact();
               Navigator.push(

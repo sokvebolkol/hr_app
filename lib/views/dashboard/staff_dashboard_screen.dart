@@ -1266,9 +1266,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
             children: [
               const Icon(Icons.calendar_month, size: 20, color: secondary),
               const SizedBox(width: 8),
-              const Text(
-                'Filter by Month:',
-                style: TextStyle(
+              Text(
+                language.filterByMonth,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: secondary,
@@ -1374,7 +1374,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Leave Requests (${filteredLeaves.length})',
+                                '${language.leaveRequest} (${filteredLeaves.length})',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -1407,7 +1407,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Attendance Adjustments (${filteredAttendance.length})',
+                                '${language.attendanceAdjustments} (${filteredAttendance.length})',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -1472,9 +1472,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
             children: [
               const Icon(Icons.calendar_month, size: 20, color: secondary),
               const SizedBox(width: 8),
-              const Text(
-                'Filter by Month:',
-                style: TextStyle(
+              Text(
+                language.filterByMonth,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: secondary,

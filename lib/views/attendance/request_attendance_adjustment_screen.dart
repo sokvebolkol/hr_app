@@ -373,7 +373,7 @@ class _RequestAttendanceAdjustmentScreenState
                       TextButton.icon(
                         onPressed: _showImagePicker,
                         icon: const Icon(Icons.edit, size: 16),
-                        label: const Text('Change'),
+                        label: Text(language.change),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
@@ -779,14 +779,14 @@ class _RequestAttendanceAdjustmentScreenState
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Not Now'),
+                child: Text(language.no),
               ),
               TextButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
                   await openAppSettings();
                 },
-                child: const Text('Open Settings'),
+                child: Text(language.openSettings),
               ),
             ],
           ),

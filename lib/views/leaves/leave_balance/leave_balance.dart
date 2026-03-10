@@ -120,7 +120,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
                             ),
                           ),
                           onPressed: () => Navigator.pop(modalContext),
-                          child: const Text('Done'),
+                          child: Text(language.done),
                         ),
                       ),
                     ),
@@ -244,7 +244,7 @@ class _LeaveBalanceDetailScreenState extends State<LeaveBalanceDetailScreen> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => viewModel.refresh(),
-            child: const Text('Retry'),
+            child: Text(language.retry),
           ),
         ],
       ),

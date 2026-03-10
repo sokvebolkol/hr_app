@@ -662,14 +662,14 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Not Now'),
+                child: Text(language.no),
               ),
               TextButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
                   await openAppSettings();
                 },
-                child: const Text('Open Settings'),
+                child: Text(language.openSettings),
               ),
             ],
           ),

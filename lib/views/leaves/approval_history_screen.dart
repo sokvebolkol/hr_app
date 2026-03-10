@@ -28,13 +28,13 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
     with SingleTickerProviderStateMixin {
   late String _selectedMonth;
   late TabController _tabController;
-  late LanguageLogic _languageLogic;
-  late Language _language;
+  late LanguageLogic languageLogic;
+  late Language language;
 
   @override
   void initState() {
     super.initState();
-    _languageLogic = LanguageLogic();
+    languageLogic = LanguageLogic();
     _initializeLanguage();
 
     // Use the month passed from dashboard, or default to 'All'
@@ -57,10 +57,10 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
   }
 
   Future<void> _initializeLanguage() async {
-    await _languageLogic.initialize();
+    await languageLogic.initialize();
     if (mounted) {
       setState(() {
-        _language = _languageLogic.language;
+        language = languageLogic.language;
       });
     }
   }
@@ -78,7 +78,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
     // Filter approved leaves by month
     final filteredApprovedLeaves =
-        _selectedMonth == _language.all || _selectedMonth == 'All'
+        _selectedMonth == language.all || _selectedMonth == 'All'
             ? approvedLeaves
             : approvedLeaves.where((leave) {
               DateTime? leaveDate = DateTime.tryParse(leave.createdate);
@@ -93,7 +93,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
     // Filter rejected leaves by month
     final filteredRejectedLeaves =
-        _selectedMonth == _language.all || _selectedMonth == 'All'
+        _selectedMonth == language.all || _selectedMonth == 'All'
             ? rejectedLeaves
             : rejectedLeaves.where((leave) {
               DateTime? leaveDate = DateTime.tryParse(leave.createdate);
@@ -119,7 +119,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          _language.approvalHistory,
+          language.approvalHistory,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -154,7 +154,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _language.approved,
+                          language.approved,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -193,7 +193,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _language.rejected,
+                          language.rejected,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -244,7 +244,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                 const Icon(Icons.calendar_month, size: 20, color: secondary),
                 const SizedBox(width: 8),
                 Text(
-                  _language.filterByMonth,
+                  language.filterByMonth,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -312,8 +312,8 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
             const SizedBox(height: 16),
             Text(
               type == 'approved'
-                  ? _language.noApprovedLeavesFound
-                  : _language.noRejectedLeavesFound,
+                  ? language.noApprovedLeavesFound
+                  : language.noRejectedLeavesFound,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -322,7 +322,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              _language.tryChangingTheFilter,
+              language.tryChangingTheFilter,
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
@@ -421,7 +421,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            _language.selectMonth,
+                            language.selectMonth,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -572,7 +572,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
 
     final sortedMonths = monthMap.keys.toList()..sort((a, b) => b.compareTo(a));
 
-    final result = <String>[_language.all];
+    final result = <String>[language.all];
     for (var monthKey in sortedMonths) {
       result.add(monthMap[monthKey]!);
     }

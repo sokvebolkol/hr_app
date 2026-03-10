@@ -6,15 +6,15 @@ class ApprovalWorkflowWidget extends StatelessWidget {
   final IconData? titleIcon;
   final Color? titleIconColor;
   final Widget Function(ApprovalItemData approval, bool isLast)?
-  customApprovalBuilder; 
+  customApprovalBuilder;
 
   const ApprovalWorkflowWidget({
     super.key,
     required this.approvalList,
-    this.title = 'User Approvers',
+    this.title = 'Approvers',
     this.titleIcon = Icons.approval,
     this.titleIconColor = Colors.orange,
-    this.customApprovalBuilder, 
+    this.customApprovalBuilder,
   });
 
   @override

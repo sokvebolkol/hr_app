@@ -388,14 +388,14 @@ class _ProfilePageState extends State<ProfilePage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Not Now'),
+                child: Text(_viewModel.languageLogic.language.no),
               ),
               TextButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
                   await openAppSettings();
                 },
-                child: const Text('Open Settings'),
+                child: Text(_viewModel.languageLogic.language.openSettings),
               ),
             ],
           ),

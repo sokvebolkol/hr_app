@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../models/adjustment_request_model.dart';
 import '../../repositories/attendance_adjustment_action_repository.dart';
 import '../../utils/file_helper.dart';
@@ -29,6 +31,8 @@ class _MyAttendanceAdjustmentRequestScreenState
   final AttendanceAdjustmentActionRepository _repository =
       AttendanceAdjustmentActionRepository();
 
+  Language language = Language();
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +46,17 @@ class _MyAttendanceAdjustmentRequestScreenState
     );
 
     _animationController.forward();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -55,9 +70,12 @@ class _MyAttendanceAdjustmentRequestScreenState
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Attendance Request',
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+        title: Text(
+          language.attendanceRequest,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: primary,
         elevation: 0,
@@ -139,9 +157,9 @@ class _MyAttendanceAdjustmentRequestScreenState
             children: [
               Icon(Icons.info_outline, color: primary, size: 20),
               const SizedBox(width: 8),
-              const Text(
-                'Adjustment Information',
-                style: TextStyle(
+              Text(
+                language.adjustmentInformation,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -157,13 +175,13 @@ class _MyAttendanceAdjustmentRequestScreenState
                 child: Column(
                   children: [
                     CompactDetailRow(
-                      label: 'Staff ID',
+                      label: language.staffId,
                       value: widget.adjustmentRequest.staffId,
                       icon: Icons.badge,
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
-                      label: 'Applied',
+                      label: language.applied,
                       value: FileHelper.formatDate(createdDate),
                       icon: Icons.schedule,
                     ),
@@ -175,13 +193,13 @@ class _MyAttendanceAdjustmentRequestScreenState
                 child: Column(
                   children: [
                     CompactDetailRow(
-                      label: 'Employee',
+                      label: language.employee,
                       value: widget.adjustmentRequest.requesterName,
                       icon: Icons.person,
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
-                      label: 'Adjust Date/Time',
+                      label: language.adjustDateTime,
                       value: FileHelper.formatDate(adjustDate),
                       icon: Icons.access_time,
                     ),
@@ -207,9 +225,9 @@ class _MyAttendanceAdjustmentRequestScreenState
                     children: [
                       Icon(Icons.comment, size: 16, color: primary),
                       const SizedBox(width: 6),
-                      const Text(
-                        'Reason',
-                        style: TextStyle(
+                      Text(
+                        language.reason,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
@@ -262,9 +280,9 @@ class _MyAttendanceAdjustmentRequestScreenState
               children: [
                 Icon(Icons.attach_file, color: primary, size: 20),
                 const SizedBox(width: 8),
-                const Text(
-                  'Document Support',
-                  style: TextStyle(
+                Text(
+                  language.documentSupport,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -276,7 +294,7 @@ class _MyAttendanceAdjustmentRequestScreenState
                   IconButton(
                     icon: const Icon(Icons.fullscreen, color: Colors.blue),
                     onPressed: () => _viewDocumentFullScreen(),
-                    tooltip: 'View Full Screen',
+                    tooltip: language.viewFullScreen,
                   ),
               ],
             ),
@@ -326,7 +344,7 @@ class _MyAttendanceAdjustmentRequestScreenState
                                   : null,
                         ),
                         const SizedBox(height: 8),
-                        const Text('Loading document...'),
+                        Text(language.loadingDocument),
                       ],
                     ),
                   );
@@ -344,7 +362,7 @@ class _MyAttendanceAdjustmentRequestScreenState
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Failed to load document',
+                          language.failedToLoadDocument,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -403,7 +421,8 @@ class _MyAttendanceAdjustmentRequestScreenState
         builder:
             (context) => _FullScreenDocumentViewer(
               imageUrl: widget.adjustmentRequest.documentUrl!,
-              title: 'Document Support',
+              title: language.documentSupport,
+              language: language,
             ),
       ),
     );
@@ -423,7 +442,7 @@ class _MyAttendanceAdjustmentRequestScreenState
           Icon(Icons.description_outlined, size: 48, color: Colors.grey[400]),
           const SizedBox(height: 12),
           Text(
-            'Document Expected',
+            language.documentExpected,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -443,6 +462,7 @@ class _MyAttendanceAdjustmentRequestScreenState
 
   Widget _buildApprovalWorkflowSection() {
     return ApprovalWorkflowWidget(
+      title: language.userApprovers,
       approvalList:
           widget.adjustmentRequest.approverList
               .map(
@@ -531,6 +551,7 @@ class _MyAttendanceAdjustmentRequestScreenState
                       if (originalApprover.isPending &&
                           widget.adjustmentRequest.isPending)
                         CompactFollowUpButton(
+                          text: language.followUp,
                           onTap: () => _showFollowUpDialog(originalApprover),
                         )
                       else
@@ -662,7 +683,10 @@ class _MyAttendanceAdjustmentRequestScreenState
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text('Follow Up', style: TextStyle(fontSize: 18)),
+                      Text(
+                        language.followUp,
+                        style: const TextStyle(fontSize: 18),
+                      ),
                     ],
                   ),
                   content: Column(
@@ -675,7 +699,7 @@ class _MyAttendanceAdjustmentRequestScreenState
                         maxLines: 3,
                         enabled: !isSending,
                         decoration: InputDecoration(
-                          hintText: 'Enter your message (optional)...',
+                          hintText: language.enterMessageOptional,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -688,7 +712,7 @@ class _MyAttendanceAdjustmentRequestScreenState
                     TextButton(
                       onPressed:
                           isSending ? null : () => Navigator.pop(context),
-                      child: const Text('Cancel'),
+                      child: Text(language.cancel),
                     ),
                     ElevatedButton(
                       onPressed:
@@ -740,9 +764,9 @@ class _MyAttendanceAdjustmentRequestScreenState
                                   strokeWidth: 2,
                                 ),
                               )
-                              : const Text(
-                                'Send',
-                                style: TextStyle(color: Colors.white),
+                              : Text(
+                                language.send,
+                                style: const TextStyle(color: Colors.white),
                               ),
                     ),
                   ],
@@ -755,10 +779,12 @@ class _MyAttendanceAdjustmentRequestScreenState
 class _FullScreenDocumentViewer extends StatefulWidget {
   final String imageUrl;
   final String title;
+  final Language language;
 
   const _FullScreenDocumentViewer({
     required this.imageUrl,
     required this.title,
+    required this.language,
   });
 
   @override
@@ -834,24 +860,31 @@ class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
                         color: Colors.white,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Loading document...',
-                        style: TextStyle(color: Colors.white),
+                      Text(
+                        widget.language.loadingDocument,
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ],
                   ),
                 );
               },
               errorBuilder: (context, error, stackTrace) {
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      SizedBox(height: 16),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
                       Text(
-                        'Failed to load document',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        widget.language.failedToLoadDocument,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),

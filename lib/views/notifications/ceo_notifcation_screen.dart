@@ -18,8 +18,8 @@ class CeoNotificationScreen extends StatefulWidget {
 class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     with AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
-  late LanguageLogic _languageLogic;
-  late Language _language;
+  late LanguageLogic languageLogic;
+  late Language language;
 
   // Cache filtered notifications - only Leave Request notifications for CEO
   List<NotificationModel> _leaveRequestNotifications = [];
@@ -34,7 +34,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    _languageLogic = LanguageLogic();
+    languageLogic = LanguageLogic();
     _initializeLanguage();
 
     // Load notifications only once when screen opens
@@ -44,10 +44,10 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
   }
 
   Future<void> _initializeLanguage() async {
-    await _languageLogic.initialize();
+    await languageLogic.initialize();
     if (mounted) {
       setState(() {
-        _language = _languageLogic.language;
+        language = languageLogic.language;
       });
     }
   }
@@ -116,7 +116,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [Text(_language.notifications)]),
+        title: Row(children: [Text(language.notifications)]),
         backgroundColor: secondary, // CEO uses secondary color
         foregroundColor: Colors.white,
         elevation: 0,
@@ -143,7 +143,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                                     size: 50.0,
                                   ),
                                   const SizedBox(height: 16),
-                                  Text(_language.markingAllAsRead),
+                                  Text(language.markingAllAsRead),
                                 ],
                               ),
                             ),
@@ -170,7 +170,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '✅ ${_language.allNotificationsMarkedAsRead}',
+                                  '✅ ${language.allNotificationsMarkedAsRead}',
                                 ),
                               ],
                             ),
@@ -187,7 +187,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                               children: [
                                 const Icon(Icons.error, color: Colors.white),
                                 const SizedBox(width: 8),
-                                Text('❌ ${_language.failedToMarkAllAsRead}'),
+                                Text('❌ ${language.failedToMarkAllAsRead}'),
                               ],
                             ),
                             backgroundColor: Colors.red,
@@ -231,7 +231,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(_language.refreshingNotifications),
+                          Text(language.refreshingNotifications),
                         ],
                       ),
                       duration: const Duration(seconds: 1),
@@ -249,7 +249,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                       children: [
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
-                        Text(_language.markAllAsRead),
+                        Text(language.markAllAsRead),
                       ],
                     ),
                   ),
@@ -259,7 +259,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                       children: [
                         const Icon(Icons.refresh, color: secondary),
                         const SizedBox(width: 8),
-                        Text(_language.refresh),
+                        Text(language.refresh),
                       ],
                     ),
                   ),
@@ -279,7 +279,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                 children: [
                   const SpinKitCircle(color: secondary, size: 50.0),
                   const SizedBox(height: 16),
-                  Text(_language.loadingLeaveRequests),
+                  Text(language.loadingLeaveRequests),
                 ],
               ),
             );
@@ -421,7 +421,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      _language.newLabel,
+                      language.newLabel,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -445,7 +445,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                     child: SpinKitCircle(color: secondary, size: 50.0),
                   ),
                   const SizedBox(width: 12),
-                  Text(_language.openingLeaveRequest),
+                  Text(language.openingLeaveRequest),
                 ],
               ),
               duration: const Duration(seconds: 1),
@@ -466,7 +466,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(_language.failedToMarkNotificationAsRead),
+                  content: Text(language.failedToMarkNotificationAsRead),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -525,7 +525,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
               children: [
                 const Icon(Icons.error_outline, color: Colors.red),
                 const SizedBox(width: 8),
-                Text(_language.error),
+                Text(language.error),
               ],
             ),
             content: Text(message),
@@ -533,7 +533,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 style: TextButton.styleFrom(foregroundColor: secondary),
-                child: Text(_language.ok),
+                child: Text(language.ok),
               ),
             ],
           ),
@@ -550,7 +550,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             Icon(Icons.error_outline, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 24),
             Text(
-              _language.failedToLoadNotifications,
+              language.failedToLoadNotifications,
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.grey.shade600,
@@ -559,7 +559,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              viewModel.error ?? _language.unknownErrorOccurred,
+              viewModel.error ?? language.unknownErrorOccurred,
               style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
@@ -570,7 +570,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                 await _refreshNotifications();
               },
               icon: const Icon(Icons.refresh),
-              label: Text(_language.tryAgain),
+              label: Text(language.tryAgain),
               style: ElevatedButton.styleFrom(
                 backgroundColor: secondary,
                 foregroundColor: Colors.white,
@@ -607,7 +607,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              _language.allCaughtUp,
+              language.allCaughtUp,
               style: TextStyle(
                 fontSize: 22,
                 color: Colors.grey.shade700,
@@ -616,7 +616,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              _language.noNewLeaveRequests,
+              language.noNewLeaveRequests,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade500,
@@ -628,7 +628,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             OutlinedButton.icon(
               onPressed: _refreshNotifications,
               icon: const Icon(Icons.refresh),
-              label: Text(_language.refresh),
+              label: Text(language.refresh),
               style: OutlinedButton.styleFrom(
                 foregroundColor: secondary,
                 side: BorderSide(color: secondary),

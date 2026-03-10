@@ -763,8 +763,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
-                        "My Requests",
+                      Text(
+                        language.myRequest,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -915,14 +915,17 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
-              tabs: const [
+              tabs: [
                 Tab(
-                  child: Text('Pending Leave', style: TextStyle(fontSize: 14)),
+                  child: Text(
+                    language.pendingLeave,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ),
                 Tab(
                   child: Text(
-                    'Pending Adjustment',
-                    style: TextStyle(fontSize: 14),
+                    language.pendingAdjustment,
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ),
               ],
@@ -994,7 +997,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             ),
             const SizedBox(height: 16),
             Text(
-              'No pending leave requests',
+              language.noPendingLeaveRequests,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -1068,7 +1071,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
             Icon(Icons.schedule_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No pending adjustment requests',
+              language.noPendingAdjustmentRequests,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],

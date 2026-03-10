@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../../constants/constant.dart';
+import '../../../localization/language.dart';
+import '../../../localization/language_logic.dart';
 import '../../../viewmodels/manager_leave_history_viewmodel.dart';
 import '../../../models/leave_history_model.dart';
 import '../../../models/manager_leave_history_model.dart';
@@ -33,12 +35,25 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
   String? _staffSelectedLeaveType;
   String? _staffSelectedMember;
 
+  Language language = Language();
+
   @override
   void initState() {
     super.initState();
     _viewModel = ManagerLeaveHistoryViewModel();
     _tabController = TabController(length: 2, vsync: this);
     _viewModel.fetchLeaveHistory();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   @override
@@ -55,9 +70,9 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: const Text(
-            'Leave History',
-            style: TextStyle(
+          title: Text(
+            language.leaveHistory,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -113,9 +128,9 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
-                  tabs: const [
-                    Tab(height: 40, child: Text('My Request')),
-                    Tab(height: 40, child: Text('My Staff Request')),
+                  tabs: [
+                    Tab(height: 40, child: Text(language.myRequest)),
+                    Tab(height: 40, child: Text(language.myStaffRequest)),
                   ],
                 ),
               ),
@@ -162,7 +177,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
           Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'Error loading leave history',
+            language.errorLoadingLeaveHistory,
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey[600],
@@ -182,7 +197,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
               backgroundColor: primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Retry'),
+            child: Text(language.retry),
           ),
         ],
       ),
@@ -202,7 +217,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
         Expanded(
           child:
               filteredRequests.isEmpty
-                  ? _buildEmptyState('No leave requests found')
+                  ? _buildEmptyState(language.noLeaveRequestsFound)
                   : _buildMyRequestsList(filteredRequests),
         ),
       ],
@@ -223,7 +238,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
         Expanded(
           child:
               filteredRequests.isEmpty
-                  ? _buildEmptyState('No staff leave requests found')
+                  ? _buildEmptyState(language.noStaffLeaveRequestsFound)
                   : _buildStaffRequestsList(filteredRequests),
         ),
       ],
@@ -249,25 +264,25 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
       child: Row(
         children: [
           _buildStatItem(
-            'Total',
+            language.total,
             viewModel.myLeaveRequests.length.toString(),
             Colors.blue,
           ),
           const SizedBox(width: 12),
           _buildStatItem(
-            'Pending',
+            language.pending,
             viewModel.myPendingCount.toString(),
             Colors.orange,
           ),
           const SizedBox(width: 12),
           _buildStatItem(
-            'Approved',
+            language.approved,
             viewModel.myApprovedCount.toString(),
             Colors.green,
           ),
           const SizedBox(width: 12),
           _buildStatItem(
-            'Rejected',
+            language.rejected,
             viewModel.myRejectedCount.toString(),
             Colors.red,
           ),
@@ -295,25 +310,25 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
       child: Row(
         children: [
           _buildStatItem(
-            'Total',
+            language.total,
             viewModel.staffLeaveRequests.length.toString(),
             Colors.blue,
           ),
           const SizedBox(width: 12),
           _buildStatItem(
-            'Pending',
+            language.pending,
             viewModel.staffPendingCount.toString(),
             Colors.orange,
           ),
           const SizedBox(width: 12),
           _buildStatItem(
-            'Approved',
+            language.approved,
             viewModel.staffApprovedCount.toString(),
             Colors.green,
           ),
           const SizedBox(width: 12),
           _buildStatItem(
-            'Rejected',
+            language.rejected,
             viewModel.staffRejectedCount.toString(),
             Colors.red,
           ),
@@ -374,7 +389,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
                   label: Text(
-                    'Status: ${FileHelper().getStatusText(_mySelectedStatus!)}',
+                    '${language.status}: ${FileHelper().getStatusText(_mySelectedStatus!)}',
                   ),
                   onDeleted: () => setState(() => _mySelectedStatus = null),
                   backgroundColor: primary.withOpacity(0.1),
@@ -383,7 +398,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
               ),
             if (_mySelectedLeaveType != null)
               Chip(
-                label: Text('Type: $_mySelectedLeaveType'),
+                label: Text('${language.type}: $_mySelectedLeaveType'),
                 onDeleted: () => setState(() => _mySelectedLeaveType = null),
                 backgroundColor: primary.withOpacity(0.1),
                 deleteIconColor: primary,
@@ -412,7 +427,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
                   label: Text(
-                    'Status: ${FileHelper().getStatusText(_staffSelectedStatus!)}',
+                    '${language.status}: ${FileHelper().getStatusText(_staffSelectedStatus!)}',
                   ),
                   onDeleted: () => setState(() => _staffSelectedStatus = null),
                   backgroundColor: primary.withOpacity(0.1),
@@ -423,7 +438,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Chip(
-                  label: Text('Type: $_staffSelectedLeaveType'),
+                  label: Text('${language.type}: $_staffSelectedLeaveType'),
                   onDeleted:
                       () => setState(() => _staffSelectedLeaveType = null),
                   backgroundColor: primary.withOpacity(0.1),
@@ -432,7 +447,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
               ),
             if (_staffSelectedMember != null)
               Chip(
-                label: Text('Staff: $_staffSelectedMember'),
+                label: Text('${language.staffMember}: $_staffSelectedMember'),
                 onDeleted: () => setState(() => _staffSelectedMember = null),
                 backgroundColor: primary.withOpacity(0.1),
                 deleteIconColor: primary,
@@ -559,7 +574,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Leave requests will appear here',
+            language.leaveRequestsWillAppearHere,
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
@@ -655,7 +670,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
       spacing: 8,
       children: [
         FilterChip(
-          label: const Text('All'),
+          label: Text(language.all),
           selected: selectedStatus == null,
           onSelected: (selected) {
             setState(() {
@@ -669,7 +684,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
           },
         ),
         FilterChip(
-          label: const Text('Pending'),
+          label: Text(language.pending),
           selected: selectedStatus == '2',
           onSelected: (selected) {
             setState(() {
@@ -683,7 +698,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
           },
         ),
         FilterChip(
-          label: const Text('Approved'),
+          label: Text(language.approved),
           selected: selectedStatus == '1',
           onSelected: (selected) {
             setState(() {
@@ -697,7 +712,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
           },
         ),
         FilterChip(
-          label: const Text('Rejected'),
+          label: Text(language.rejected),
           selected: selectedStatus == '0',
           onSelected: (selected) {
             setState(() {
@@ -727,7 +742,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
       spacing: 8,
       children: [
         FilterChip(
-          label: const Text('All'),
+          label: Text(language.all),
           selected: selectedType == null,
           onSelected: (selected) {
             setState(() {
@@ -767,7 +782,7 @@ class _ManagerLeaveHistoryScreenState extends State<ManagerLeaveHistoryScreen>
       spacing: 8,
       children: [
         FilterChip(
-          label: const Text('All'),
+          label: Text(language.all),
           selected: _staffSelectedMember == null,
           onSelected: (selected) {
             setState(() {

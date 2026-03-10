@@ -6,6 +6,8 @@ import '../../models/ceo_dashboard_model.dart';
 import '../../repositories/profile_repository.dart';
 import '../../utils/file_helper.dart';
 import '../../viewmodels/attendance_adjustment_action_viewmodel.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../widgets/approvalworkflowwidget.dart';
 import '../../widgets/attendance_action_widget.dart';
 
@@ -26,6 +28,8 @@ class AttendanceAdjustmentApprovalDetailScreen extends StatefulWidget {
 
 class _AttendanceAdjustmentApprovalDetailScreenState
     extends State<AttendanceAdjustmentApprovalDetailScreen> {
+  Language language = Language();
+
   String? _currentUserName;
   bool _isLoadingUser = true;
 
@@ -33,6 +37,17 @@ class _AttendanceAdjustmentApprovalDetailScreenState
   void initState() {
     super.initState();
     _loadCurrentUser();
+    _initializeLanguage();
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   Future<void> _loadCurrentUser() async {
@@ -68,9 +83,9 @@ class _AttendanceAdjustmentApprovalDetailScreenState
               backgroundColor: secondary,
               foregroundColor: Colors.white,
               centerTitle: false,
-              title: const Text(
-                'Adjustment Detail',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              title: Text(
+                language.adjustmentDetail,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
             body: SingleChildScrollView(
@@ -92,6 +107,7 @@ class _AttendanceAdjustmentApprovalDetailScreenState
                     Padding(
                       padding: EdgeInsets.only(left: 16, right: 16),
                       child: ApprovalWorkflowWidget(
+                        title: language.userApprovers,
                         approvalList:
                             widget.request.approverList
                                 .map(
@@ -234,7 +250,7 @@ class _AttendanceAdjustmentApprovalDetailScreenState
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Staff ID: ${widget.request.staffId}',
+                          '${language.staffId}: ${widget.request.staffId}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.white70,
@@ -271,7 +287,7 @@ class _AttendanceAdjustmentApprovalDetailScreenState
                         const SizedBox(height: 4),
                         Text(
                           viewModel.hasActionTaken
-                              ? 'PROCESSED'
+                              ? language.processed
                               : widget.request.statusText,
                           style: const TextStyle(
                             color: Colors.white,
@@ -300,9 +316,9 @@ class _AttendanceAdjustmentApprovalDetailScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Employee Information',
-                    style: TextStyle(
+                  Text(
+                    language.employeeInformation,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -311,25 +327,25 @@ class _AttendanceAdjustmentApprovalDetailScreenState
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.location_on_outlined,
-                    'Branch',
+                    language.branch,
                     widget.request.branchFullName,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.work_outline,
-                    'Position',
+                    language.position,
                     widget.request.positionName,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.business_outlined,
-                    'Department',
+                    language.department,
                     widget.request.departmentName,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.email_outlined,
-                    'Email',
+                    language.email,
                     widget.request.email,
                   ),
                 ],
@@ -407,19 +423,19 @@ class _AttendanceAdjustmentApprovalDetailScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow(
-              'Adjustment Type',
+              language.adjustmentType,
               widget.request.adjustType,
               Icons.edit_calendar,
             ),
             _buildDetailRow(
-              'Adjustment Date',
+              language.adjustmentDate,
               DateFormat(
                 'EEEE, MMMM dd, yyyy',
               ).format(widget.request.adjustDate),
               Icons.date_range,
             ),
             _buildDetailRow(
-              'Requested On',
+              language.requestedOn,
               DateFormat(
                 'MMMM dd, yyyy at hh:mm a',
               ).format(widget.request.requestDate),
@@ -428,9 +444,9 @@ class _AttendanceAdjustmentApprovalDetailScreenState
 
             if (widget.request.reason.isNotEmpty) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Reason',
-                style: TextStyle(
+              Text(
+                language.reason,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,

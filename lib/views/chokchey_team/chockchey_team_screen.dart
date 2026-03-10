@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 
 class ChockcheyTeamScreen extends StatefulWidget {
   const ChockcheyTeamScreen({super.key});
@@ -12,6 +13,7 @@ class ChockcheyTeamScreen extends StatefulWidget {
 
 class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
     with TickerProviderStateMixin {
+  Language language = Language();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -19,6 +21,7 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
   @override
   void initState() {
     super.initState();
+    _initializeLanguage();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -38,6 +41,16 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
     _animationController.forward();
   }
 
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -55,11 +68,7 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             padding: const EdgeInsets.all(7),
-            child: Icon(
-              icon,
-              size: 18,
-              color: iconColor ?? secondary,
-            ),
+            child: Icon(icon, size: 18, color: iconColor ?? secondary),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -104,44 +113,49 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
             onPressed: () {
               showDialog(
                 context: context,
-                builder: (ctx) => Dialog(
-                  backgroundColor: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(FontAwesomeIcons.users, size: 36, color: secondary),
-                        const SizedBox(height: 14),
-                        Text(
-                          'About Chokchey Team',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                            color: secondary,
-                          ),
+                builder:
+                    (ctx) => Dialog(
+                      backgroundColor: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.users,
+                              size: 36,
+                              color: secondary,
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'About Chokchey Team',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                color: secondary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              "This module will help you stay informed about your company's team structure, memos, and announcements. Exciting features are coming soon!",
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.grey[700],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: secondary,
+                              ),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: Text(language.close),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          "This module will help you stay informed about your company's team structure, memos, and announcements. Exciting features are coming soon!",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey[700],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: secondary,
-                          ),
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          child: const Text('Close'),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
               );
             },
           ),
@@ -249,7 +263,11 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
                       ),
                       child: Column(
                         children: [
-                          FaIcon(FontAwesomeIcons.infoCircle, color: secondary, size: 22),
+                          FaIcon(
+                            FontAwesomeIcons.infoCircle,
+                            color: secondary,
+                            size: 22,
+                          ),
                           const SizedBox(height: 10),
                           Text(
                             "We're working hard to bring you an amazing memo and announcements feature. Stay tuned for updates!",
@@ -286,11 +304,26 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _buildFeatureItem(FontAwesomeIcons.bullhorn, 'Company-wide announcements'),
-                          _buildFeatureItem(FontAwesomeIcons.clipboardList, 'Internal memos and updates'),
-                          _buildFeatureItem(FontAwesomeIcons.bell, 'Real-time notifications'),
-                          _buildFeatureItem(FontAwesomeIcons.userGroup, 'Department-specific messages'),
-                          _buildFeatureItem(FontAwesomeIcons.sitemap, 'Team structure overview'),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.bullhorn,
+                            'Company-wide announcements',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.clipboardList,
+                            'Internal memos and updates',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.bell,
+                            'Real-time notifications',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.userGroup,
+                            'Department-specific messages',
+                          ),
+                          _buildFeatureItem(
+                            FontAwesomeIcons.sitemap,
+                            'Team structure overview',
+                          ),
                         ],
                       ),
                     ),

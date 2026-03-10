@@ -3,6 +3,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification_model.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../attendance/attendance_adjustment_approval_detail_screen.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
@@ -28,6 +30,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
   bool _isInitialized = false;
 
+  Language language = Language();
+
   @override
   bool get wantKeepAlive => true;
 
@@ -37,6 +41,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _tabController = TabController(length: 2, vsync: this);
+    _initializeLanguage();
 
     // Load notifications only once when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -49,6 +54,16 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         setState(() {});
       }
     });
+  }
+
+  Future<void> _initializeLanguage() async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    if (mounted) {
+      setState(() {
+        language = languageLogic.language;
+      });
+    }
   }
 
   Future<void> _initializeNotifications() async {
@@ -132,7 +147,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(language.notifications),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -147,19 +162,19 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                     context: context,
                     barrierDismissible: false,
                     builder:
-                        (context) => const Center(
+                        (context) => Center(
                           child: Card(
                             child: Padding(
-                              padding: EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(20),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  SpinKitFadingCircle(
+                                  const SpinKitFadingCircle(
                                     color: primary,
                                     size: 50.0,
                                   ),
-                                  SizedBox(height: 16),
-                                  Text('Marking all as read...'),
+                                  const SizedBox(height: 16),
+                                  Text(language.markingAllAsRead),
                                 ],
                               ),
                             ),
@@ -177,32 +192,35 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                       _updateFilteredNotifications(viewModel.notifications);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.check_circle, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text('All notifications marked as read'),
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(language.allNotificationsMarkedAsRead),
                               ],
                             ),
                             backgroundColor: Colors.green,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
                     } else {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Row(
                               children: [
-                                Icon(Icons.error, color: Colors.white),
-                                SizedBox(width: 8),
-                                Text('Failed to mark all as read'),
+                                const Icon(Icons.error, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Text(language.failedToMarkAllAsRead),
                               ],
                             ),
                             backgroundColor: Colors.red,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }
@@ -230,10 +248,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                 case 'refresh':
                   // Show loading indicator
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 16,
                             height: 16,
                             child: SpinKitFadingCircle(
@@ -241,11 +259,11 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                               size: 16.0,
                             ),
                           ),
-                          SizedBox(width: 12),
-                          Text('Refreshing notifications...'),
+                          const SizedBox(width: 12),
+                          Text(language.refreshingNotifications),
                         ],
                       ),
-                      duration: Duration(seconds: 1),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                   await _refreshNotifications();
@@ -260,7 +278,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                       children: [
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
-                        const Text('Mark all as read'),
+                        Text(language.markAllAsRead),
                         // Show count badge if there are unread notifications
                         Consumer<NotificationViewModel>(
                           builder: (context, viewModel, child) {
@@ -298,13 +316,13 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'refresh',
                     child: Row(
                       children: [
-                        Icon(Icons.refresh, color: secondary),
-                        SizedBox(width: 8),
-                        Text('Refresh'),
+                        const Icon(Icons.refresh, color: secondary),
+                        const SizedBox(width: 8),
+                        Text(language.refresh),
                       ],
                     ),
                   ),
@@ -344,9 +362,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'Personal',
+                            language.personal,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -385,8 +403,11 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Flexible(
-                          child: Text('Staff', overflow: TextOverflow.ellipsis),
+                        Flexible(
+                          child: Text(
+                            language.staffMember,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         if (_leaveApprovalNotifications
                             .where((n) => !n.isRead)
@@ -565,9 +586,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
-                      'NEW',
-                      style: TextStyle(
+                    child: Text(
+                      language.newLabel,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -592,8 +613,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
             // Show error if marking as read failed
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Failed to mark notification as read'),
+                SnackBar(
+                  content: Text(language.failedToMarkNotificationAsRead),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -747,12 +768,12 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Error'),
+            title: Text(language.error),
             content: Text(message),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                child: Text(language.ok),
               ),
             ],
           ),
@@ -841,9 +862,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
                         if (notification.data.isNotEmpty) ...[
                           const SizedBox(height: 24),
-                          const Text(
-                            'Details:',
-                            style: TextStyle(
+                          Text(
+                            language.details,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -900,7 +921,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                               _handleLeaveNotificationTap(notification);
                             },
                             icon: const Icon(Icons.visibility),
-                            label: const Text('View Leave Details'),
+                            label: Text(language.viewLeaveDetails),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primary,
                               foregroundColor: Colors.white,
@@ -927,7 +948,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.all(16),
                             ),
-                            child: const Text('View Details'),
+                            child: Text(language.viewDetails),
                           ),
                         ),
                     ],
@@ -947,7 +968,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
-            'Failed to load notifications',
+            language.failedToLoadNotifications,
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey.shade600,
@@ -956,7 +977,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            viewModel.error ?? 'Unknown error occurred',
+            viewModel.error ?? language.unknownErrorOccurred,
             style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             textAlign: TextAlign.center,
           ),
@@ -967,7 +988,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
               await _refreshNotifications();
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(language.retry),
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: Colors.white,
@@ -983,16 +1004,16 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
     switch (tabType) {
       case 'leave_request':
-        title = 'No leave requests';
-        subtitle = 'No new leave requests to review';
+        title = language.noLeaveRequestsEmpty;
+        subtitle = language.noNewLeaveRequests;
         break;
       case 'leave_approval':
-        title = 'No leave updates';
-        subtitle = 'No leave status updates available';
+        title = language.noLeaveUpdates;
+        subtitle = language.noLeaveStatusUpdatesAvailable;
         break;
       default:
-        title = 'No notifications';
-        subtitle = 'No new notifications available';
+        title = language.noNotificationsAvailable;
+        subtitle = language.noNewNotificationsAvailable;
         break;
     }
 
