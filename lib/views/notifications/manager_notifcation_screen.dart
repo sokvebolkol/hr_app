@@ -677,7 +677,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                 ),
           ),
         ).then((result) {
-          if (result == true) {
+          if (result != null && result['refresh'] == true) {
             _refreshNotifications();
           }
         });
@@ -724,7 +724,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                   ),
             ),
           ).then((result) {
-            if (result == true) {
+            if (result != null && result['refresh'] == true) {
               _refreshNotifications();
             }
           });

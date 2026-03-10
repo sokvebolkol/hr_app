@@ -492,18 +492,22 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
       print("🔔 CEO - Opening request for approval");
 
       // Convert to PendingLeaveRequest for ApproverLeaveDetailScreen
-      // final leaveRequest = notification.toPendingLeaveRequest();
+      final leaveRequest = notification.toLeaveRequest();
 
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => ApproverLeaveDetailScreen(leave: leaveRequest),
-      //   ),
-      // ).then((result) {
-      //   if (result == true) {
-      //     _refreshNotifications();
-      //   }
-      // });
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => ApproverLeaveDetailScreen(
+                leave: leaveRequest,
+                isPending: true,
+              ),
+        ),
+      ).then((result) {
+        if (result != null && result['refresh'] == true) {
+          _refreshNotifications();
+        }
+      });
     } catch (e) {
       print("Error handling leave request: $e");
       _showErrorDialog('Error opening leave request: ${e.toString()}');
