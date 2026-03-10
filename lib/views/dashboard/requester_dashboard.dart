@@ -34,6 +34,7 @@ import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../notifications/manager_notifcation_screen.dart';
 import '../notifications/requester_notification_screen.dart';
+import '../birthday_screen.dart';
 
 class RequesterDashboardScreen extends StatefulWidget {
   final bool hideBottomNav;
@@ -73,7 +74,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
-    _dashboardViewModel.initialize();
+    _dashboardViewModel.initialize().then((_) => _checkAndShowBirthday());
 
     // Listen for profile updates
     ProfileViewModel.onProfileUpdated = () {
@@ -81,6 +82,37 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
         _dashboardViewModel.refreshProfile();
       }
     };
+  }
+
+  Future<void> _checkAndShowBirthday() async {
+    final user = _dashboardViewModel.user;
+    final profile = _dashboardViewModel.userProfile;
+    if (user == null || profile == null) return;
+    if (user.dob == null || user.dob!.isEmpty) return;
+
+    // Parse dob
+    DateTime dob;
+    try {
+      dob = DateTime.parse(user.dob!.split(' ')[0]);
+    } catch (_) {
+      return;
+    }
+
+    final now = DateTime.now();
+    if (dob.month != now.month || dob.day != now.day) return;
+
+    // Only show once per year
+    final prefs = await SharedPreferences.getInstance();
+    final shownKey = 'birthday_shown_${now.year}';
+    // change this to false to testing for every hot reload
+    // if (prefs.getBool(shownKey) == false) return;
+    if (prefs.getBool(shownKey) == true) return;
+    await prefs.setBool(shownKey, true);
+
+    if (!mounted) return;
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    await showBirthdayScreen(context, user: user, profile: profile);
   }
 
   Future<void> _checkUserRole() async {

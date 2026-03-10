@@ -14,6 +14,8 @@ class UserModel {
   final String? u4;
   final String? u5;
   final String changepassword;
+  final String? gender;
+  final String? dob;
 
   UserModel({
     required this.ucode,
@@ -31,6 +33,8 @@ class UserModel {
     this.u4,
     this.u5,
     required this.changepassword,
+    this.gender,
+    this.dob,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -49,5 +53,7 @@ class UserModel {
     u4: json['u4'],
     u5: json['u5'],
     changepassword: json['changepassword'],
+    gender: json['gender']?.toString(),
+    dob: json['dob']?.toString(),
   );
 }
