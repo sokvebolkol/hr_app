@@ -381,7 +381,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_forward, size: 20),
-                    label: Text("Change Password now"),
+                    label: Text(language.changePasswordNow),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primary,
                       foregroundColor: Colors.white,
@@ -540,7 +540,7 @@ class _LoginScreenState extends State<LoginScreen>
                         _buildHeader(),
                         const SizedBox(height: 60),
                         _buildLoginCard(),
-                        // _buildLanguageSelector(),
+                        _buildLanguageSelector(),
                         const Spacer(),
                         _buildFooter(),
                         const SizedBox(height: 40),
@@ -551,6 +551,122 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageSelector() {
+    final isKhmer = language.code == 'KH';
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Center(
+        child: InkWell(
+          onTap: () => _showLanguageDialog(),
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.grey.shade300),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isKhmer ? '🇰🇭' : '🇬🇧',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isKhmer ? 'ខ្មែរ' : 'English',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Colors.grey.shade500,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLanguageDialog() {
+    final languageLogic = context.read<LanguageLogic>();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            language.selectLanguage,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Text('🇬🇧', style: TextStyle(fontSize: 22)),
+                title: const Text('English'),
+                trailing:
+                    language.code == 'EN'
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : null,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onTap: () {
+                  if (language.code != 'EN') {
+                    languageLogic.toggleLanguage();
+                  }
+                  Navigator.of(ctx).pop();
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Text('🇰🇭', style: TextStyle(fontSize: 22)),
+                title: const Text('ខ្មែរ (Khmer)'),
+                trailing:
+                    language.code == 'KH'
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : null,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onTap: () {
+                  if (language.code != 'KH') {
+                    languageLogic.toggleLanguage();
+                  }
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(language.cancel),
+            ),
+          ],
         );
       },
     );
