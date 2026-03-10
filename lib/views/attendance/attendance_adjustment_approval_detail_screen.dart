@@ -27,6 +27,7 @@ class AttendanceAdjustmentApprovalDetailScreen extends StatefulWidget {
 class _AttendanceAdjustmentApprovalDetailScreenState
     extends State<AttendanceAdjustmentApprovalDetailScreen> {
   String? _currentUserName;
+  bool _isLoadingUser = true;
 
   @override
   void initState() {
@@ -36,9 +37,10 @@ class _AttendanceAdjustmentApprovalDetailScreenState
 
   Future<void> _loadCurrentUser() async {
     final profile = await ProfileRepository().getUserProfile();
-    if (mounted && profile != null) {
+    if (mounted) {
       setState(() {
-        _currentUserName = profile.fullName;
+        _currentUserName = profile?.fullName;
+        _isLoadingUser = false;
       });
     }
   }
@@ -112,7 +114,9 @@ class _AttendanceAdjustmentApprovalDetailScreenState
               ),
             ),
             floatingActionButton:
-                widget.isPending && !_hasCurrentUserAlreadyActed
+                widget.isPending &&
+                        !_isLoadingUser &&
+                        !_hasCurrentUserAlreadyActed
                     ? Consumer<AttendanceAdjustmentActionViewModel>(
                       builder: (context, vm, child) {
                         return AttendanceActionButtons(

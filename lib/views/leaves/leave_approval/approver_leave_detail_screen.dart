@@ -26,6 +26,7 @@ class ApproverLeaveDetailScreen extends StatefulWidget {
 
 class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
   String? _currentUserName;
+  bool _isLoadingUser = true;
 
   @override
   void initState() {
@@ -35,9 +36,10 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
 
   Future<void> _loadCurrentUser() async {
     final profile = await ProfileRepository().getUserProfile();
-    if (mounted && profile != null) {
+    if (mounted) {
       setState(() {
-        _currentUserName = profile.fullName;
+        _currentUserName = profile?.fullName;
+        _isLoadingUser = false;
       });
     }
   }
@@ -102,7 +104,9 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               ),
             ),
             floatingActionButton:
-                widget.isPending && !_hasCurrentUserAlreadyActed
+                widget.isPending &&
+                        !_isLoadingUser &&
+                        !_hasCurrentUserAlreadyActed
                     ? Consumer<LeaveActionViewModel>(
                       builder: (context, viewModel, child) {
                         return LeaveActionButtons(
