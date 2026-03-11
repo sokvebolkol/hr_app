@@ -1,10 +1,11 @@
-import 'package:chokchey_hr_app/views/auth/new-employee-screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import 'login-screen.dart';
+import 'new-employee-screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -93,6 +94,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    language = context.watch<LanguageLogic>().language;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -114,18 +116,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
                   _buildIllustration(),
                   const SizedBox(height: 60),
                   _buildWelcomeText(),
                   const SizedBox(height: 40),
                   _buildActionButtons(),
                   const SizedBox(height: 60),
-                  // _buildFooter(),
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -320,6 +319,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               );
             },
           ),
+          const SizedBox(height: 16),
+          _buildLanguageSelector(),
         ],
       ),
     );
@@ -471,6 +472,106 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageSelector() {
+    final languageLogic = context.read<LanguageLogic>();
+    final isKhmer = language.code == 'KH';
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildLangOption(
+                  flag: '🇬🇧',
+                  name: 'English',
+                  isSelected: !isKhmer,
+                  onTap: () {
+                    if (isKhmer) {
+                      HapticFeedback.lightImpact();
+                      languageLogic.toggleLanguage();
+                    }
+                  },
+                ),
+                _buildLangOption(
+                  flag: '🇰🇭',
+                  name: 'ខ្មែរ',
+                  isSelected: isKhmer,
+                  onTap: () {
+                    if (!isKhmer) {
+                      HapticFeedback.lightImpact();
+                      languageLogic.toggleLanguage();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLangOption({
+    required String flag,
+    required String name,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: primary.withOpacity(0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                  : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 8),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 250),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+              ),
+              child: Text(name),
+            ),
+          ],
         ),
       ),
     );

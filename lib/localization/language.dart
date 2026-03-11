@@ -1400,7 +1400,7 @@ class Khmer implements Language {
 
   // Welcome Screen
   @override
-  String get welcomeBack => "សូមស្វាគមន៍ការ!";
+  String get welcomeBack => "សូមស្វាគមន៍!";
   @override
   String get chooseHowToContinue =>
       "ជ្រើសរើសវិធីដែលអ្នកចង់ប្រើ\nជាមួយប្រព័ន្ធ Chokchey HR";
@@ -1411,7 +1411,7 @@ class Khmer implements Language {
   @override
   String get newEmployeeRegisterHere => "បុគ្គលិកថ្មី? ចុះឈ្មោះនៅទីនេះ";
   @override
-  String get trustedPlatform => "វេទិកាដែលទុកចិត្ត";
+  String get trustedPlatform => "Platform ដែលទុកចិត្ត";
   @override
   String get employeesCount => "បុគ្គលិក 200+";
 
