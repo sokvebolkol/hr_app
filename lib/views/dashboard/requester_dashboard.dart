@@ -74,7 +74,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
-    _dashboardViewModel.initialize().then((_) => _checkAndShowBirthday());
+    // _dashboardViewModel.initialize().then((_) => _checkAndShowBirthday());
 
     // Listen for profile updates
     ProfileViewModel.onProfileUpdated = () {
@@ -84,6 +84,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     };
   }
 
+  // Enable this method to check birthday on dashboard load, currently commented out to avoid showing birthday screen every time during development
   Future<void> _checkAndShowBirthday() async {
     final user = _dashboardViewModel.user;
     final profile = _dashboardViewModel.userProfile;
