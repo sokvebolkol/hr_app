@@ -87,7 +87,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
               }
               if (leaveDate == null) return false;
               final monthYear =
-                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
+                  '${FileHelper().getMonthShortName(leaveDate.month)} ${leaveDate.year}';
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -102,7 +102,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
               }
               if (leaveDate == null) return false;
               final monthYear =
-                  '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
+                  '${FileHelper().getMonthShortName(leaveDate.month)} ${leaveDate.year}';
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -126,7 +126,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(
@@ -565,7 +565,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
       if (leaveDate != null) {
         final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
         final monthYear =
-            '${FileHelper().getMonthName(leaveDate.month)} ${leaveDate.year}';
+            '${FileHelper().getMonthShortName(leaveDate.month)} ${leaveDate.year}';
         monthMap[monthKey] = monthYear;
       }
     }

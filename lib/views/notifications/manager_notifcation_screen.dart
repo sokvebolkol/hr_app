@@ -165,7 +165,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                         (context) => Center(
                           child: Card(
                             child: Padding(
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

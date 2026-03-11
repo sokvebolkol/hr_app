@@ -48,11 +48,11 @@ class Language {
   String get accountDeleted => "Your account has been deleted.";
   String get errorDeletingAccount =>
       "Error deleting account. Please try again.";
-  String get notifications => "Notifications";
-  String get enableNotifications => "Enable Notifications";
-  String get disableNotifications => "Disable Notifications";
-  String get notificationsEnabled => "Notifications enabled.";
-  String get notificationsDisabled => "Notifications disabled.";
+  String get notifications => "Notification";
+  String get enableNotifications => "Enable Notification";
+  String get disableNotifications => "Disable Notification";
+  String get notificationsEnabled => "Notification enabled.";
+  String get notificationsDisabled => "Notification disabled.";
   String get serverExperiencingIssues =>
       "The server is currently experiencing issues. Please try again later.";
   String get technicalIssueDetails =>
@@ -235,7 +235,7 @@ class Language {
   String get tryAgain => "Try Again";
   String get allCaughtUp => "All Caught Up! 🎉";
   String get noNewLeaveRequests =>
-      "No new leave requests to review.\nYour team is all set!";
+      "No new leave requests to review";
   String get newLabel => "NEW";
 
   String get all => "All";
@@ -950,7 +950,7 @@ class Khmer implements Language {
   String get allCaughtUp => "បានធ្វើរួចរាល់! 🎉";
   @override
   String get noNewLeaveRequests =>
-      "មិនមានសំណើច្បាប់ថ្មីសម្រាប់ពិនិត្យ។\nក្រុមរបស់អ្នករួចរាល់ហើយ!";
+      "មិនមានសំណើច្បាប់ថ្មីសម្រាប់ពិនិត្យ។";
   @override
   String get newLabel => "ថ្មី";
   @override
@@ -1305,7 +1305,7 @@ class Khmer implements Language {
   @override
   String get filterStaffRequests => "ច្រោះការស្នើសុំបុគ្គលិក";
   @override
-  String get staffMember => "សមាជិកបុគ្គលិក";
+  String get staffMember => "បុគ្គលិក";
 
   // Notification Screens
   @override
