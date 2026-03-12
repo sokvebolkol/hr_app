@@ -13,6 +13,7 @@ import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
+import '../../widgets/environment_switcher_bottom_sheet.dart';
 import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
@@ -35,6 +36,10 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   String _appVersion = '1.0.0';
+
+  // For 7-tap gesture to open environment switcher
+  int _logoTapCount = 0;
+  DateTime? _lastTapTime;
 
   Language language = Language();
 
@@ -587,30 +592,54 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildHeader() {
     return Column(
       children: [
-        Container(
-          width: 110,
-          height: 110,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 25,
-                offset: const Offset(0, 10),
+        GestureDetector(
+          onTap: _handleLogoTap,
+          child: Container(
+            width: 110,
+            height: 110,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 25,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset(
+                'assets/images/logo_256x256.png',
+                fit: BoxFit.contain,
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(15),
-            child: Image.asset(
-              'assets/images/logo_256x256.png',
-              fit: BoxFit.contain,
             ),
           ),
         ),
       ],
     );
+  }
+
+  void _handleLogoTap() async {
+    final now = DateTime.now();
+
+    // Reset counter if more than 2 seconds since last tap
+    if (_lastTapTime != null && now.difference(_lastTapTime!).inSeconds > 2) {
+      _logoTapCount = 0;
+    }
+
+    _lastTapTime = now;
+    _logoTapCount++;
+
+    if (_logoTapCount == 7) {
+      _logoTapCount = 0;
+      HapticFeedback.mediumImpact();
+      await EnvironmentSwitcherBottomSheet.show(context);
+    } else if (_logoTapCount >= 5) {
+      // Visual feedback when getting close
+      HapticFeedback.lightImpact();
+    }
   }
 
   Widget _buildLoginCard() {

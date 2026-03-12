@@ -13,6 +13,7 @@ import '../../widgets/custom_alert_dialog.dart';
 import '../auth/welcome.dart';
 import '../auth/confirm-password-screen.dart';
 import '../profile/profile_screen.dart';
+import '../settings/environment_selector_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -70,7 +71,7 @@ class _MenuScreenState extends State<MenuScreen> {
           child: Column(
             children: [
               SizedBox(
-                height: 500,
+                height: MediaQuery.of(context).size.height,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -79,6 +80,7 @@ class _MenuScreenState extends State<MenuScreen> {
                       top: 200,
                       left: 0,
                       right: 0,
+                      bottom: 0,
                       child: _buildItem(),
                     ),
 
@@ -99,6 +101,10 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Widget _buildBlueHeader() {
+    final serverService = ServerService();
+    final isProduction =
+        serverService.currentEnvironment == Environment.production;
+
     return Consumer<ProfileViewModel>(
       builder: (context, viewModel, child) {
         return Container(
@@ -111,13 +117,62 @@ class _MenuScreenState extends State<MenuScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${viewModel.languageLogic.language.version} $_appVersion',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${viewModel.languageLogic.language.version} $_appVersion',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      // Show environment label only if not production
+                      if (!isProduction) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getEnvironmentColor(
+                              serverService.currentEnvironment,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _getEnvironmentIcon(
+                                  serverService.currentEnvironment,
+                                ),
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                serverService.baseUrlName,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   InkWell(
                     onTap: () => _handleLogout(viewModel),
@@ -148,7 +203,6 @@ class _MenuScreenState extends State<MenuScreen> {
       builder: (context, viewModel, child) {
         return Container(
           padding: const EdgeInsets.only(top: 24, bottom: 24),
-          height: MediaQuery.of(context).size.height * 0.9,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.only(
@@ -156,34 +210,56 @@ class _MenuScreenState extends State<MenuScreen> {
               topRight: Radius.circular(16),
             ),
           ),
-          child: Column(
-            children: [
-              SizedBox(height: 120),
-              _buildMenuItem(
-                viewModel: viewModel,
-                icon: Icons.person_outline,
-                title: viewModel.languageLogic.language.myProfile,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfilePage(),
-                    ),
-                  );
-                },
-              ),
-              _buildDivider(),
-              _buildMenuItem(
-                viewModel: viewModel,
-                icon: Icons.lock_outline,
-                title: viewModel.languageLogic.language.changePassword,
-                onTap: () async {
-                  await _navigateToChangePassword(viewModel);
-                },
-              ),
-              _buildDivider(),
-              _buildLanguageSelector(),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 120),
+                _buildMenuItem(
+                  viewModel: viewModel,
+                  icon: Icons.person_outline,
+                  title: viewModel.languageLogic.language.myProfile,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfilePage(),
+                      ),
+                    );
+                  },
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  viewModel: viewModel,
+                  icon: Icons.lock_outline,
+                  title: viewModel.languageLogic.language.changePassword,
+                  onTap: () async {
+                    await _navigateToChangePassword(viewModel);
+                  },
+                ),
+                _buildDivider(),
+                _buildLanguageSelector(),
+
+                // Show Environment Settings only if not production
+                if (ServerService().currentEnvironment !=
+                    Environment.production) ...[
+                  _buildDivider(),
+                  _buildMenuItem(
+                    viewModel: viewModel,
+                    icon: Icons.dns_outlined,
+                    title: 'Environment Settings',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => const EnvironmentSelectorScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },
@@ -561,6 +637,29 @@ class _MenuScreenState extends State<MenuScreen> {
           (route) => false,
         );
       }
+    }
+  }
+
+  // Helper methods for environment indicator
+  Color _getEnvironmentColor(Environment env) {
+    switch (env) {
+      case Environment.production:
+        return Colors.red;
+      case Environment.uat:
+        return Colors.orange;
+      case Environment.development:
+        return Colors.blue;
+    }
+  }
+
+  IconData _getEnvironmentIcon(Environment env) {
+    switch (env) {
+      case Environment.production:
+        return Icons.cloud_done;
+      case Environment.uat:
+        return Icons.science;
+      case Environment.development:
+        return Icons.computer;
     }
   }
 }

@@ -10,6 +10,7 @@ import 'views/auth/splash-screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
 import 'services/internet_connection_service.dart';
+import 'services/global_service.dart';
 import 'firebase_options.dart';
 
 /// Check if device has internet connection
@@ -48,6 +49,10 @@ void main() async {
 
     // Initialize Firebase with timeout
     await _initializeFirebaseWithTimeout();
+
+    // Initialize ServerService to load saved environment
+    await ServerService().initialize();
+    print('🌐 Server environment initialized');
 
     // Request permissions after Firebase (non-blocking)
     _requestPermissions(); // Remove await to make it non-blocking
