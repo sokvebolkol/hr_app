@@ -12,7 +12,7 @@ class ServerService {
   static const String prodUrl =
       'https://hr-mobile.api.chokchey.com.kh/api/'; // prod running
   static const String uatUrl =
-      'http://hr-mobileapi-alb-859602875.ap-southeast-1.elb.amazonaws.com/api/'; // uat running
+      'https://uat-coapp.chokchey.com.kh/api/'; // uat running
   static const String devUrl =
       'http://192.168.53.254:8000/api/'; // local running
 
