@@ -234,8 +234,7 @@ class Language {
   String get unknownErrorOccurred => "Unknown error occurred";
   String get tryAgain => "Try Again";
   String get allCaughtUp => "All Caught Up! 🎉";
-  String get noNewLeaveRequests =>
-      "No new leave requests to review";
+  String get noNewLeaveRequests => "No new leave requests to review";
   String get newLabel => "NEW";
 
   String get all => "All";
@@ -497,6 +496,30 @@ class Language {
   // Misc
   String get done => "Done";
   String get continueToLogin => "Continue to Login";
+
+  // Employee Registration Screen
+  String get enterStaffIdToContinue =>
+      "Please enter your Staff ID to continue.";
+  String get invalidStaffId => "Invalid Staff ID";
+  String get staffIdNotFound => "Staff ID Not Found";
+  String get staffIdNotFoundMsg =>
+      "The Staff ID you entered does not exist in our system. Please check and try again.";
+  String get unauthorized => "Unauthorized";
+  String get invalidCredentialsContactHR =>
+      "Invalid credentials. Please contact your manager or HR.";
+  String get pleaseCheckStaffId => "Please check your Staff ID and try again.";
+  String get creatingAccount => "Creating Account...";
+  String get enterCodeOrStaffId => "Enter Code or Staff ID";
+  String get followStepsToGetCode =>
+      "Please follow the following steps to get the code to login";
+  String get contactManagerToRegister =>
+      "Contact your manager or HR to register your Staff ID";
+  String get registrationForNewEmployees =>
+      "Registration is for new employees only";
+  String get staffIdOrCode => "Staff ID or Code";
+  String get pleaseEnterStaffIdOrCode => "Please enter your Staff ID or Code";
+  String get staffIdOrCode4Digits =>
+      "Staff ID or Code must be exactly 4 digits";
 }
 
 class Khmer implements Language {
@@ -949,8 +972,7 @@ class Khmer implements Language {
   @override
   String get allCaughtUp => "បានធ្វើរួចរាល់! 🎉";
   @override
-  String get noNewLeaveRequests =>
-      "មិនមានសំណើច្បាប់ថ្មីសម្រាប់ពិនិត្យ។";
+  String get noNewLeaveRequests => "មិនមានសំណើច្បាប់ថ្មីសម្រាប់ពិនិត្យ។";
   @override
   String get newLabel => "ថ្មី";
   @override
@@ -1432,4 +1454,42 @@ class Khmer implements Language {
   String get done => "រួចរាល់";
   @override
   String get continueToLogin => "បន្តទៅចូលប្រើប្រាស់";
+
+  // Employee Registration Screen
+  @override
+  String get enterStaffIdToContinue => "សូមបញ្ចូលលេខបុគ្គលិករបស់អ្នកដើម្បីបន្ត";
+  @override
+  String get invalidStaffId => "លេខបុគ្គលិកមិនត្រឹមត្រូវ";
+  @override
+  String get staffIdNotFound => "រកមិនឃើញលេខបុគ្គលិក";
+  @override
+  String get staffIdNotFoundMsg =>
+      "លេខបុគ្គលិករបស់អ្នកមិនមានក្នុងប្រព័ន្ធ។ សូមពិនិត្យ ហើយព្យាយាមម្ដងទៀត";
+  @override
+  String get unauthorized => "គ្មានការអនុញ្ញាត";
+  @override
+  String get invalidCredentialsContactHR =>
+      "ព័ត៌មានមិនត្រឹមត្រូវ។ សូមទាក់ទងអ្នកគ្រប់គ្រង ឬ HR";
+  @override
+  String get pleaseCheckStaffId =>
+      "សូមពិនិត្យលេខបុគ្គលិករបស់អ្នក ហើយព្យាយាមម្ដងទៀត";
+  @override
+  String get creatingAccount => "កំពុងបង្កើតគណនី...";
+  @override
+  String get enterCodeOrStaffId => "បញ្ចូលកូដ ឬលេខបុគ្គលិក";
+  @override
+  String get followStepsToGetCode =>
+      "សូមអនុវត្តតាមជំហានខាងក្រោមដើម្បីទទួលបានកូដចូល";
+  @override
+  String get contactManagerToRegister =>
+      "ទាក់ទងអ្នកគ្រប់គ្រង ឬ HR ដើម្បីចុះឈ្មោះលេខបុគ្គលិករបស់អ្នក";
+  @override
+  String get registrationForNewEmployees =>
+      "ការចុះឈ្មោះគឺសម្រាប់បុគ្គលិកថ្មីប៉ុណ្ណោះ";
+  @override
+  String get staffIdOrCode => "លេខបុគ្គលិក ឬកូដ";
+  @override
+  String get pleaseEnterStaffIdOrCode => "សូមបញ្ចូលលេខបុគ្គលិក ឬកូដរបស់អ្នក";
+  @override
+  String get staffIdOrCode4Digits => "លេខបុគ្គលិក ឬកូដត្រូវតែមានចំនួន ៤ ខ្ទង់";
 }

@@ -119,16 +119,16 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
 
     if (staffId.isEmpty) {
       _showErrorDialog(
-        title: "Missing Information",
-        message: "Please enter your Staff ID to continue.",
+        title: language.missingInformation,
+        message: language.enterStaffIdToContinue,
       );
       return;
     }
 
     if (staffId.length != 4) {
       _showErrorDialog(
-        title: "Invalid Staff ID",
-        message: "Staff ID must be exactly 4 digits.",
+        title: language.invalidStaffId,
+        message: language.staffId4digits,
       );
       return;
     }
@@ -180,7 +180,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
         // ✅ Success - Login complete
         if (data['success'] == true) {
           await _showSuccessDialog(
-            title: "Login Successful!",
+            title: language.loginSuccess,
             message: data['message'] ?? "Welcome! You're now logged in.",
           );
 
@@ -193,7 +193,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
         } else {
           // ✅ Login failed
           _showErrorDialog(
-            title: "Login Failed",
+            title: language.loginFailed,
             message:
                 data['message'] ??
                 "User login information not found. Please contact your manager or HR department.",
@@ -201,24 +201,27 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
         }
       } else if (response.statusCode == 404) {
         _showErrorDialog(
-          title: "Staff ID Not Found",
-          message:
-              "The Staff ID you entered does not exist in our system. Please check and try again.",
+          title: language.staffIdNotFound,
+          message: language.staffIdNotFoundMsg,
         );
       } else if (response.statusCode == 401) {
         _showErrorDialog(
-          title: "Unauthorized",
-          message: "Invalid credentials. Please contact your manager or HR.",
+          title: language.unauthorized,
+          message: language.invalidCredentialsContactHR,
         );
       } else if (response.statusCode == 422) {
         try {
           final data = convert.jsonDecode(response.body);
-          final errorMessage = data['message'] ?? 'Validation error occurred.';
-          _showErrorDialog(title: "Validation Error", message: errorMessage);
+          final errorMessage =
+              data['message'] ?? language.validationErrorOccurred;
+          _showErrorDialog(
+            title: language.validationError,
+            message: errorMessage,
+          );
         } catch (_) {
           _showErrorDialog(
-            title: "Validation Error",
-            message: "Please check your Staff ID and try again.",
+            title: language.validationError,
+            message: language.pleaseCheckStaffId,
           );
         }
       } else {
@@ -229,14 +232,13 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
           errorMessage = data['message'] ?? errorMessage;
         } catch (_) {}
 
-        _showErrorDialog(title: "Login Failed", message: errorMessage);
+        _showErrorDialog(title: language.loginFailed, message: errorMessage);
       }
     } catch (e) {
       print('❌ Error: $e');
       _showErrorDialog(
-        title: "Network Error",
-        message:
-            "Unable to connect to the server. Please check your internet connection and try again.",
+        title: language.networkError,
+        message: language.noInternetConnection,
       );
     } finally {
       if (mounted) {
@@ -486,7 +488,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Join as Employee',
+                      language.joinAsEmployee,
                       style: TextStyle(
                         color: primary,
                         fontSize: 16,
@@ -558,7 +560,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Enter Code or Staff ID',
+              language.enterCodeOrStaffId,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -567,18 +569,18 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Please follow the following steps to get the code to login',
+              language.followStepsToGetCode,
               style: TextStyle(fontSize: 13, color: secondary, height: 1.5),
             ),
             const SizedBox(height: 16),
             // Steps
             _buildInfoItem(
               icon: Icons.supervisor_account_rounded,
-              text: 'Contact your manager or HR to register your Staff ID',
+              text: language.contactManagerToRegister,
             ),
             _buildInfoItem(
               icon: Icons.new_releases_outlined,
-              text: 'Registration is for new employees only',
+              text: language.registrationForNewEmployees,
             ),
           ],
         ),
@@ -653,7 +655,7 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
             ),
             const SizedBox(width: 12),
             Text(
-              'Staff ID or Code ',
+              language.staffIdOrCode,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -754,10 +756,10 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
             ],
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return '⚠️ Please enter your Staff ID or Code';
+                return '⚠️ ${language.pleaseEnterStaffIdOrCode}';
               }
               if (value.length != 4) {
-                return '⚠️ Staff ID or Code must be exactly 4 digits';
+                return '⚠️ ${language.staffIdOrCode4Digits}';
               }
               return null;
             },
@@ -804,8 +806,8 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
             _isLoading
                 ? Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    SizedBox(
+                  children: [
+                    const SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
@@ -813,10 +815,10 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
                         strokeWidth: 3,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Text(
-                      'Creating Account...',
-                      style: TextStyle(
+                      language.creatingAccount,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -826,12 +828,12 @@ class _EmployeeRegistrationScreenState extends State<EmployeeRegistrationScreen>
                 )
                 : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.login_rounded, size: 24),
-                    SizedBox(width: 12),
+                  children: [
+                    const Icon(Icons.login_rounded, size: 24),
+                    const SizedBox(width: 12),
                     Text(
-                      'Login',
-                      style: TextStyle(
+                      language.login,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
