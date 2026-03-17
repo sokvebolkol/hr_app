@@ -74,6 +74,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
+    _dashboardViewModel.initialize();
     // _dashboardViewModel.initialize().then((_) => _checkAndShowBirthday());
 
     // Listen for profile updates
