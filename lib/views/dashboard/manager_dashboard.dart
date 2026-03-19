@@ -138,8 +138,10 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   Widget _buildBottomNavigationBar() {
     final screenHeight = MediaQuery.of(context).size.height;
     final isSmallScreen = screenHeight < 700;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
+      padding: EdgeInsets.only(bottom: bottomPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,

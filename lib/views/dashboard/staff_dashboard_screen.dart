@@ -1217,10 +1217,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
         _selectedMonthPending == 'All'
             ? leaves
             : leaves.where((leave) {
-              // Try multiple date fields
-              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+              // Try todat first, then frdat
+              DateTime? leaveDate = DateTime.tryParse(leave.todat);
 
-              // If createdate doesn't work, try frdat (from date)
               if (leaveDate == null && leave.frdat.isNotEmpty) {
                 leaveDate = DateTime.tryParse(leave.frdat);
               }
@@ -1243,7 +1242,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     final allDates = <DateTime>[];
     for (var leave in leaves) {
       final date =
-          DateTime.tryParse(leave.createdate) ?? DateTime.tryParse(leave.frdat);
+          DateTime.tryParse(leave.todat) ?? DateTime.tryParse(leave.frdat);
       if (date != null) allDates.add(date);
     }
     for (var request in attendanceRequests) {
@@ -1441,10 +1440,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
         _selectedMonth == 'All'
             ? allLeaves
             : allLeaves.where((leave) {
-              // Try multiple date fields
-              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+              // Try todat first, then frdat
+              DateTime? leaveDate = DateTime.tryParse(leave.todat);
 
-              // If createdate doesn't work, try frdat (from date)
               if (leaveDate == null && leave.frdat.isNotEmpty) {
                 leaveDate = DateTime.tryParse(leave.frdat);
               }
@@ -1581,10 +1579,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     final Map<DateTime, String> monthMap = {};
 
     for (var leave in leaves) {
-      // Try multiple date fields
-      DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+      // Try todat first, then frdat
+      DateTime? leaveDate = DateTime.tryParse(leave.todat);
 
-      // If createdate doesn't work, try frdat (from date)
       if (leaveDate == null && leave.frdat.isNotEmpty) {
         leaveDate = DateTime.tryParse(leave.frdat);
       }

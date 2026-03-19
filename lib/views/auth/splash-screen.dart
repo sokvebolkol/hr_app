@@ -10,7 +10,6 @@ import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../utils/internet_helper.dart';
-
 import 'welcome.dart';
 
 class SplashScreen extends StatefulWidget {

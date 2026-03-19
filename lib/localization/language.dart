@@ -2,13 +2,13 @@ List<Language> languageList = [Language(), Khmer()];
 
 class Language {
   String get code => "EN";
-  String get login => "Log In";
+  String get login => "Login";
   String get logout => "Logout";
   String get deleteMyAccount => "Delete My Account";
   String get removeAccount => "Delete Account";
   String get msgRemoveAccount =>
       "Would you really like to delete your account?";
-  String get register => " Register";
+  String get register => "Register";
   String get selectLanguage => "Select Language";
   String get language => "Language";
   String get cancel => "Cancel";
@@ -477,9 +477,9 @@ class Language {
   String get noPendingAdjustmentRequests => "No pending adjustment requests";
 
   // Welcome Screen
-  String get welcomeBack => "Welcome Back!";
-  String get chooseHowToContinue =>
-      "Choose how you'd like to continue with\nChokchey HR Management System";
+  String get welcomeBack => "Welcome back!";
+  String get accessYourHRTools =>
+      "Access your HR tools, requests \n and updates in one place";
   String get joinAsEmployee => "Join as Employee";
   String get signInToYourAccount => "Sign in to your account";
   String get newEmployeeRegisterHere => "New Employee? Register here";
@@ -1424,8 +1424,8 @@ class Khmer implements Language {
   @override
   String get welcomeBack => "សូមស្វាគមន៍!";
   @override
-  String get chooseHowToContinue =>
-      "ជ្រើសរើសវិធីដែលអ្នកចង់ប្រើ\nជាមួយប្រព័ន្ធ Chokchey HR";
+  String get accessYourHRTools =>
+      "ចូលប្រើឧបករណ៍ HR របស់អ្នក, \n សំណើ និងការអាប់ដេតទាំងអស់នៅកន្លែងមួយ";
   @override
   String get joinAsEmployee => "ចូលជាបុគ្គលិក";
   @override

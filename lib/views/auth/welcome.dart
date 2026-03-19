@@ -119,10 +119,33 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Column(
                 children: [
-                  _buildIllustration(),
-                  const SizedBox(height: 60),
+                  // _buildIllustration(),
+                  SizedBox(height: 40),
+                  Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 25,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.asset(
+                        'assets/images/logo_256x256.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 100),
                   _buildWelcomeText(),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 100),
                   _buildActionButtons(),
                   const SizedBox(height: 60),
                 ],
@@ -267,7 +290,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              language.chooseHowToContinue,
+              language.accessYourHRTools,
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.grey[600],

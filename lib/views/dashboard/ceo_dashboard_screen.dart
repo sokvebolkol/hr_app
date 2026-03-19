@@ -1222,10 +1222,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         _selectedMonthPending == 'All'
             ? leaves
             : leaves.where((leave) {
-              // Try multiple date fields
-              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+              // Try todat first, then frdat
+              DateTime? leaveDate = DateTime.tryParse(leave.todat);
 
-              // If createdate doesn't work, try frdat (from date)
               if (leaveDate == null && leave.frdat.isNotEmpty) {
                 leaveDate = DateTime.tryParse(leave.frdat);
               }
@@ -1357,10 +1356,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         _selectedMonth == 'All'
             ? allLeaves
             : allLeaves.where((leave) {
-              // Try multiple date fields
-              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+              // Try todat first, then frdat
+              DateTime? leaveDate = DateTime.tryParse(leave.todat);
 
-              // If createdate doesn't work, try frdat (from date)
               if (leaveDate == null && leave.frdat.isNotEmpty) {
                 leaveDate = DateTime.tryParse(leave.frdat);
               }
@@ -1497,10 +1495,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     final Map<DateTime, String> monthMap = {};
 
     for (var leave in leaves) {
-      // Try multiple date fields
-      DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+      // Try todat first, then frdat
+      DateTime? leaveDate = DateTime.tryParse(leave.todat);
 
-      // If createdate doesn't work, try frdat (from date)
       if (leaveDate == null && leave.frdat.isNotEmpty) {
         leaveDate = DateTime.tryParse(leave.frdat);
       }

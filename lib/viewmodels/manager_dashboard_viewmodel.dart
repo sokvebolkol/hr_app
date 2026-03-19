@@ -50,28 +50,17 @@ class ManagerDashboardViewModel extends ChangeNotifier {
       _setLoading(true);
       _setError(null);
 
-      print('Loading Manager dashboard attendance summary...');
-
       final response = await _repository.getAttendanceSummary();
-
-      print('Manager ViewModel - Response received: ${response.success}');
-
       if (response.success) {
         _attendanceSummary = response.data.summary;
-        print(
-          'Manager dashboard data loaded successfully: ${_attendanceSummary?.totalStaff} total staff',
-        );
       } else {
         final errorMessage =
             'Failed to load dashboard data - API returned success: false';
         _setError(errorMessage);
-        print('Failed to load manager dashboard data: $errorMessage');
       }
     } catch (e) {
       final errorMessage = 'An unexpected error occurred: $e';
       _setError(errorMessage);
-      print('Error loading manager dashboard data: $e');
-      print('Error type: ${e.runtimeType}');
       if (e is Exception) {
         print('Exception message: ${e.toString()}');
       }

@@ -333,7 +333,9 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                 widget.hideBottomNav
                     ? null
                     : Container(
-                      height: 80,
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         boxShadow: [
@@ -880,7 +882,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                   return Row(
                     children: [
                       SizedBox(
-                        width: 155,
+                        width: 165,
                         child: FunctionIconCardWidget(
                           iconData: button['icon'] as IconData,
                           label: button['label'] as String,
