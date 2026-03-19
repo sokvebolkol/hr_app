@@ -1,6 +1,7 @@
 import 'package:chokchey_hr_app/views/leaves/leave_request/leave_request_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../menu/menu_screen.dart';
 import 'requester_dashboard.dart';
@@ -18,6 +19,29 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   int _currentIndex = 0;
   bool _showStaffView = false; // false = Personal, true = Staff
   bool _triggerPersonalRefresh = false;
+
+  static const _kShowStaffViewKey = 'manager_dashboard_show_staff_view';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadViewPreference();
+  }
+
+  Future<void> _loadViewPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _showStaffView = prefs.getBool(_kShowStaffViewKey) ?? false;
+      });
+    }
+  }
+
+  Future<void> _setStaffView(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kShowStaffViewKey, value);
+    setState(() => _showStaffView = value);
+  }
 
   void _refreshPersonalDashboard() {
     setState(() {
@@ -200,7 +224,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
               HapticFeedback.lightImpact();
             } else {
               // Toggle between views when already on dashboard
-              setState(() => _showStaffView = !_showStaffView);
+              _setStaffView(!_showStaffView);
               HapticFeedback.mediumImpact();
             }
           },
