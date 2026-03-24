@@ -146,4 +146,42 @@ class AttendanceAdjustmentActionRepository {
       throw Exception('Error sending follow-up: $e');
     }
   }
+
+  // Cancel attendance adjustment request
+  Future<bool> cancelAttendanceAdjustmentRequest(int adjustmentId) async {
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      final token = pref.getString("token");
+
+      if (token == null) {
+        throw Exception('Token not found in local storage');
+      }
+
+      final response = await http.post(
+        Uri.parse(
+          '${_serverService.baseUrl}attendance/adjustment/$adjustmentId/cancel',
+        ),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({'adjustment_id': adjustmentId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['success'] == true;
+      } else {
+        throw Exception(
+          'Unable to cancel the attendance adjustment request as it has already been processed.',
+        );
+      }
+    } catch (e) {
+      throw Exception(
+        'Unable to cancel the attendance adjustment request as it has already been processed.',
+      );
+    }
+  }
+  
 }

@@ -135,6 +135,7 @@ class NotificationModel {
       adjustDateTime: adj['adjust_datetime']?.toString() ?? '',
       reason: adj['reason']?.toString() ?? '',
       status: _parseInt(adj['status']),
+      isAttendanceCanCancel: adj['is_attendance_can_cancel'] ?? false,
       createdBy: adj['created_by']?.toString() ?? '',
       createdAt: adj['created_at']?.toString() ?? createdAt,
       requesterName: adj['requester_name']?.toString() ?? '',

@@ -110,7 +110,6 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
       duration:
           '${widget.leaveRequest.numleav} day${double.parse(widget.leaveRequest.numleav) > 1 ? 's' : ''}',
       durationType: widget.leaveRequest.leaveNote,
-      hasDocument: _hasDocumentSupport(),
     );
   }
 

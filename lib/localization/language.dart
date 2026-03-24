@@ -431,6 +431,7 @@ class Language {
       "No new leave status updates.\nYour leave requests are being processed!";
   String get details => "Details";
   String get personal => "Personal";
+  String get staff => "Staff";
   String get noLeaveUpdates => "No leave updates";
   String get noLeaveStatusUpdatesAvailable =>
       "No leave status updates available";
@@ -450,6 +451,10 @@ class Language {
   String get duration => "Duration";
   String get from => "From";
   String get to => "To";
+  String get fromDate => "From Date";
+  String get toDate => "To Date";
+  String get appliedOn => "Applied On";
+  String get pinchToZoom => "Pinch to zoom • Double tap to zoom in/out";
   String get type => "Type";
   String get remark => "Remark";
   String get tapToView => "Tap to view";
@@ -1342,6 +1347,8 @@ class Khmer implements Language {
   @override
   String get personal => "ផ្ទាល់ខ្លួន";
   @override
+  String get staff => "បុគ្គលិក";
+  @override
   String get noLeaveUpdates => "គ្មានការអាប់ដេតច្បាប់";
   @override
   String get noLeaveStatusUpdatesAvailable => "គ្មានការអាប់ដេតស្ថានភាពច្បាប់";
@@ -1375,6 +1382,14 @@ class Khmer implements Language {
   String get from => "ចាប់ពី";
   @override
   String get to => "ដល់";
+  @override
+  String get fromDate => "ចាប់ពីថ្ងៃ";
+  @override
+  String get toDate => "ដល់ថ្ងៃ";
+  @override
+  String get appliedOn => "បានដាក់ស្នើនៅ";
+  @override
+  String get pinchToZoom => "ទ្រាំម្រាម • ចុចទំងន់ ២ ដើម្បីពង្រីក/បង្រួម";
   @override
   String get type => "ប្រភេទ";
   @override

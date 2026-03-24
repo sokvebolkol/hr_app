@@ -3,6 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'language.dart';
 
 class LanguageLogic extends ChangeNotifier {
+  // Singleton so all screens share the same instance and get notified
+  static final LanguageLogic _instance = LanguageLogic._internal();
+  factory LanguageLogic() => _instance;
+  LanguageLogic._internal();
+
   Language _language = Language();
   Language get language => _language;
 

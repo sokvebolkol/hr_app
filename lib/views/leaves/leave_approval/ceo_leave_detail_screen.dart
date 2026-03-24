@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
+import '../../../localization/language.dart';
+import '../../../localization/language_logic.dart';
 import '../../../models/ceo_dashboard_model.dart';
 import '../../../widgets/leave_action_widget.dart';
 import '../../../viewmodels/leave_action_viewmodel.dart';
@@ -23,6 +25,40 @@ class CeoLeaveDetailScreen extends StatefulWidget {
 }
 
 class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
+  Language language = LanguageLogic().language;
+
+  @override
+  void initState() {
+    super.initState();
+    LanguageLogic().addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    LanguageLogic().removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    setState(() {
+      language = LanguageLogic().language;
+    });
+  }
+
+  void _viewDocumentFullScreen() {
+    if (widget.leave.file == null || widget.leave.file!.isEmpty) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => _FullScreenDocumentViewer(
+              imageUrl: widget.leave.file!,
+              title: language.documentSupport,
+            ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -36,8 +72,8 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               backgroundColor: secondary,
               foregroundColor: Colors.white,
               centerTitle: false,
-              title: const Text(
-                'Leave Detail',
+              title: Text(
+                language.leaveDetail,
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
@@ -190,7 +226,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Staff ID: ${widget.leave.staff_id}',
+                          '${language.staffId}: ${widget.leave.staff_id}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.white70,
@@ -247,7 +283,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         const SizedBox(height: 4),
                         Text(
                           viewModel.hasActionTaken
-                              ? 'PROCESSED'
+                              ? language.processed
                               : widget.leave.statusText,
                           style: const TextStyle(
                             color: Colors.white,
@@ -276,8 +312,8 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Employee Information',
+                  Text(
+                    language.employeeInformation,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -287,25 +323,25 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.location_on_outlined,
-                    'Branch',
+                    language.branch,
                     widget.leave.branch,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.work_outline,
-                    'Position',
+                    language.position,
                     widget.leave.position,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.business_outlined,
-                    'Department',
+                    language.department,
                     widget.leave.department,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.email_outlined,
-                    'Email',
+                    language.email,
                     widget.leave.email,
                   ),
                 ],
@@ -381,27 +417,27 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow(
-              'From Date',
+              language.fromDate,
               DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.fromDate),
               Icons.date_range,
             ),
             _buildDetailRow(
-              'To Date',
+              language.toDate,
               DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.toDate),
               Icons.date_range,
             ),
             _buildDetailRow(
-              'Duration',
-              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
+              language.duration,
+              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? language.day : language.days.toLowerCase()}',
               Icons.schedule,
             ),
             _buildDetailRow(
-              'Leave Note',
+              language.leaveNote,
               widget.leave.leaveNote,
               Icons.note_outlined,
             ),
             _buildDetailRow(
-              'Applied On',
+              language.appliedOn,
               DateFormat(
                 'MMMM dd, yyyy at hh:mm a',
               ).format(widget.leave.requestDate),
@@ -409,8 +445,8 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
             ),
 
             if (widget.leave.reason.isNotEmpty) ...[
-              const Text(
-                'Reason',
+              Text(
+                language.reason,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -492,8 +528,8 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
               children: [
                 Icon(Icons.attach_file, color: primary, size: 24),
                 const SizedBox(width: 8),
-                const Text(
-                  'Supporting Document',
+                Text(
+                  language.documentSupport,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -506,100 +542,93 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
 
             // Check if the file is an image
             if (_isImageFile(widget.leave.file!)) ...[
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    widget.leave.file!,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey[100],
-                        child: const Center(
-                          child: SpinKitFadingCircle(color: primary),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[100],
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.broken_image,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Failed to load image',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+              GestureDetector(
+                onTap: _viewDocumentFullScreen,
+                child: Container(
+                  width: double.infinity,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
-                ),
-              ),
-            ] else ...[
-              // For non-image files, show file icon and details
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          widget.leave.file!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[100],
+                              child: const Center(
+                                child: SpinKitFadingCircle(color: primary),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[100],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    language.failedToLoadDocument,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      child: Icon(
-                        _getFileIcon(widget.leave.file!),
-                        color: primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _getFileName(widget.leave.file!),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                      Positioned(
+                        bottom: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getFileType(widget.leave.file!),
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                        ],
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.zoom_in,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                language.tapToView,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -613,44 +642,140 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
     final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
     return imageExtensions.any((ext) => fileName.toLowerCase().endsWith(ext));
   }
+}
 
-  String _getFileName(String filePath) {
-    return filePath.split('/').last.split('\\').last;
+class _FullScreenDocumentViewer extends StatefulWidget {
+  final String imageUrl;
+  final String title;
+
+  const _FullScreenDocumentViewer({
+    required this.imageUrl,
+    required this.title,
+  });
+
+  @override
+  State<_FullScreenDocumentViewer> createState() =>
+      _FullScreenDocumentViewerState();
+}
+
+class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
+  final TransformationController _transformationController =
+      TransformationController();
+  TapDownDetails? _doubleTapDetails;
+  Language language = LanguageLogic().language;
+
+  @override
+  void initState() {
+    super.initState();
+    LanguageLogic().addListener(_onLanguageChanged);
   }
 
-  String _getFileType(String fileName) {
-    final extension = fileName.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return 'PDF Document';
-      case 'doc':
-      case 'docx':
-        return 'Word Document';
-      case 'txt':
-        return 'Text Document';
-      case 'xls':
-      case 'xlsx':
-        return 'Excel Document';
-      default:
-        return '${extension.toUpperCase()} File';
+  @override
+  void dispose() {
+    LanguageLogic().removeListener(_onLanguageChanged);
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    setState(() {
+      language = LanguageLogic().language;
+    });
+  }
+
+  void _handleDoubleTapDown(TapDownDetails details) {
+    _doubleTapDetails = details;
+  }
+
+  void _handleDoubleTap() {
+    if (_transformationController.value != Matrix4.identity()) {
+      _transformationController.value = Matrix4.identity();
+    } else {
+      final position = _doubleTapDetails!.localPosition;
+      _transformationController.value =
+          Matrix4.identity()
+            ..translate(-position.dx * 2, -position.dy * 2)
+            ..scale(3.0);
     }
   }
 
-  IconData _getFileIcon(String fileName) {
-    final extension = fileName.split('.').last.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return Icons.picture_as_pdf;
-      case 'doc':
-      case 'docx':
-        return Icons.description;
-      case 'txt':
-        return Icons.text_snippet;
-      case 'xls':
-      case 'xlsx':
-        return Icons.table_chart;
-      default:
-        return Icons.insert_drive_file;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+      body: GestureDetector(
+        onDoubleTapDown: _handleDoubleTapDown,
+        onDoubleTap: _handleDoubleTap,
+        child: Center(
+          child: InteractiveViewer(
+            transformationController: _transformationController,
+            minScale: 0.5,
+            maxScale: 4.0,
+            child: Image.network(
+              widget.imageUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value:
+                            loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        language.loadingDocument,
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text(
+                        language.failedToLoadDocument,
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.black87,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text(
+          language.pinchToZoom,
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
   }
 }

@@ -64,6 +64,9 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
     _ceoDashboardViewModel = CeoDashboardViewModel();
     _initializeLanguage();
 
+    // Listen to language changes from singleton
+    LanguageLogic().addListener(_onLanguageChanged);
+
     _dashboardViewModel.initialize();
     _ceoDashboardViewModel.initialize();
 
@@ -74,6 +77,14 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
         _ceoDashboardViewModel.refresh();
       }
     };
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {
+        language = LanguageLogic().language;
+      });
+    }
   }
 
   Future<void> _initializeLanguage() async {
@@ -355,7 +366,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
           ),
         ),
         bottomNavigationBar: ConvexAppBar(
-          key: ValueKey(_currentIndex),
+          key: ValueKey('${_currentIndex}_${language.code}'),
           color: Colors.black,
           backgroundColor: Colors.white,
           activeColor: secondary,
@@ -543,6 +554,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    LanguageLogic().removeListener(_onLanguageChanged);
     ProfileViewModel.onProfileUpdated = null;
     _dashboardViewModel.dispose();
     _ceoDashboardViewModel.dispose();
@@ -1246,9 +1258,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             children: [
               const Icon(Icons.calendar_month, size: 20, color: secondary),
               const SizedBox(width: 8),
-              const Text(
-                'Filter by Month:',
-                style: TextStyle(
+              Text(
+                language.filterByMonth,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: secondary,
@@ -1275,7 +1287,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _selectedMonthPending,
+                          _selectedMonthPending == 'All'
+                              ? language.all
+                              : _selectedMonthPending,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -1386,9 +1400,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             children: [
               const Icon(Icons.calendar_month, size: 20, color: secondary),
               const SizedBox(width: 8),
-              const Text(
-                'Filter by Month:',
-                style: TextStyle(
+              Text(
+                language.filterByMonth,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: secondary,
@@ -1415,7 +1429,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _selectedMonth,
+                          _selectedMonth == 'All'
+                              ? language.all
+                              : _selectedMonth,
                           style: const TextStyle(
                             fontSize: 14,
                             color: secondary,
@@ -1665,7 +1681,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
-                                    month,
+                                    month == 'All' ? language.all : month,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight:
@@ -1861,7 +1877,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                                 // Month text
                                 Expanded(
                                   child: Text(
-                                    month,
+                                    month == 'All' ? language.all : month,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight:

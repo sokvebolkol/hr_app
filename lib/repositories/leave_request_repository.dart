@@ -140,6 +140,7 @@ class LeaveRequestRepository {
           toDate: toDate,
           reason: reason,
           leaveFor: leaveFor,
+          halfDaySession: halfDaySession,
           totalLeave: totalLeave,
           approvers: approvers,
           file: file,
@@ -170,6 +171,7 @@ class LeaveRequestRepository {
     required String toDate,
     required String reason,
     required int leaveFor,
+    required String halfDaySession,
     required double totalLeave,
     required List<Map<String, dynamic>> approvers,
     required File file,
@@ -194,6 +196,7 @@ class LeaveRequestRepository {
         'to_date': toDate,
         'reason': reason,
         'leave_for': leaveFor.toString(),
+        'leave_session': halfDaySession,
         'total_leave': totalLeave.toString(),
       });
 

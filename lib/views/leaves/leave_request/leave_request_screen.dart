@@ -150,14 +150,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           };
         }).toList();
 
-    // Debug: Print formatted approvers
-    print('=== DEBUG: FORMATTED APPROVERS ===');
-    print('Number of formatted approvers: ${result.length}');
-    for (var approver in result) {
-      print('Formatted: ${approver}');
-    }
-    print('=== END FORMATTED DEBUG ===');
-
     return result;
   }
 
@@ -478,6 +470,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
 
   // ✅ Image picker with progressive compression
   Future<void> _pickAndValidateImage(ImageSource source) async {
+    // Capture before any async gap to avoid 'deactivated widget' error
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     try {
       // Check camera permission before proceeding (only for camera, not photos)
       // iOS 14+ uses PHPicker for photos which doesn't require explicit permissions
@@ -571,6 +565,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           "${language.fileTooLarge} (${(finalFileSize / 1024 / 1024).toStringAsFixed(1)} MB). ${language.maxSize}",
           Colors.red,
           Icons.error_outline,
+          messenger: scaffoldMessenger,
         );
         return;
       }
@@ -586,6 +581,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           "${language.photoSelected} (${finalFileSize > 1024 * 1024 ? '$sizeInMB MB' : '$sizeInKB KB'})",
           Colors.green,
           Icons.check_circle,
+          messenger: scaffoldMessenger,
         );
       }
     } catch (e) {
@@ -604,6 +600,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               'Camera access is needed to use this feature. Please try again and allow access.',
               Colors.orange,
               Icons.warning_amber,
+              messenger: scaffoldMessenger,
             );
             return;
           }
@@ -614,6 +611,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
           "Error: ${e.toString()}",
           Colors.red,
           Icons.error_outline,
+          messenger: scaffoldMessenger,
         );
       }
       print('❌ Error picking image: $e');
@@ -621,10 +619,16 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   }
 
   // ✅ Add this helper method for consistent snackbars:
-  void _showSnackBar(String message, Color backgroundColor, IconData icon) {
-    if (!mounted) return;
+  void _showSnackBar(
+    String message,
+    Color backgroundColor,
+    IconData icon, {
+    ScaffoldMessengerState? messenger,
+  }) {
+    final sm = messenger ?? (mounted ? ScaffoldMessenger.of(context) : null);
+    if (sm == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    sm.showSnackBar(
       SnackBar(
         content: Row(
           children: [

@@ -1137,7 +1137,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                       adjustmentRequest: adjustment,
                     ),
               ),
-            );
+            ).then((result) {
+              if (result == true) {
+                viewModel.refresh();
+              }
+            });
           },
           child: RequestCardWidget(
             reason: adjustment.reason,

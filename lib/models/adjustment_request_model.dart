@@ -5,6 +5,7 @@ class AdjustmentRequestModel {
   final String adjustDateTime;
   final String reason;
   final int status;
+  final bool isAttendanceCanCancel;
   final String createdBy;
   final String createdAt;
   final String requesterName;
@@ -20,6 +21,7 @@ class AdjustmentRequestModel {
     required this.adjustDateTime,
     required this.reason,
     required this.status,
+    required this.isAttendanceCanCancel,
     required this.createdBy,
     required this.createdAt,
     required this.requesterName,
@@ -37,6 +39,7 @@ class AdjustmentRequestModel {
       adjustDateTime: json['adjust_datetime'] ?? '',
       reason: json['reason'] ?? '',
       status: json['status'] ?? 0,
+      isAttendanceCanCancel: json['is_attendance_can_cancel'] ?? false,
       createdBy: json['created_by'] ?? '',
       createdAt: json['created_at'] ?? '',
       requesterName: json['requester_name'] ?? '',

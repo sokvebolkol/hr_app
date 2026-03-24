@@ -5,6 +5,7 @@ import '../../localization/language_logic.dart';
 import '../../models/adjustment_request_model.dart';
 import '../../repositories/attendance_adjustment_action_repository.dart';
 import '../../utils/file_helper.dart';
+import '../../widgets/action_buttons_card.dart';
 import '../../widgets/approvalworkflowwidget.dart';
 import '../../widgets/compact_detail_row.dart';
 import '../../widgets/compact_follow_up_button.dart';
@@ -32,6 +33,7 @@ class _MyAttendanceAdjustmentRequestScreenState
       AttendanceAdjustmentActionRepository();
 
   Language language = Language();
+  bool _isCancelling = false;
 
   @override
   void initState() {
@@ -49,6 +51,144 @@ class _MyAttendanceAdjustmentRequestScreenState
     _initializeLanguage();
   }
 
+  void _viewDocumentFullScreen() {
+    if (widget.adjustmentRequest.documentUrl == null ||
+        widget.adjustmentRequest.documentUrl!.isEmpty) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => _FullScreenDocumentViewer(
+              imageUrl: widget.adjustmentRequest.documentUrl!,
+              title: language.documentSupport,
+              language: language,
+            ),
+      ),
+    );
+  }
+
+  void _showFollowUpDialog(AdjustmentApprover approver) {
+    final messageController = TextEditingController();
+    bool isSending = false;
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setDialogState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.message,
+                          color: primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        language.followUp,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: messageController,
+                        maxLines: 3,
+                        enabled: !isSending,
+                        decoration: InputDecoration(
+                          hintText: language.enterMessageOptional,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed:
+                          isSending ? null : () => Navigator.pop(context),
+                      child: Text(language.cancel),
+                    ),
+                    ElevatedButton(
+                      onPressed:
+                          isSending
+                              ? null
+                              : () async {
+                                setDialogState(() => isSending = true);
+                                try {
+                                  final success = await _repository
+                                      .sendAttendanceFollowUp(
+                                        widget.adjustmentRequest.id.toString(),
+                                        approver.approverId,
+                                        messageController.text.trim(),
+                                      );
+
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        success
+                                            ? 'Follow-up sent to ${approver.approverName}'
+                                            : 'Failed to send follow-up. Please try again.',
+                                      ),
+                                      backgroundColor:
+                                          success ? Colors.green : Colors.red,
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                      style: ElevatedButton.styleFrom(backgroundColor: primary),
+                      child:
+                          isSending
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : Text(
+                                language.send,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                    ),
+                  ],
+                ),
+          ),
+    );
+  }
+
   Future<void> _initializeLanguage() async {
     final languageLogic = LanguageLogic();
     await languageLogic.initialize();
@@ -63,6 +203,143 @@ class _MyAttendanceAdjustmentRequestScreenState
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _showErrorSnackBar(String error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $error'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: () => _showCancelConfirmation(),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleCancelRequest(
+    BuildContext dialogContext,
+    StateSetter setDialogState,
+  ) async {
+    try {
+      setDialogState(() {
+        _isCancelling = true;
+      });
+
+      final success = await _repository.cancelAttendanceAdjustmentRequest(
+        widget.adjustmentRequest.id,
+      );
+
+      setDialogState(() {
+        _isCancelling = false;
+      });
+
+      if (Navigator.of(dialogContext).canPop()) {
+        Navigator.of(dialogContext).pop();
+      }
+
+      if (success) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        }
+
+        _showSnackBar(
+          'Attendance adjustment request cancelled successfully',
+          Colors.green,
+        );
+      } else {
+        _showSnackBar(
+          'Failed to cancel attendance adjustment request. Please try again.',
+          Colors.red,
+        );
+      }
+    } catch (e) {
+      setDialogState(() {
+        _isCancelling = false;
+      });
+
+      if (Navigator.of(dialogContext).canPop()) {
+        Navigator.of(dialogContext).pop();
+      }
+
+      _showErrorSnackBar(e.toString());
+    }
+  }
+
+  void _showCancelConfirmation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (dialogContext, setDialogState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(language.cancelRequest),
+                    ],
+                  ),
+                  content: Text(language.areYouSureToCancel),
+                  actions: [
+                    TextButton(
+                      onPressed:
+                          _isCancelling
+                              ? null
+                              : () => Navigator.of(dialogContext).pop(),
+                      child: Text(language.no),
+                    ),
+                    ElevatedButton(
+                      onPressed:
+                          _isCancelling
+                              ? null
+                              : () => _handleCancelRequest(
+                                dialogContext,
+                                setDialogState,
+                              ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child:
+                          _isCancelling
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : Text(
+                                language.yesCancelRequest,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                    ),
+                  ],
+                ),
+          ),
+    );
+  }
+
+  void _showSnackBar(String message, Color color) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override
@@ -97,6 +374,9 @@ class _MyAttendanceAdjustmentRequestScreenState
               if (_hasDocumentSupport()) _buildDocumentSupportCard(),
               if (_hasDocumentSupport()) const SizedBox(height: 16),
               _buildApprovalWorkflowSection(),
+              const SizedBox(height: 16),
+              if (widget.adjustmentRequest.isAttendanceCanCancel)
+                _buildActionButtons(),
             ],
           ),
         ),
@@ -110,8 +390,8 @@ class _MyAttendanceAdjustmentRequestScreenState
       statusText: widget.adjustmentRequest.statusText,
       id: widget.adjustmentRequest.id.toString(),
       duration: widget.adjustmentRequest.adjustType,
-      durationType: 'Adjustment',
-      hasDocument: true,
+      durationType: '',
+      hasDocument: false,
     );
   }
 
@@ -409,22 +689,20 @@ class _MyAttendanceAdjustmentRequestScreenState
     );
   }
 
-  void _viewDocumentFullScreen() {
-    if (widget.adjustmentRequest.documentUrl == null ||
-        widget.adjustmentRequest.documentUrl!.isEmpty) {
-      return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (context) => _FullScreenDocumentViewer(
-              imageUrl: widget.adjustmentRequest.documentUrl!,
-              title: language.documentSupport,
-              language: language,
-            ),
-      ),
+  Widget _buildActionButtons() {
+    return ActionButtonsCard(
+      layout: ButtonLayout.row,
+      spacing: 16,
+      buttons: [
+        ActionButtonData(
+          label: language.cancelRequest,
+          icon: Icons.cancel_outlined,
+          onPressed: _showCancelConfirmation,
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          isLoading: _isCancelling,
+        ),
+      ],
     );
   }
 
@@ -654,125 +932,6 @@ class _MyAttendanceAdjustmentRequestScreenState
       default:
         return Icons.help_outline;
     }
-  }
-
-  void _showFollowUpDialog(AdjustmentApprover approver) {
-    final messageController = TextEditingController();
-    bool isSending = false;
-    showDialog(
-      context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setDialogState) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  title: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.message,
-                          color: primary,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        language.followUp,
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: messageController,
-                        maxLines: 3,
-                        enabled: !isSending,
-                        decoration: InputDecoration(
-                          hintText: language.enterMessageOptional,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.all(12),
-                        ),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed:
-                          isSending ? null : () => Navigator.pop(context),
-                      child: Text(language.cancel),
-                    ),
-                    ElevatedButton(
-                      onPressed:
-                          isSending
-                              ? null
-                              : () async {
-                                setDialogState(() => isSending = true);
-                                try {
-                                  final success = await _repository
-                                      .sendAttendanceFollowUp(
-                                        widget.adjustmentRequest.id.toString(),
-                                        approver.approverId,
-                                        messageController.text.trim(),
-                                      );
-
-                                  if (!mounted) return;
-                                  Navigator.pop(context);
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        success
-                                            ? 'Follow-up sent to ${approver.approverName}'
-                                            : 'Failed to send follow-up. Please try again.',
-                                      ),
-                                      backgroundColor:
-                                          success ? Colors.green : Colors.red,
-                                    ),
-                                  );
-                                } catch (e) {
-                                  if (!mounted) return;
-                                  Navigator.pop(context);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: ${e.toString()}'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              },
-                      style: ElevatedButton.styleFrom(backgroundColor: primary),
-                      child:
-                          isSending
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : Text(
-                                language.send,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                    ),
-                  ],
-                ),
-          ),
-    );
   }
 }
 

@@ -200,7 +200,11 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                   adjustmentRequest: adjustment,
                 ),
           ),
-        );
+        ).then((result) {
+          if (result == true && mounted) {
+            _viewModel.refresh();
+          }
+        });
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),

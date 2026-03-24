@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
+import '../../localization/language.dart';
+import '../../localization/language_logic.dart';
 import '../menu/menu_screen.dart';
 import 'requester_dashboard.dart';
 import 'staff_dashboard_screen.dart';
@@ -19,13 +21,27 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   int _currentIndex = 0;
   bool _showStaffView = false; // false = Personal, true = Staff
   bool _triggerPersonalRefresh = false;
+  Language language = LanguageLogic().language;
 
   static const _kShowStaffViewKey = 'manager_dashboard_show_staff_view';
 
   @override
   void initState() {
     super.initState();
+    LanguageLogic().addListener(_onLanguageChanged);
     _loadViewPreference();
+  }
+
+  @override
+  void dispose() {
+    LanguageLogic().removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    setState(() {
+      language = LanguageLogic().language;
+    });
   }
 
   Future<void> _loadViewPreference() async {
@@ -202,7 +218,11 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
             // ✅ Toggle Switch Button
             _buildToggleSwitchNavItem(),
             SizedBox(width: isSmallScreen ? 80 : 100), // Space for FAB
-            _buildNavItem(icon: Icons.menu_rounded, label: 'Menu', index: 1),
+            _buildNavItem(
+              icon: Icons.menu_rounded,
+              label: language.menu,
+              index: 1,
+            ),
           ],
         ),
       ),
@@ -329,7 +349,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                   letterSpacing: 0.5,
                 ),
                 child: Text(
-                  _showStaffView ? 'Staff' : 'Personal',
+                  _showStaffView ? language.staff : language.personal,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
