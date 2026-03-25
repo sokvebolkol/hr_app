@@ -34,8 +34,6 @@ class NotificationRepository {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('Unread count API response: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
 
@@ -50,7 +48,6 @@ class NotificationRepository {
         throw Exception('Failed to get unread count: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error getting unread count: $e');
       rethrow;
     }
   }

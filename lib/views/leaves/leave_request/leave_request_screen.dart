@@ -32,6 +32,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   String userId = '';
   bool isLoading = true;
   String? errorMessage;
+  double _height = 100;
 
   // Form fields
   LeaveTypeModel? selectedLeaveType;
@@ -1184,31 +1185,68 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 6),
-                                    TextFormField(
-                                      maxLines: 3,
-                                      decoration: InputDecoration(
-                                        hintText: language.enterYourReason,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+
+                                    GestureDetector(
+                                      onPanUpdate: (details) {
+                                        setState(() {
+                                          _height += details.delta.dy;
+
+                                          // limit min & max height
+                                          if (_height < 80) _height = 80;
+                                          if (_height > 300) _height = 300;
+                                        });
+                                      },
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            height: _height,
+                                            child: TextFormField(
+                                              maxLines: null,
+                                              textAlignVertical:
+                                                  TextAlignVertical.top,
+                                              expands: true,
+                                              keyboardType:
+                                                  TextInputType.multiline,
+                                              decoration: InputDecoration(
+                                                hintText:
+                                                    language.enterYourReason,
+                                                alignLabelWithHint: true,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.grey[50],
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical:
+                                                          isWide ? 16 : 10,
+                                                    ),
+                                              ),
+                                              onChanged: (val) => reason = val,
+                                              validator:
+                                                  (val) =>
+                                                      val == null || val.isEmpty
+                                                          ? language
+                                                              .pleaseEnterReason
+                                                          : null,
+                                            ),
                                           ),
-                                        ),
-                                        filled: true,
-                                        fillColor: Colors.grey[50],
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: isWide ? 16 : 10,
-                                        ),
+
+                                          // 👇 Resize handle
+                                          Center(
+                                            child: Icon(
+                                              Icons.drag_handle,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      onChanged: (val) => reason = val,
-                                      validator:
-                                          (val) =>
-                                              val == null || val.isEmpty
-                                                  ? language.pleaseEnterReason
-                                                  : null,
                                     ),
                                     SizedBox(height: isWide ? 24 : 18),
-
                                     // Document Support
                                     if (selectedLeaveType?.requiresDocument ??
                                         false) ...[

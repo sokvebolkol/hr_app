@@ -26,6 +26,7 @@ class _RequesterNotificationScreenState
   List<NotificationModel> _leaveStatusNotifications = [];
 
   bool _isInitialized = false;
+  bool _isNavigating = false; // Prevent duplicate taps
 
   Language language = Language();
 
@@ -113,6 +114,7 @@ class _RequesterNotificationScreenState
   @override
   void dispose() {
     _scrollController.dispose();
+    _isNavigating = false;
     super.dispose();
   }
 
@@ -250,26 +252,33 @@ class _RequesterNotificationScreenState
                         const SizedBox(width: 8),
                         Text(language.markAllAsRead),
                         // Show count badge if there are unread notifications
-                        if (_leaveStatusNotifications.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(left: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_leaveStatusNotifications.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                        Consumer<NotificationViewModel>(
+                          builder: (context, viewModel, child) {
+                            final unreadCount = viewModel.summary?.unread ?? 0;
+                            if (unreadCount > 0) {
+                              return Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$unreadCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -474,47 +483,59 @@ class _RequesterNotificationScreenState
           ],
         ),
         onTap: () async {
-          // Show loading indicator
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: SpinKitFadingCircle(size: 16, color: primary),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(language.openingLeaveRequest),
-                ],
-              ),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          // Prevent duplicate taps
+          if (_isNavigating) return;
+          _isNavigating = true;
 
-          final success = await viewModel.markAsRead(notification.id);
-
-          if (success) {
-            _updateFilteredNotifications(viewModel.notifications);
-
-            if (!mounted) return;
-
-            // Handle leave status notification
-            _handleLeaveStatusTap(notification);
-          } else {
-            // Show error if marking as read failed
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(language.failedToMarkNotificationAsRead),
-                  backgroundColor: Colors.red,
+          try {
+            // Show loading indicator
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: SpinKitFadingCircle(size: 16, color: primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(language.openingLeaveRequest),
+                  ],
                 ),
-              );
-            }
+                duration: const Duration(seconds: 1),
+              ),
+            );
 
-            // Still navigate even if marking as read failed
-            if (!mounted) return;
-            _handleLeaveStatusTap(notification);
+            final success = await viewModel.markAsRead(notification.id);
+
+            if (success) {
+              _updateFilteredNotifications(viewModel.notifications);
+
+              if (!mounted) return;
+
+              // Handle leave status notification
+              _handleLeaveStatusTap(notification);
+            } else {
+              // Show error if marking as read failed
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(language.failedToMarkNotificationAsRead),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+
+              // Still navigate even if marking as read failed
+              if (!mounted) return;
+              _handleLeaveStatusTap(notification);
+            }
+          } finally {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _isNavigating = false;
+              }
+            });
           }
         },
       ),
@@ -540,6 +561,7 @@ class _RequesterNotificationScreenState
       try {
         // Convert to LeaveHistoryModel for MyLeaveDetailScreen
         final leaveInfo = notification.toLeaveHistoryModel();
+        _isNavigating = false; // Reset flag before navigation
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -551,11 +573,13 @@ class _RequesterNotificationScreenState
           }
         });
       } catch (e) {
+        _isNavigating = false;
         _showErrorDialog('Error processing leave data: ${e.toString()}');
         // Fallback: show notification details modal
         _showNotificationDetails(notification);
       }
     } catch (e) {
+      _isNavigating = false;
       _showErrorDialog('Error opening leave details: ${e.toString()}');
     }
   }
@@ -564,6 +588,7 @@ class _RequesterNotificationScreenState
   void _handleAttendanceAdjustmentStatusTap(NotificationModel notification) {
     try {
       final adjustmentRequest = notification.toAdjustmentRequestModel();
+      _isNavigating = false; // Reset flag before navigation
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -574,6 +599,7 @@ class _RequesterNotificationScreenState
         ),
       );
     } catch (e) {
+      _isNavigating = false;
       _showNotificationDetails(notification);
     }
   }

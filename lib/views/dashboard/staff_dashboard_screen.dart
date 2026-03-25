@@ -127,7 +127,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
           providers: [
             ChangeNotifierProvider.value(value: _dashboardViewModel),
             ChangeNotifierProvider.value(value: _managerDashboardViewModel),
-            ChangeNotifierProvider(create: (_) => NotificationViewModel()),
           ],
           child: Consumer2<DashboardViewModel, ManagerDashboardViewModel>(
             builder: (context, dashboardViewModel, managerViewModel, child) {

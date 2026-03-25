@@ -19,9 +19,6 @@ class AttendanceByDepartmentRepository {
         throw Exception('Authentication token not found');
       }
 
-      if (startDate != null) print('Start Date: $startDate');
-      if (endDate != null) print('End Date: $endDate');
-
       // Build URL with optional date parameters
       String url = '${_serverService.baseUrl}attendance-by-department';
       List<String> queryParams = [];
@@ -45,9 +42,6 @@ class AttendanceByDepartmentRepository {
         },
       );
 
-      print('Attendance By Department Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
@@ -64,7 +58,6 @@ class AttendanceByDepartmentRepository {
 
           return AttendanceByDepartmentResponse.fromJson(data);
         } catch (e) {
-          print('Error parsing attendance by department data: $e');
           throw Exception('Failed to parse attendance data: $e');
         }
       } else if (response.statusCode == 401) {
@@ -76,7 +69,6 @@ class AttendanceByDepartmentRepository {
         throw Exception(errorMessage);
       }
     } catch (e) {
-      print('Error in getAttendanceByDepartment: $e');
       rethrow;
     }
   }

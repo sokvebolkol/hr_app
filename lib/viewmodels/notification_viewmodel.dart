@@ -54,7 +54,6 @@ class NotificationViewModel extends ChangeNotifier {
       _unreadCount = response.unreadCount;
       notifyListeners();
     } catch (e) {
-      print('Error fetching unread count: $e');
       // Don't show error to user for background updates
     }
   }
@@ -162,7 +161,6 @@ class NotificationViewModel extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('Error marking notification as read: $e');
       _error = e.toString();
       notifyListeners();
       return false;
@@ -188,14 +186,21 @@ class NotificationViewModel extends ChangeNotifier {
                 createdAt: notification.createdAt,
                 timeAgo: notification.timeAgo,
                 isRecent: notification.isRecent,
-                staffLeaveRequest:
-                    notification.staffLeaveRequest, // Updated field name
-                ownLeaveRequestData:
-                    notification.ownLeaveRequestData, // Updated field name
+                staffLeaveRequest: notification.staffLeaveRequest,
+                ownLeaveRequestData: notification.ownLeaveRequestData,
               );
             }).toList();
 
         _unreadCount = 0;
+        if (_summary != null) {
+          _summary = NotificationSummary(
+            total: _summary!.total,
+            unread: 0,
+            read: _summary!.total,
+            byType: _summary!.byType,
+            recentUnread: 0,
+          );
+        }
 
         notifyListeners();
         return true;

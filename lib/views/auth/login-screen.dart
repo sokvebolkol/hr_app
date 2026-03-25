@@ -802,7 +802,7 @@ class _LoginScreenState extends State<LoginScreen>
             if (value == null || value.isEmpty) {
               return language.enterPassword;
             }
-            if (value.length < 3) {
+            if (value.length < 6) {
               return language.passwordTooShort;
             }
             return null;

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/constant.dart';
 import '../../models/ceo_dashboard_model.dart';
-import '../../utils/file_helper.dart';
 import '../../widgets/pending_approval_request_widget.dart';
 import '../leaves/leave_approval/ceo_leave_detail_screen.dart';
 import '../../localization/language.dart';
@@ -29,7 +28,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
   late String _selectedMonth;
   late TabController _tabController;
   late LanguageLogic languageLogic;
-  late Language language;
+  Language language = LanguageLogic().language;
 
   @override
   void initState() {
@@ -81,13 +80,15 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
         _selectedMonth == language.all || _selectedMonth == 'All'
             ? approvedLeaves
             : approvedLeaves.where((leave) {
-              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+              DateTime? leaveDate =
+                  leave.todat.isNotEmpty
+                      ? DateTime.tryParse(leave.todat)
+                      : null;
               if (leaveDate == null && leave.frdat.isNotEmpty) {
                 leaveDate = DateTime.tryParse(leave.frdat);
               }
               if (leaveDate == null) return false;
-              final monthYear =
-                  '${FileHelper().getMonthShortName(leaveDate.month)} ${leaveDate.year}';
+              final monthYear = _monthLabel(leaveDate);
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -96,13 +97,15 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
         _selectedMonth == language.all || _selectedMonth == 'All'
             ? rejectedLeaves
             : rejectedLeaves.where((leave) {
-              DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+              DateTime? leaveDate =
+                  leave.todat.isNotEmpty
+                      ? DateTime.tryParse(leave.todat)
+                      : null;
               if (leaveDate == null && leave.frdat.isNotEmpty) {
                 leaveDate = DateTime.tryParse(leave.frdat);
               }
               if (leaveDate == null) return false;
-              final monthYear =
-                  '${FileHelper().getMonthShortName(leaveDate.month)} ${leaveDate.year}';
+              final monthYear = _monthLabel(leaveDate);
               return monthYear == _selectedMonth;
             }).toList();
 
@@ -553,20 +556,39 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
     );
   }
 
+  /// Returns a localized "Month Year" label (e.g. "March 2026" / "មីនា 2026").
+  String _monthLabel(DateTime date) {
+    final lang = LanguageLogic().language;
+    final monthNames = [
+      lang.january,
+      lang.february,
+      lang.march,
+      lang.april,
+      lang.may,
+      lang.june,
+      lang.july,
+      lang.august,
+      lang.september,
+      lang.october,
+      lang.november,
+      lang.december,
+    ];
+    return '${monthNames[date.month - 1]} ${date.year}';
+  }
+
   List<String> _generateMonthOptions(List<dynamic> leaves) {
     final Map<DateTime, String> monthMap = {};
 
     for (var leave in leaves) {
-      DateTime? leaveDate = DateTime.tryParse(leave.createdate);
+      DateTime? leaveDate =
+          leave.todat.isNotEmpty ? DateTime.tryParse(leave.todat) : null;
       if (leaveDate == null && leave.frdat.isNotEmpty) {
         leaveDate = DateTime.tryParse(leave.frdat);
       }
 
       if (leaveDate != null) {
         final monthKey = DateTime(leaveDate.year, leaveDate.month, 1);
-        final monthYear =
-            '${FileHelper().getMonthShortName(leaveDate.month)} ${leaveDate.year}';
-        monthMap[monthKey] = monthYear;
+        monthMap[monthKey] = _monthLabel(leaveDate);
       }
     }
 

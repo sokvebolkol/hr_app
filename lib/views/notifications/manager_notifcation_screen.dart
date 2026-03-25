@@ -29,6 +29,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
   List<NotificationModel> _leaveApprovalNotifications = [];
 
   bool _isInitialized = false;
+  bool _isNavigating = false; // Prevent duplicate taps
 
   Language language = Language();
 
@@ -138,12 +139,24 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
   void dispose() {
     _scrollController.dispose();
     _tabController.dispose();
+    _isNavigating = false; // Reset navigation flag
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
+    // Reset navigation flag when widget rebuilds to prevent stuck state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isNavigating) {
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            _isNavigating = false;
+          }
+        });
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -282,13 +295,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                         // Show count badge if there are unread notifications
                         Consumer<NotificationViewModel>(
                           builder: (context, viewModel, child) {
-                            final unreadCount =
-                                _leaveRequestNotifications
-                                    .where((n) => !n.isRead)
-                                    .length +
-                                _leaveApprovalNotifications
-                                    .where((n) => !n.isRead)
-                                    .length;
+                            final unreadCount = viewModel.summary!.unread;
+
                             if (unreadCount > 0) {
                               return Container(
                                 margin: const EdgeInsets.only(left: 8),
@@ -368,29 +376,6 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-
-                        if (_leaveRequestNotifications
-                            .where((n) => !n.isRead)
-                            .isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_leaveRequestNotifications.where((n) => !n.isRead).length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -409,28 +394,6 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (_leaveApprovalNotifications
-                            .where((n) => !n.isRead)
-                            .isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_leaveApprovalNotifications.where((n) => !n.isRead).length}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
@@ -600,29 +563,42 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           ],
         ),
         onTap: () async {
-          final success = await viewModel.markAsRead(notification.id);
+          // Prevent duplicate taps
+          if (_isNavigating) return;
+          _isNavigating = true;
 
-          if (success) {
-            _updateFilteredNotifications(viewModel.notifications);
+          try {
+            final success = await viewModel.markAsRead(notification.id);
 
-            if (!mounted) return;
+            if (success) {
+              _updateFilteredNotifications(viewModel.notifications);
 
-            // Handle leave notifications (both request and approval)
-            _handleLeaveNotificationTap(notification);
-          } else {
-            // Show error if marking as read failed
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(language.failedToMarkNotificationAsRead),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (!mounted) return;
+
+              // Handle leave notifications (both request and approval)
+              _handleLeaveNotificationTap(notification);
+            } else {
+              // Show error if marking as read failed
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(language.failedToMarkNotificationAsRead),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+
+              // Still navigate even if marking as read failed
+              if (!mounted) return;
+              _handleLeaveNotificationTap(notification);
             }
-
-            // Still navigate even if marking as read failed
-            if (!mounted) return;
-            _handleLeaveNotificationTap(notification);
+          } finally {
+            // Reset the flag after a brief delay to ensure navigation completes
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _isNavigating = false;
+              }
+            });
           }
         },
       ),
@@ -637,6 +613,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     try {
       if (action == 'new_request' || action == 'reminder') {
         final request = notification.toAttendanceAdjustmentRequest();
+        _isNavigating = false; // Reset flag before navigation
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -653,6 +630,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         });
       } else if (action == 'approved' || action == 'rejected') {
         final adjustmentRequest = notification.toAdjustmentRequestModel();
+        _isNavigating = false; // Reset flag before navigation
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -663,9 +641,11 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           ),
         );
       } else {
+        _isNavigating = false; // Reset flag before showing modal
         _showNotificationDetails(notification);
       }
     } catch (e) {
+      _isNavigating = false; // Reset flag before showing modal
       _showNotificationDetails(notification);
     }
   }
@@ -683,11 +663,13 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
       if (action == 'new_request') {
         if (notification.leaveData == null) {
+          _isNavigating = false; // Reset flag before showing error
           _showErrorDialog('No leave information available for this request');
           return;
         }
 
         final leaveRequest = notification.toLeaveRequest();
+        _isNavigating = false; // Reset flag before navigation
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -705,6 +687,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
       } else if (action == 'approved' || action == 'rejected') {
         // For approved/rejected leaves, navigate to MyLeaveDetailScreen
         if (notification.leaveData == null) {
+          _isNavigating = false; // Reset flag before showing error
           _showErrorDialog(
             'No leave information available for this status update',
           );
@@ -712,6 +695,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         }
         try {
           final leaveInfo = notification.toLeaveHistoryModel();
+          _isNavigating = false; // Reset flag before navigation
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -724,10 +708,12 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
             }
           });
         } catch (e) {
+          _isNavigating = false; // Reset flag before showing error
           _showErrorDialog('Error processing leave data: ${e.toString()}');
         }
       } else if (action == 'reminder') {
         if (notification.leaveData == null) {
+          _isNavigating = false; // Reset flag before showing error
           _showErrorDialog('No leave information available for this reminder');
           return;
         }
@@ -735,6 +721,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         try {
           // Check if it's a pending request that needs approval
           final leaveRequest = notification.toLeaveRequest();
+          _isNavigating = false; // Reset flag before navigation
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -750,13 +737,16 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
             }
           });
         } catch (e) {
+          _isNavigating = false; // Reset flag before showing error
           _showErrorDialog('Error processing reminder data: ${e.toString()}');
         }
       } else {
         // Fallback: show notification details modal
+        _isNavigating = false; // Reset flag before showing modal
         _showNotificationDetails(notification);
       }
     } catch (e) {
+      _isNavigating = false; // Reset flag before showing error
       _showErrorDialog('Error opening leave details: ${e.toString()}');
     }
   }
@@ -939,9 +929,6 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                           child: ElevatedButton(
                             onPressed: () {
                               Navigator.pop(context);
-                              print(
-                                'Navigate to: ${notification.data['click_action']}',
-                              );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.grey[600],

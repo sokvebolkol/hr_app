@@ -28,20 +28,29 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
   Future<void> _submit() async {
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
-    print("New Password: $newPassword");
-    print("Confirm Password: $confirmPassword");
+
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill in both fields")),
       );
       return;
     }
+
+    // ✅ ADD THIS VALIDATION
+    if (newPassword.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password must be at least 6 characters")),
+      );
+      return;
+    }
+
     if (newPassword != confirmPassword) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
       return;
     }
+
     if (widget.eCard == null || widget.eCard!.isEmpty) {
       ScaffoldMessenger.of(
         context,

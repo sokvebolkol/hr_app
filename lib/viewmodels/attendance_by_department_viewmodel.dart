@@ -13,10 +13,10 @@ class AttendanceByDepartmentViewModel extends ChangeNotifier {
   String _searchQuery = ''; // For searching staff
 
   AttendanceByDepartmentData? get attendanceData => _attendanceData;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  String? get selectedDepartment => _selectedDepartment;
-  String get searchQuery => _searchQuery;
+  bool get isLoading                             => _isLoading;
+  String? get errorMessage                       => _errorMessage;
+  String? get selectedDepartment                 => _selectedDepartment;
+  String get searchQuery                         => _searchQuery;
 
   // Getters for filtered data
   List<Department> get departments {

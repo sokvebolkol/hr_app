@@ -25,6 +25,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
   List<NotificationModel> _leaveRequestNotifications = [];
 
   bool _isInitialized = false;
+  bool _isNavigating = false; // Prevent duplicate taps
 
   @override
   bool get wantKeepAlive => true;
@@ -107,6 +108,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
   @override
   void dispose() {
     _scrollController.dispose();
+    _isNavigating = false;
     super.dispose();
   }
 
@@ -250,6 +252,33 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                         const Icon(Icons.done_all, color: secondary),
                         const SizedBox(width: 8),
                         Text(language.markAllAsRead),
+                        Consumer<NotificationViewModel>(
+                          builder: (context, viewModel, child) {
+                            final unreadCount = viewModel.summary?.unread ?? 0;
+                            if (unreadCount > 0) {
+                              return Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$unreadCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -434,47 +463,59 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
           ],
         ),
         onTap: () async {
-          // Show loading indicator
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: SpinKitCircle(color: secondary, size: 50.0),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(language.openingLeaveRequest),
-                ],
-              ),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          // Prevent duplicate taps
+          if (_isNavigating) return;
+          _isNavigating = true;
 
-          final success = await viewModel.markAsRead(notification.id);
-
-          if (success) {
-            _updateFilteredNotifications(viewModel.notifications);
-
-            if (!mounted) return;
-
-            // Handle leave request notification
-            _handleLeaveRequestTap(notification);
-          } else {
-            // Show error if marking as read failed
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(language.failedToMarkNotificationAsRead),
-                  backgroundColor: Colors.red,
+          try {
+            // Show loading indicator
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: SpinKitCircle(color: secondary, size: 50.0),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(language.openingLeaveRequest),
+                  ],
                 ),
-              );
-            }
+                duration: const Duration(seconds: 1),
+              ),
+            );
 
-            // Still navigate even if marking as read failed
-            if (!mounted) return;
-            _handleLeaveRequestTap(notification);
+            final success = await viewModel.markAsRead(notification.id);
+
+            if (success) {
+              _updateFilteredNotifications(viewModel.notifications);
+
+              if (!mounted) return;
+
+              // Handle leave request notification
+              _handleLeaveRequestTap(notification);
+            } else {
+              // Show error if marking as read failed
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(language.failedToMarkNotificationAsRead),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+
+              // Still navigate even if marking as read failed
+              if (!mounted) return;
+              _handleLeaveRequestTap(notification);
+            }
+          } finally {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _isNavigating = false;
+              }
+            });
           }
         },
       ),
@@ -493,6 +534,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
 
       // Convert to PendingLeaveRequest for ApproverLeaveDetailScreen
       final leaveRequest = notification.toLeaveRequest();
+      _isNavigating = false; // Reset flag before navigation
 
       Navigator.push(
         context,
@@ -509,7 +551,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
         }
       });
     } catch (e) {
-      print("Error handling leave request: $e");
+      _isNavigating = false;
       _showErrorDialog('Error opening leave request: ${e.toString()}');
     }
   }
