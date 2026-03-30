@@ -677,13 +677,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                 (context) => ApproverLeaveDetailScreen(
                   leave: leaveRequest,
                   isPending: true,
+                  onActionComplete: _refreshNotifications,
                 ),
           ),
-        ).then((result) {
-          if (result != null && result['refresh'] == true) {
-            _refreshNotifications();
-          }
-        });
+        );
       } else if (action == 'approved' || action == 'rejected') {
         // For approved/rejected leaves, navigate to MyLeaveDetailScreen
         if (notification.leaveData == null) {
@@ -729,13 +726,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                   (context) => ApproverLeaveDetailScreen(
                     leave: leaveRequest,
                     isPending: true,
+                    onActionComplete: _refreshNotifications,
                   ),
             ),
-          ).then((result) {
-            if (result != null && result['refresh'] == true) {
-              _refreshNotifications();
-            }
-          });
+          );
         } catch (e) {
           _isNavigating = false; // Reset flag before showing error
           _showErrorDialog('Error processing reminder data: ${e.toString()}');

@@ -160,7 +160,7 @@ class LeaveRequestRepository {
         );
       }
     } catch (e) {
-      throw Exception('Error submitting leave request');
+      rethrow;
     }
   }
 

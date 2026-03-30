@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../constants/constant.dart';
+import '../../../localization/language.dart';
+import '../../../localization/language_logic.dart';
 import '../../../models/ceo_dashboard_model.dart';
 import '../../../repositories/profile_repository.dart';
 import '../../../utils/file_helper.dart';
@@ -12,11 +14,13 @@ import '../../../viewmodels/leave_action_viewmodel.dart';
 class ApproverLeaveDetailScreen extends StatefulWidget {
   final LeaveRequest leave;
   final bool isPending;
+  final VoidCallback? onActionComplete;
 
   const ApproverLeaveDetailScreen({
     super.key,
     required this.leave,
     this.isPending = false,
+    this.onActionComplete,
   });
 
   @override
@@ -27,11 +31,25 @@ class ApproverLeaveDetailScreen extends StatefulWidget {
 class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
   String? _currentUserName;
   bool _isLoadingUser = true;
+  Language language = LanguageLogic().language;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentUser();
+    LanguageLogic().addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    LanguageLogic().removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    setState(() {
+      language = LanguageLogic().language;
+    });
   }
 
   Future<void> _loadCurrentUser() async {
@@ -68,9 +86,9 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               backgroundColor: primary,
               foregroundColor: Colors.white,
               centerTitle: false,
-              title: const Text(
-                'Leave Detail',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              title: Text(
+                language.leaveDetail,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
             body: SingleChildScrollView(
@@ -99,7 +117,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                             )
                             .toList(),
                   ),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 200),
                 ],
               ),
             ),
@@ -109,16 +127,18 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         !_hasCurrentUserAlreadyActed
                     ? Consumer<LeaveActionViewModel>(
                       builder: (context, viewModel, child) {
-                        return LeaveActionButtons(
-                          leaveId: widget.leave.lreid,
-                          employeeName: widget.leave.requesterName,
-                          leaveType: widget.leave.ltyp,
-                          numLeaveDays: widget.leave.numLeaveDays,
-                          fromDate: widget.leave.fromDate,
-                          toDate: widget.leave.toDate,
-                          onAction: _handleLeaveAction,
-                          viewModel: viewModel,
-                          showApproveRemark: true,
+                        return SafeArea(
+                          child: LeaveActionButtons(
+                            leaveId: widget.leave.lreid,
+                            employeeName: widget.leave.requesterName,
+                            leaveType: widget.leave.ltyp,
+                            numLeaveDays: widget.leave.numLeaveDays,
+                            fromDate: widget.leave.fromDate,
+                            toDate: widget.leave.toDate,
+                            onAction: _handleLeaveAction,
+                            viewModel: viewModel,
+                            showApproveRemark: true,
+                          ),
                         );
                       },
                     )
@@ -133,14 +153,9 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
 
   void _handleLeaveAction(bool isApprove, String remark, bool success) {
     if (success) {
-      // Navigate back immediately with refresh instruction
-      Navigator.pop(context, {
-        'action': isApprove ? 'approve' : 'reject',
-        'remark': remark,
-        'success': true,
-        'refresh': true,
-        'leaveId': widget.leave.lreid,
-      });
+      widget.onActionComplete?.call();
+      // Navigate back to home (root) screen
+      Navigator.popUntil(context, (route) => route.isFirst);
     }
   }
 
@@ -223,7 +238,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Staff ID: ${widget.leave.staff_id}',
+                          '${language.staffId}: ${widget.leave.staff_id}',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.white70,
@@ -280,7 +295,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                         const SizedBox(height: 4),
                         Text(
                           viewModel.hasActionTaken
-                              ? 'PROCESSED'
+                              ? language.processed
                               : widget.leave.statuText,
                           style: const TextStyle(
                             color: Colors.white,
@@ -309,9 +324,9 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Employee Information',
-                    style: TextStyle(
+                  Text(
+                    language.employeeInformation,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -320,25 +335,25 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.location_on_outlined,
-                    'Branch',
+                    language.branch,
                     widget.leave.branch,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.work_outline,
-                    'Position',
+                    language.position,
                     widget.leave.position,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.business_outlined,
-                    'Department',
+                    language.department,
                     widget.leave.department,
                   ),
                   const SizedBox(height: 12),
                   _buildInfoItem(
                     Icons.email_outlined,
-                    'Email',
+                    language.email,
                     widget.leave.email,
                   ),
                 ],
@@ -409,37 +424,37 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow(
-              'From Date',
+              language.fromDate,
               DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.fromDate),
               Icons.date_range,
             ),
             _buildDetailRow(
-              'To Date',
+              language.toDate,
               DateFormat('EEEE, MMMM dd, yyyy').format(widget.leave.toDate),
               Icons.date_range,
             ),
             _buildDetailRow(
-              'Duration',
-              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? 'day' : 'days'}',
+              language.duration,
+              '${widget.leave.numLeaveDays} ${widget.leave.numLeaveDays == 1 ? language.day : language.days}',
               Icons.schedule,
             ),
             _buildDetailRow(
-              'Leave Note',
+              language.leaveNote,
               widget.leave.leaveNote,
               Icons.note_outlined,
             ),
             _buildDetailRow(
-              'Applied On',
+              language.appliedOn,
               DateFormat(
-                'MMMM dd, yyyy at hh:mm a',
+                'MMMM dd, yyyy hh:mm a',
               ).format(widget.leave.requestDate),
               Icons.access_time,
             ),
 
             if (widget.leave.reason.isNotEmpty) ...[
-              const Text(
-                'Reason',
-                style: TextStyle(
+              Text(
+                language.reason,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,

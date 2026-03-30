@@ -14,7 +14,7 @@ class ServerService {
   static const String uatUrl =
       'https://uat-coapp.chokchey.com.kh/api/'; // uat running
   static const String devUrl =
-      'http://192.168.53.161:8000/api/'; // local running
+      'http://192.168.53.23:8000/api/'; // local running
 
   static const String _envKey = 'selected_environment';
 

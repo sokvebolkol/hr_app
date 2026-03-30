@@ -6,6 +6,7 @@ import '../utils/file_helper.dart';
 
 class PendingApprovalRequestWidget extends StatefulWidget {
   final String reason;
+  final String? label;
   final String status;
   final String fromDate;
   final String toDate;
@@ -22,6 +23,7 @@ class PendingApprovalRequestWidget extends StatefulWidget {
   const PendingApprovalRequestWidget({
     super.key,
     required this.reason,
+    this.label = 'Reason: ',
     required this.status,
     required this.fromDate,
     required this.toDate,
@@ -199,7 +201,7 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Reason: ',
+                          text: widget.label,
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.black87,

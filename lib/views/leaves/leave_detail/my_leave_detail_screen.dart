@@ -80,22 +80,24 @@ class _MyLeaveDetailScreenState extends State<MyLeaveDetailScreen>
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              _buildCompactStatusCard(),
-              const SizedBox(height: 16),
-              _buildDetailsCard(),
-              const SizedBox(height: 16),
-              _buildApprovalWorkflowSection(),
-              const SizedBox(height: 16),
-              if (_hasDocumentSupport()) _buildDocumentSupportCard(),
-              const SizedBox(height: 16),
-              if (widget.leaveRequest.isLeaveCanCancel) _buildActionButtons(),
-            ],
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildCompactStatusCard(),
+                const SizedBox(height: 16),
+                _buildDetailsCard(),
+                const SizedBox(height: 16),
+                _buildApprovalWorkflowSection(),
+                const SizedBox(height: 16),
+                if (_hasDocumentSupport()) _buildDocumentSupportCard(),
+                const SizedBox(height: 16),
+                if (widget.leaveRequest.isLeaveCanCancel) _buildActionButtons(),
+              ],
+            ),
           ),
         ),
       ),

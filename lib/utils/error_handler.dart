@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'exceptions.dart';
+import '../repositories/profile_repository.dart';
+import '../views/auth/login-screen.dart';
 
 /// Centralized error handler for the application
 class ErrorHandler {
@@ -165,6 +167,9 @@ class ErrorHandler {
   }) {
     final errorMessage = message ?? getErrorMessage(error);
     final errorTitle = title ?? _getErrorTitle(error, errorMessage);
+    final bool isSessionExpired =
+        errorMessage.contains('Session expired') ||
+        errorMessage.contains('login');
 
     return showDialog(
       context: context,
@@ -200,7 +205,7 @@ class ErrorHandler {
                   },
                   child: const Text('Cancel'),
                 ),
-              if (onRetry != null)
+              if (!isSessionExpired && onRetry != null)
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -210,9 +215,22 @@ class ErrorHandler {
                 )
               else
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop();
-                    onDismiss?.call();
+                    if (isSessionExpired) {
+                      await ProfileRepository().logout();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      }
+                    } else {
+                      onDismiss?.call();
+                    }
                   },
                   child: const Text('OK'),
                 ),

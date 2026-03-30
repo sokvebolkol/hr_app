@@ -268,26 +268,22 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                               secondary.withOpacity(0.8),
                               secondary.withOpacity(0.9),
                             ]
-                            : [
-                              primary,
-                              primary.withOpacity(0.8),
-                              primary.withOpacity(0.9),
-                            ],
+                            : isSelected
+                            ? [primary, primary]
+                            : [Colors.grey, Colors.grey],
                   ),
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: (_showStaffView ? secondary : primary).withOpacity(
-                        0.4,
-                      ),
+                      color: (_showStaffView ? secondary : Colors.grey)
+                          .withOpacity(0.4),
                       blurRadius: 12,
                       offset: const Offset(0, 3),
                       spreadRadius: 0,
                     ),
                     BoxShadow(
-                      color: (_showStaffView ? secondary : primary).withOpacity(
-                        0.2,
-                      ),
+                      color: (_showStaffView ? secondary : Colors.grey)
+                          .withOpacity(0.2),
                       blurRadius: 6,
                       offset: const Offset(0, 1),
                     ),
@@ -331,7 +327,12 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                               ? Icons.groups_rounded
                               : Icons.person_rounded,
                           size: 16,
-                          color: _showStaffView ? secondary : primary,
+                          color:
+                              _showStaffView
+                                  ? secondary
+                                  : isSelected
+                                  ? primary
+                                  : Colors.grey[700],
                         ),
                       ),
                     ),

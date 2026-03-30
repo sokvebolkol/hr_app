@@ -1945,6 +1945,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
         margin: const EdgeInsets.only(bottom: 1),
         child: PendingApprovalRequestWidget(
           reason: leave.reason,
+          label: '${language.reason}: ',
           status: leave.statuText,
           fromDate: leave.fromDate.toString(),
           toDate: leave.toDate.toString(),

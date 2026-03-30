@@ -19,6 +19,7 @@ import '../dashboard/requester_dashboard.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import 'confirm-password-screen.dart';
 import 'forgot-password.dart';
+import 'welcome.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -384,7 +385,13 @@ class _LoginScreenState extends State<LoginScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => WelcomeScreen(),
+                        ),
+                      );
+                    },
                     icon: const Icon(Icons.arrow_forward, size: 20),
                     label: Text(language.changePasswordNow),
                     style: ElevatedButton.styleFrom(

@@ -1992,27 +1992,26 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
 
   Widget _buildCompactLeaveItem(LeaveRequest leave, bool isPending) {
     return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push(
+      onTap: () {
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder:
                 (context) => ApproverLeaveDetailScreen(
                   leave: leave,
                   isPending: isPending,
+                  onActionComplete: () {
+                    if (mounted) widget.managerViewModel.refresh();
+                  },
                 ),
           ),
         );
-
-        // Handle the result if action was taken
-        if (result != null && mounted) {
-          widget.managerViewModel.refresh();
-        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 1),
         child: PendingApprovalRequestWidget(
           reason: leave.reason,
+          label: '${language.reason}: ',
           status: leave.statuText,
           fromDate: leave.fromDate.toString(),
           toDate: leave.toDate.toString(),

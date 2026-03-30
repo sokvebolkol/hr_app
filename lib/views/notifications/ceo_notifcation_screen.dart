@@ -543,13 +543,10 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
               (context) => ApproverLeaveDetailScreen(
                 leave: leaveRequest,
                 isPending: true,
+                onActionComplete: _refreshNotifications,
               ),
         ),
-      ).then((result) {
-        if (result != null && result['refresh'] == true) {
-          _refreshNotifications();
-        }
-      });
+      );
     } catch (e) {
       _isNavigating = false;
       _showErrorDialog('Error opening leave request: ${e.toString()}');

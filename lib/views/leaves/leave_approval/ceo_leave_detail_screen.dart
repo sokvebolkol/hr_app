@@ -102,7 +102,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                   //           )
                   //           .toList(),
                   // ),
-                  const SizedBox(height: 100), // Space for floating buttons
+                  const SizedBox(height: 200), // Space for floating buttons
                 ],
               ),
             ),
@@ -110,17 +110,19 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                 widget.isPending
                     ? Consumer<LeaveActionViewModel>(
                       builder: (context, vm, child) {
-                        return LeaveActionButtons(
-                          leaveId: widget.leave.lreid.toString(),
-                          employeeName: widget.leave.requesterName,
-                          leaveType: widget.leave.ltyp,
-                          numLeaveDays: widget.leave.numLeaveDays,
-                          fromDate: widget.leave.fromDate,
-                          toDate: widget.leave.toDate,
-                          onAction: _handleLeaveAction,
-                          viewModel: vm,
-                          showApproveRemark:
-                              false, // CEO does not need remark on approve
+                        return SafeArea(
+                          child: LeaveActionButtons(
+                            leaveId: widget.leave.lreid.toString(),
+                            employeeName: widget.leave.requesterName,
+                            leaveType: widget.leave.ltyp,
+                            numLeaveDays: widget.leave.numLeaveDays,
+                            fromDate: widget.leave.fromDate,
+                            toDate: widget.leave.toDate,
+                            onAction: _handleLeaveAction,
+                            viewModel: vm,
+                            showApproveRemark:
+                                false, // CEO does not need remark on approve
+                          ),
                         );
                       },
                     )
@@ -439,7 +441,7 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
             _buildDetailRow(
               language.appliedOn,
               DateFormat(
-                'MMMM dd, yyyy at hh:mm a',
+                'MMMM dd, yyyy hh:mm a',
               ).format(widget.leave.requestDate),
               Icons.access_time,
             ),

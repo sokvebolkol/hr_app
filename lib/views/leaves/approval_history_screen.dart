@@ -357,6 +357,7 @@ class _ApprovalHistoryScreenState extends State<ApprovalHistoryScreen>
             margin: const EdgeInsets.only(bottom: 12),
             child: PendingApprovalRequestWidget(
               reason: leave.reason,
+              label: '${language.reason}: ',
               status: leave.statuText,
               fromDate: leave.fromDate.toString(),
               toDate: leave.toDate.toString(),
