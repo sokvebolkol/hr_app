@@ -154,8 +154,7 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
   void _handleLeaveAction(bool isApprove, String remark, bool success) {
     if (success) {
       widget.onActionComplete?.call();
-      // Navigate back to home (root) screen
-      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.pop(context);
     }
   }
 

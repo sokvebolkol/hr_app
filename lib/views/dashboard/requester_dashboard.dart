@@ -41,11 +41,14 @@ class RequesterDashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToMenu;
   final VoidCallback? onRefreshNeeded;
 
+  final int initialIndex;
+
   const RequesterDashboardScreen({
     super.key,
     this.hideBottomNav = false,
     this.onNavigateToMenu,
     this.onRefreshNeeded,
+    this.initialIndex = 0,
   });
 
   @override
@@ -71,6 +74,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
   void initState() {
     super.initState();
     _checkUserRole();
+    _currentIndex = widget.initialIndex;
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();

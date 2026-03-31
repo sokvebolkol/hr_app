@@ -31,7 +31,8 @@ import '../notifications/ceo_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
 
 class CeoDashboardScreen extends StatefulWidget {
-  const CeoDashboardScreen({super.key});
+  final int initialIndex;
+  const CeoDashboardScreen({super.key, this.initialIndex = 0});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -59,6 +60,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     WidgetsBinding.instance.addObserver(this);
     _dashboardViewModel = DashboardViewModel();
     _ceoDashboardViewModel = CeoDashboardViewModel();
@@ -1716,6 +1718,9 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                     },
                   ),
                 ),
+
+                // Bottom safe area padding
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
               ],
             ),
           ),

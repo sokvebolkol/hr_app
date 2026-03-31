@@ -791,7 +791,11 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
   ) async {
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(
+        DateTime.now().year - 1,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
       lastDate: DateTime.now(),
       initialDateRange: DateTimeRange(
         start: DateTime.now().subtract(const Duration(days: 30)),

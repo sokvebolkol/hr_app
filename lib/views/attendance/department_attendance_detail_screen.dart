@@ -81,7 +81,7 @@ class _DepartmentAttendanceDetailScreenState
       case 1: // Absent
         return Colors.red[700]!;
       case 2: // Late
-        return Colors.blueGrey[700]!;
+        return Colors.yellow[700]!;
       case 3: // Present
         return Colors.green[700]!;
       default:
@@ -215,26 +215,31 @@ class _DepartmentAttendanceDetailScreenState
                 ),
               ),
             ),
-            body: Column(
-              children: [
-                if (widget.isTodayAttendance) _buildFilterSection(),
-                Expanded(
-                  child:
-                      widget.viewModel.isLoading
-                          ? const Center(
-                            child: SpinKitCircle(color: secondary, size: 50.0),
-                          )
-                          : TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _buildStaffList('Leave'),
-                              _buildStaffList('Absent'),
-                              _buildStaffList('Late'),
-                              _buildStaffList('Present'),
-                            ],
-                          ),
-                ),
-              ],
+            body: SafeArea(
+              child: Column(
+                children: [
+                  if (widget.isTodayAttendance) _buildFilterSection(),
+                  Expanded(
+                    child:
+                        widget.viewModel.isLoading
+                            ? const Center(
+                              child: SpinKitCircle(
+                                color: secondary,
+                                size: 50.0,
+                              ),
+                            )
+                            : TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildStaffList('Leave'),
+                                _buildStaffList('Absent'),
+                                _buildStaffList('Late'),
+                                _buildStaffList('Present'),
+                              ],
+                            ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -547,6 +552,7 @@ class _DepartmentAttendanceDetailScreenState
     DateTimeRange tempDateRange =
         _selectedDateRange ?? DateTimeRange(start: now, end: now);
     bool isSelectingStart = true;
+    String? selectedChip;
 
     await showDialog(
       context: context,
@@ -670,34 +676,49 @@ class _DepartmentAttendanceDetailScreenState
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                _buildQuickSelectChip('Last 7 Days', () {
-                                  setDialogState(() {
-                                    tempDateRange = DateTimeRange(
-                                      start: now.subtract(
-                                        const Duration(days: 6),
-                                      ),
-                                      end: now,
-                                    );
-                                  });
-                                }),
-                                _buildQuickSelectChip('Last 30 Days', () {
-                                  setDialogState(() {
-                                    tempDateRange = DateTimeRange(
-                                      start: now.subtract(
-                                        const Duration(days: 29),
-                                      ),
-                                      end: now,
-                                    );
-                                  });
-                                }),
-                                _buildQuickSelectChip('This Month', () {
-                                  setDialogState(() {
-                                    tempDateRange = DateTimeRange(
-                                      start: DateTime(now.year, now.month, 1),
-                                      end: now,
-                                    );
-                                  });
-                                }),
+                                _buildQuickSelectChip(
+                                  'Last 7 Days',
+                                  isSelected: selectedChip == 'Last 7 Days',
+                                  () {
+                                    setDialogState(() {
+                                      selectedChip = 'Last 7 Days';
+                                      tempDateRange = DateTimeRange(
+                                        start: now.subtract(
+                                          const Duration(days: 6),
+                                        ),
+                                        end: now,
+                                      );
+                                    });
+                                  },
+                                ),
+                                _buildQuickSelectChip(
+                                  'Last 30 Days',
+                                  isSelected: selectedChip == 'Last 30 Days',
+                                  () {
+                                    setDialogState(() {
+                                      selectedChip = 'Last 30 Days';
+                                      tempDateRange = DateTimeRange(
+                                        start: now.subtract(
+                                          const Duration(days: 29),
+                                        ),
+                                        end: now,
+                                      );
+                                    });
+                                  },
+                                ),
+                                _buildQuickSelectChip(
+                                  'This Month',
+                                  isSelected: selectedChip == 'This Month',
+                                  () {
+                                    setDialogState(() {
+                                      selectedChip = 'This Month';
+                                      tempDateRange = DateTimeRange(
+                                        start: DateTime(now.year, now.month, 1),
+                                        end: now,
+                                      );
+                                    });
+                                  },
+                                ),
                               ],
                             ),
                           ],
@@ -724,7 +745,11 @@ class _DepartmentAttendanceDetailScreenState
                               isSelectingStart
                                   ? tempDateRange.start
                                   : tempDateRange.end,
-                          firstDate: DateTime(2020),
+                          firstDate: DateTime(
+                            DateTime.now().year - 1,
+                            DateTime.now().month,
+                            DateTime.now().day,
+                          ),
                           lastDate: DateTime.now(),
                           onDateChanged: (date) {
                             setDialogState(() {
@@ -856,28 +881,36 @@ class _DepartmentAttendanceDetailScreenState
     );
   }
 
-  Widget _buildQuickSelectChip(String label, VoidCallback onTap) {
+  Widget _buildQuickSelectChip(
+    String label,
+    VoidCallback onTap, {
+    bool isSelected = false,
+  }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: isSelected ? secondary : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: isSelected ? secondary : Colors.grey[300]!),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_today, size: 12, color: Colors.grey[700]),
+            Icon(
+              Icons.calendar_today,
+              size: 12,
+              color: isSelected ? Colors.white : Colors.grey[700],
+            ),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: isSelected ? Colors.white : Colors.grey[700],
               ),
             ),
           ],

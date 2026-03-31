@@ -1783,6 +1783,9 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                     },
                   ),
                 ),
+
+                // Bottom safe area padding
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
               ],
             ),
           ),

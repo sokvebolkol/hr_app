@@ -72,42 +72,44 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
         ),
         centerTitle: false,
       ),
-      body: AnimatedBuilder(
-        animation: _viewModel,
-        builder: (context, child) {
-          if (_viewModel.isLoading) {
-            return const Center(
-              child: SpinKitCircle(color: secondary, size: 50.0),
-            );
-          }
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: _viewModel,
+          builder: (context, child) {
+            if (_viewModel.isLoading) {
+              return const Center(
+                child: SpinKitCircle(color: secondary, size: 50.0),
+              );
+            }
 
-          if (_viewModel.errorMessage != null) {
-            return _buildErrorState();
-          }
+            if (_viewModel.errorMessage != null) {
+              return _buildErrorState();
+            }
 
-          if (_viewModel.attendanceData == null) {
-            return _buildEmptyState();
-          }
+            if (_viewModel.attendanceData == null) {
+              return _buildEmptyState();
+            }
 
-          return Column(
-            children: [
-              _buildOverallSummary(),
-              _buildTableHeader(),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    setState(() {
-                      _selectedDateRange = null;
-                    });
-                    await _viewModel.refresh();
-                  },
-                  color: secondary,
-                  child: _buildDepartmentTable(),
+            return Column(
+              children: [
+                _buildOverallSummary(),
+                _buildTableHeader(),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {
+                        _selectedDateRange = null;
+                      });
+                      await _viewModel.refresh();
+                    },
+                    color: secondary,
+                    child: _buildDepartmentTable(),
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -158,7 +160,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 child: _buildSummaryCard(
                   language.late,
                   summary.totalLateOccurrences,
-                  Colors.blueGrey,
+                  Colors.yellow[700]!,
                 ),
               ),
               const SizedBox(width: 12),
@@ -289,7 +291,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.green[700],
+                      color: Colors.orange,
                     ),
                   ),
                 ),
@@ -315,7 +317,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.orange[700],
+                      color: Colors.yellow[700],
                     ),
                   ),
                 ),
@@ -462,6 +464,7 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     DateTimeRange tempDateRange =
         _selectedDateRange ?? DateTimeRange(start: now, end: now);
     bool isSelectingStart = true;
+    String? selectedChip;
 
     await showDialog(
       context: context,
@@ -587,34 +590,52 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                _buildQuickSelectChip(language.last7Days, () {
-                                  setDialogState(() {
-                                    tempDateRange = DateTimeRange(
-                                      start: now.subtract(
-                                        const Duration(days: 6),
-                                      ),
-                                      end: now,
-                                    );
-                                  });
-                                }),
-                                _buildQuickSelectChip(language.last30Days, () {
-                                  setDialogState(() {
-                                    tempDateRange = DateTimeRange(
-                                      start: now.subtract(
-                                        const Duration(days: 29),
-                                      ),
-                                      end: now,
-                                    );
-                                  });
-                                }),
-                                _buildQuickSelectChip(language.thisMonth, () {
-                                  setDialogState(() {
-                                    tempDateRange = DateTimeRange(
-                                      start: DateTime(now.year, now.month, 1),
-                                      end: now,
-                                    );
-                                  });
-                                }),
+                                _buildQuickSelectChip(
+                                  language.last7Days,
+                                  isSelected:
+                                      selectedChip == language.last7Days,
+                                  () {
+                                    setDialogState(() {
+                                      selectedChip = language.last7Days;
+                                      tempDateRange = DateTimeRange(
+                                        start: now.subtract(
+                                          const Duration(days: 6),
+                                        ),
+                                        end: now,
+                                      );
+                                    });
+                                  },
+                                ),
+                                _buildQuickSelectChip(
+                                  language.last30Days,
+                                  isSelected:
+                                      selectedChip == language.last30Days,
+                                  () {
+                                    setDialogState(() {
+                                      selectedChip = language.last30Days;
+                                      tempDateRange = DateTimeRange(
+                                        start: now.subtract(
+                                          const Duration(days: 29),
+                                        ),
+                                        end: now,
+                                      );
+                                    });
+                                  },
+                                ),
+                                _buildQuickSelectChip(
+                                  language.thisMonth,
+                                  isSelected:
+                                      selectedChip == language.thisMonth,
+                                  () {
+                                    setDialogState(() {
+                                      selectedChip = language.thisMonth;
+                                      tempDateRange = DateTimeRange(
+                                        start: DateTime(now.year, now.month, 1),
+                                        end: now,
+                                      );
+                                    });
+                                  },
+                                ),
                               ],
                             ),
                           ],
@@ -640,7 +661,11 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                               isSelectingStart
                                   ? tempDateRange.start
                                   : tempDateRange.end,
-                          firstDate: DateTime(2020),
+                          firstDate: DateTime(
+                            DateTime.now().year - 1,
+                            DateTime.now().month,
+                            DateTime.now().day,
+                          ),
                           lastDate: DateTime.now(),
                           onDateChanged: (date) {
                             setDialogState(() {
@@ -830,28 +855,36 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
     );
   }
 
-  Widget _buildQuickSelectChip(String label, VoidCallback onTap) {
+  Widget _buildQuickSelectChip(
+    String label,
+    VoidCallback onTap, {
+    bool isSelected = false,
+  }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: isSelected ? secondary : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: isSelected ? secondary : Colors.grey[300]!),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_today, size: 12, color: Colors.grey[700]),
+            Icon(
+              Icons.calendar_today,
+              size: 12,
+              color: isSelected ? Colors.white : Colors.grey[700],
+            ),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: isSelected ? Colors.white : Colors.grey[700],
               ),
             ),
           ],

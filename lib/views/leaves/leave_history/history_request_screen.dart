@@ -658,7 +658,11 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
                               isSelectingStart
                                   ? tempDateRange.start
                                   : tempDateRange.end,
-                          firstDate: DateTime(2020),
+                          firstDate: DateTime(
+                            DateTime.now().year - 1,
+                            DateTime.now().month,
+                            DateTime.now().day,
+                          ),
                           lastDate: DateTime.now(),
                           onDateChanged: (date) {
                             setDialogState(() {

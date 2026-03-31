@@ -11,7 +11,8 @@ import 'staff_dashboard_screen.dart';
 
 // Combine RequesterDashboardScreen and StaffDashboardScreen into ManagerDashboard with toggle switch in bottom nav bar.
 class ManagerDashboard extends StatefulWidget {
-  const ManagerDashboard({super.key});
+  final int initialIndex;
+  const ManagerDashboard({super.key, this.initialIndex = 0});
 
   @override
   State<ManagerDashboard> createState() => _ManagerDashboardState();
@@ -28,6 +29,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     LanguageLogic().addListener(_onLanguageChanged);
     _loadViewPreference();
   }

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
-import '../menu/menu_screen.dart';
+import '../dashboard/ceo_dashboard_screen.dart';
+import '../dashboard/manager_dashboard.dart';
+import '../dashboard/requester_dashboard.dart';
 import 'login-screen.dart';
 
 // ignore: must_be_immutable
@@ -69,32 +72,47 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Password reset successful!")),
-        );
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder:
-                (_) =>
-                    widget.isChangePassword
-                        ? const MenuScreen()
-                        : LoginScreen(),
-          ),
-          (route) => false,
-        );
+        if (!mounted) return;
+        if (widget.isChangePassword) {
+          final prefs = await SharedPreferences.getInstance();
+          final isCeo = prefs.getBool('ceoUser') ?? false;
+          final isApprover = prefs.getBool('isApprover') ?? false;
+          Widget targetScreen;
+          if (isCeo) {
+            targetScreen = const CeoDashboardScreen(initialIndex: 2);
+          } else if (isApprover) {
+            targetScreen = const ManagerDashboard(initialIndex: 1);
+          } else {
+            targetScreen = const RequesterDashboardScreen(initialIndex: 1);
+          }
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => targetScreen),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => LoginScreen()),
+            (route) => false,
+          );
+        }
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to reset password: ${response.body}")),
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Network error. Please try again.")),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
