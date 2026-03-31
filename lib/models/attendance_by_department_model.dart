@@ -146,14 +146,19 @@ class DailyRecord {
   final String date;
   final String? clockIn;
   final String? clockOut;
+  final bool? isLate;
 
-  DailyRecord({required this.date, this.clockIn, this.clockOut});
+  DailyRecord({required this.date, this.clockIn, this.clockOut, this.isLate});
 
   factory DailyRecord.fromJson(Map<String, dynamic> json) {
     return DailyRecord(
       date: json['date'] ?? '',
       clockIn: json['clock_in'],
       clockOut: json['clock_out'],
+      isLate:
+          json['clock_in'] != null
+              ? (json['clock_in'] as String).compareTo('08:05') > 0
+              : null,
     );
   }
 }

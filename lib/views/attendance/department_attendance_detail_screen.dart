@@ -122,18 +122,13 @@ class _DepartmentAttendanceDetailScreenState
             .where((staff) => staff.absentCount > 0)
             .toList();
       case 'Late':
+        // Show all staff who have at least one late record (for per-day filtering)
         return currentDepartment.staffMembers
-            .where((staff) => staff.lateCount > 0)
+            .where((staff) => staff.dailyRecords.any((r) => r.isLate == true))
             .toList();
       case 'Present':
-        return currentDepartment.staffMembers
-            .where(
-              (staff) =>
-                  staff.lateCount == 0 &&
-                  staff.leaveCount == 0 &&
-                  staff.absentCount == 0,
-            )
-            .toList();
+        // Show all staff (including late staff)
+        return currentDepartment.staffMembers;
       default:
         return currentDepartment.staffMembers;
     }
@@ -434,22 +429,152 @@ class _DepartmentAttendanceDetailScreenState
   }
 
   Widget _buildStaffRow(StaffMember staff, String status) {
-    Color statusColor = Colors.grey;
-    String displayStatus = status;
     final bool showClockColumns = status != 'Leave' && status != 'Absent';
     final bool showTotalColumn = status != 'Present';
+    final int totalCount = _getTotalCount(staff, status);
 
-    if (status == 'Leave') {
-      statusColor = Colors.green[700]!;
-    } else if (status == 'Absent') {
-      statusColor = Colors.red[700]!;
-      displayStatus = 'Absent';
-    } else if (status == 'Late') {
-      statusColor = Colors.orange[700]!;
-    } else {
-      statusColor = Colors.blue[700]!;
+    // Multi-day range: show each daily record individually
+    if (showClockColumns && staff.dailyRecords.length > 1) {
+      // For 'Late' tab, only show late records; for 'Present', show all records
+      final List<DailyRecord> filteredRecords =
+          status == 'Late'
+              ? staff.dailyRecords.where((r) => r.isLate == true).toList()
+              : staff.dailyRecords;
+      if (filteredRecords.isEmpty) return const SizedBox();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Staff header row
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        staff.fullName,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        staff.positionName,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                const Expanded(flex: 1, child: SizedBox()),
+                const Expanded(flex: 1, child: SizedBox()),
+                Expanded(
+                  flex: 1,
+                  child: Center(
+                    child: Text(
+                      staff.branchShortName,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+                if (showTotalColumn)
+                  Expanded(
+                    flex: 1,
+                    child: Center(
+                      child: Text(
+                        totalCount.toString(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Per-day record rows
+            ...filteredRecords.map((record) {
+              final bool isLate = record.isLate ?? false;
+              final Color timeColor =
+                  isLate == true ? Colors.red[700]! : Colors.black87;
+              return Padding(
+                padding: const EdgeInsets.only(top: 4, left: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: [
+                          if (isLate)
+                            Container(
+                              width: 6,
+                              height: 6,
+                              margin: const EdgeInsets.only(right: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.red[700]!,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          Text(
+                            _formatRecordDate(record.date),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: Text(
+                          _formatTime(record.clockIn),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: timeColor,
+                            fontWeight:
+                                isLate == true
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Center(
+                        child: Text(
+                          _formatTime(record.clockOut),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Expanded(flex: 1, child: SizedBox()),
+                    if (showTotalColumn)
+                      const Expanded(flex: 1, child: SizedBox()),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      );
     }
 
+    // Single record (original layout)
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -509,7 +634,7 @@ class _DepartmentAttendanceDetailScreenState
               flex: 1,
               child: Center(
                 child: Text(
-                  _getTotalCount(staff, status).toString(),
+                  totalCount.toString(),
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -544,6 +669,16 @@ class _DepartmentAttendanceDetailScreenState
       return convertToAmPm(timeWithSeconds);
     } catch (e) {
       return '--:--';
+    }
+  }
+
+  String _formatRecordDate(String date) {
+    if (date.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(date);
+      return DateFormat('MMM dd').format(dt);
+    } catch (_) {
+      return date;
     }
   }
 
