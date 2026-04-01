@@ -434,29 +434,150 @@ class _DepartmentAttendanceDetailScreenState
     );
   }
 
+  /// Returns the date records relevant to display for a given status tab.
+  List<DailyRecord> _getDisplayRecords(StaffMember staff, String status) {
+    switch (status) {
+      case 'Leave':
+        // Prefer the API's own type field; fall back to the leaveCount-limited
+        // slice of null-clock records when the field is absent.
+        final leaveByType =
+            staff.dailyRecords
+                .where((r) => r.attendanceType == 'leave')
+                .toList();
+        if (leaveByType.isNotEmpty) return leaveByType;
+        // Fallback: take only as many null-clock records as leaveCount indicates
+        final nullRecords =
+            staff.dailyRecords
+                .where((r) => r.clockIn == null && r.clockOut == null)
+                .toList();
+        return nullRecords.take(staff.leaveCount).toList();
+      case 'Absent':
+        final absentByType =
+            staff.dailyRecords
+                .where((r) => r.attendanceType == 'absent')
+                .toList();
+        if (absentByType.isNotEmpty) return absentByType;
+        final nullRecs =
+            staff.dailyRecords
+                .where((r) => r.clockIn == null && r.clockOut == null)
+                .toList();
+        return nullRecs.take(staff.absentCount).toList();
+      case 'Late':
+        return staff.dailyRecords.where((r) => r.isLate == true).toList();
+      case 'Present':
+        return staff.dailyRecords
+            .where((r) => r.clockIn != null || r.clockOut != null)
+            .toList();
+      default:
+        return staff.dailyRecords;
+    }
+  }
+
+  /// A single indented date sub-row shown beneath an employee header row.
+  Widget _buildDateSubRow(DailyRecord record, String status) {
+    final bool isLate = record.isLate ?? false;
+    final bool showClock = status == 'Late' || status == 'Present';
+    final bool showTotalSpacer = status != 'Present';
+
+    final Color dotColor =
+        status == 'Leave'
+            ? Colors.orange[400]!
+            : status == 'Absent'
+            ? Colors.red[300]!
+            : isLate
+            ? Colors.red[700]!
+            : Colors.green[500]!;
+    final Color timeColor = isLate ? Colors.yellow : Colors.black87;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 3, left: 8, bottom: 2),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Row(
+              children: [
+                Container(
+                  width: 5,
+                  height: 5,
+                  margin: const EdgeInsets.only(right: 6),
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Text(
+                  _formatRecordDate(record.date),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                ),
+              ],
+            ),
+          ),
+          if (showClock) ...[
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  _formatTime(record.clockIn),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: timeColor,
+                    fontWeight: isLate ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
+                  _formatTime(record.clockOut),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: timeColor,
+                    fontWeight: isLate ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            const Expanded(flex: 1, child: SizedBox()),
+            const Expanded(flex: 1, child: SizedBox()),
+          ],
+          const Expanded(flex: 1, child: SizedBox()),
+          if (showTotalSpacer) const Expanded(flex: 1, child: SizedBox()),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStaffRow(StaffMember staff, String status) {
     final bool showClockColumns = status != 'Leave' && status != 'Absent';
     final bool showTotalColumn = status != 'Present';
     final int totalCount = _getTotalCount(staff, status);
 
-    // Multi-day range: show each daily record individually
-    if (showClockColumns && staff.dailyRecords.length > 1) {
-      // For 'Late' tab, only show late records; for 'Present', show all records except those with both clockIn and clockOut null
-      final List<DailyRecord> filteredRecords =
-          status == 'Late'
-              ? staff.dailyRecords.where((r) => r.isLate == true).toList()
-              : status == 'Present'
-              ? staff.dailyRecords
-                  .where((r) => r.clockIn != null || r.clockOut != null)
-                  .toList()
-              : staff.dailyRecords;
-      if (filteredRecords.isEmpty) return const SizedBox();
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+    final List<DailyRecord> allRecords = _getDisplayRecords(staff, status);
+    if (allRecords.isEmpty) return const SizedBox();
+
+    // Leave/Absent: no inline date rows (summary only on tap).
+    // Present: show only the most-recent date inline; rest shown in bottom sheet.
+    // Late: show all inline.
+    final List<DailyRecord> inlineRecords =
+        (status == 'Leave' || status == 'Absent')
+            ? []
+            : status == 'Present'
+            ? [allRecords.last]
+            : allRecords;
+
+    return InkWell(
+      onTap: () => _showStaffDetailBottomSheet(staff, allRecords, status),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Staff header row
+            // Employee header row
             Row(
               children: [
                 Expanded(
@@ -480,8 +601,10 @@ class _DepartmentAttendanceDetailScreenState
                     ],
                   ),
                 ),
-                const Expanded(flex: 1, child: SizedBox()),
-                const Expanded(flex: 1, child: SizedBox()),
+                if (showClockColumns) ...[
+                  const Expanded(flex: 1, child: SizedBox()),
+                  const Expanded(flex: 1, child: SizedBox()),
+                ],
                 Expanded(
                   flex: 1,
                   child: Center(
@@ -510,150 +633,34 @@ class _DepartmentAttendanceDetailScreenState
                   ),
               ],
             ),
-            const SizedBox(height: 6),
-            // Per-day record rows
-            ...filteredRecords.map((record) {
-              final bool isLate = record.isLate ?? false;
-              final Color timeColor =
-                  isLate == true ? Colors.red[700]! : Colors.black87;
-              return Padding(
-                padding: const EdgeInsets.only(top: 4, left: 8),
+            // Per-day sub-rows
+            if (inlineRecords.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              ...inlineRecords.map((r) => _buildDateSubRow(r, status)),
+            ],
+            // Hint for Present when more records exist
+            if (status == 'Present' && allRecords.length > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, left: 14),
                 child: Row(
                   children: [
-                    Expanded(
-                      flex: 2,
-                      child: Row(
-                        children: [
-                          if (isLate)
-                            Container(
-                              width: 6,
-                              height: 6,
-                              margin: const EdgeInsets.only(right: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.red[700]!,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          Text(
-                            _formatRecordDate(record.date),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
+                    Icon(Icons.expand_more, size: 13, color: Colors.grey[400]),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${allRecords.length - 1} more'
+                      ' date${allRecords.length > 2 ? "s" : ""}'
+                      ' \u2022 tap to view all',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[400],
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: Text(
-                          _formatTime(record.clockIn),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: timeColor,
-                            fontWeight:
-                                isLate == true
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Center(
-                        child: Text(
-                          _formatTime(record.clockOut),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Expanded(flex: 1, child: SizedBox()),
-                    if (showTotalColumn)
-                      const Expanded(flex: 1, child: SizedBox()),
                   ],
                 ),
-              );
-            }),
+              ),
           ],
         ),
-      );
-    }
-
-    // Single record (original layout)
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  staff.fullName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  staff.positionName,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          if (showClockColumns)
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Text(
-                  _formatTime(staff.clockIn),
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
-                ),
-              ),
-            ),
-          if (showClockColumns)
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Text(
-                  _formatTime(staff.clockOut),
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
-                ),
-              ),
-            ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: Text(
-                staff.branchShortName,
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
-              ),
-            ),
-          ),
-          if (showTotalColumn)
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Text(
-                  totalCount.toString(),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
@@ -666,8 +673,12 @@ class _DepartmentAttendanceDetailScreenState
         return staff.absentCount;
       case 'Late':
         return staff.lateCount;
+      case 'Present':
+        return staff.dailyRecords
+            .where((r) => r.clockIn != null || r.clockOut != null)
+            .length;
       default:
-        return 1;
+        return staff.dailyRecords.length;
     }
   }
 
@@ -690,6 +701,435 @@ class _DepartmentAttendanceDetailScreenState
     } catch (_) {
       return date;
     }
+  }
+
+  String _formatRecordDateFull(String date) {
+    if (date.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(date);
+      return DateFormat('EEEE, MMM dd, yyyy').format(dt);
+    } catch (_) {
+      return date;
+    }
+  }
+
+  void _showStaffDetailBottomSheet(
+    StaffMember staff,
+    List<DailyRecord> records,
+    String status,
+  ) {
+    final Color statusColor = _getTabColor(_tabController.index);
+    const Color lateColor = Color(0xFFF59E0B); // amber-500
+    const Color lateColorDark = Color(0xFFB45309); // amber-700
+    const Color lateBg = Color(0xFFFFFBEB); // amber-50
+    final bool showClock = status != 'Leave' && status != 'Absent';
+    final int totalCount = _getTotalCount(staff, status);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.55,
+          minChildSize: 0.3,
+          maxChildSize: 0.92,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // ── Drag handle ──────────────────────────────────────────
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      margin: const EdgeInsets.only(top: 12, bottom: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  // ── Coloured header band ─────────────────────────────────
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [statusColor, statusColor.withOpacity(0.75)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              staff.fullName.isNotEmpty
+                                  ? staff.fullName[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        // Name / position / branch
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                staff.fullName,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                staff.positionName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 11,
+                                    color: Colors.white.withOpacity(0.8),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    staff.branchFullName.isNotEmpty
+                                        ? staff.branchFullName
+                                        : staff.branchShortName,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Count pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.35),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                totalCount.toString(),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  height: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                status,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── Column headers ───────────────────────────────────────
+                  if (records.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Date',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey[600],
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ),
+                          if (showClock) ...[
+                            SizedBox(
+                              width: 64,
+                              child: Center(
+                                child: Text(
+                                  'Clock In',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.grey[600],
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 64,
+                              child: Center(
+                                child: Text(
+                                  'Clock Out',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.grey[600],
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 4),
+
+                  // ── Records list ─────────────────────────────────────────
+                  Expanded(
+                    child:
+                        records.isEmpty
+                            ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getStatusIcon(status),
+                                    size: 48,
+                                    color: Colors.grey[300],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No records available',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                            : ListView.builder(
+                              controller: scrollController,
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                              itemCount: records.length,
+                              itemBuilder: (context, index) {
+                                final record = records[index];
+                                final bool isLate = record.isLate ?? false;
+
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isLate && showClock
+                                            ? lateBg
+                                            : Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color:
+                                          isLate && showClock
+                                              ? lateColor.withOpacity(0.35)
+                                              : Colors.grey[200]!,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.03),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Coloured left bar
+                                      Container(
+                                        width: 4,
+                                        height: 40,
+                                        margin: const EdgeInsets.only(
+                                          right: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              isLate && showClock
+                                                  ? lateColor
+                                                  : statusColor,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                      // Date + optional late badge
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _formatRecordDateFull(
+                                                record.date,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black87,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                            if (isLate && showClock) ...[
+                                              const SizedBox(height: 4),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 7,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: lateColor.withOpacity(
+                                                    0.15,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                    color: lateColor
+                                                        .withOpacity(0.4),
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.schedule_rounded,
+                                                      size: 10,
+                                                      color: lateColorDark,
+                                                    ),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      'Late',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color: lateColorDark,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      // Clock In / Out
+                                      if (showClock) ...[
+                                        SizedBox(
+                                          width: 64,
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                _formatTime(record.clockIn),
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      isLate
+                                                          ? FontWeight.w700
+                                                          : FontWeight.w500,
+                                                  color:
+                                                      isLate
+                                                          ? lateColorDark
+                                                          : Colors.black87,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 64,
+                                          child: Text(
+                                            _formatTime(record.clockOut),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.black87,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _showDateRangePicker() async {

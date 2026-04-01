@@ -148,7 +148,16 @@ class DailyRecord {
   final String? clockOut;
   final bool? isLate;
 
-  DailyRecord({required this.date, this.clockIn, this.clockOut, this.isLate});
+  /// Raw attendance type returned by the API (e.g. 'leave', 'absent', 'present', 'late').
+  final String? attendanceType;
+
+  DailyRecord({
+    required this.date,
+    this.clockIn,
+    this.clockOut,
+    this.isLate,
+    this.attendanceType,
+  });
 
   factory DailyRecord.fromJson(Map<String, dynamic> json) {
     return DailyRecord(
@@ -159,6 +168,10 @@ class DailyRecord {
           json['clock_in'] != null
               ? (json['clock_in'] as String).compareTo('08:05') > 0
               : null,
+      attendanceType:
+          (json['attendance_type'] ?? json['status'] ?? json['type'])
+              ?.toString()
+              .toLowerCase(),
     );
   }
 }
