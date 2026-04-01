@@ -37,7 +37,7 @@ class _DepartmentAttendanceDetailScreenState
 
   String get _dateRangeText {
     if (_selectedDateRange == null) {
-      return 'Today';
+      return language.today;
     }
     final formatter = DateFormat('MMM dd');
     return '${formatter.format(_selectedDateRange!.start)} - ${formatter.format(_selectedDateRange!.end)}';
@@ -86,6 +86,22 @@ class _DepartmentAttendanceDetailScreenState
         return Colors.green[700]!;
       default:
         return secondary;
+    }
+  }
+
+  // Get translated status name
+  String _getStatusName(String status) {
+    switch (status) {
+      case 'Leave':
+        return language.leave;
+      case 'Absent':
+        return language.absent;
+      case 'Late':
+        return language.late;
+      case 'Present':
+        return language.present;
+      default:
+        return status;
     }
   }
 
@@ -205,11 +221,11 @@ class _DepartmentAttendanceDetailScreenState
                         fontWeight: FontWeight.w500,
                         fontSize: 12,
                       ),
-                      tabs: const [
-                        Tab(text: 'Leave'),
-                        Tab(text: 'Absent'),
-                        Tab(text: 'Late'),
-                        Tab(text: 'Present'),
+                      tabs: [
+                        Tab(text: language.leave),
+                        Tab(text: language.absent),
+                        Tab(text: language.late),
+                        Tab(text: language.present),
                       ],
                     ),
                   ),
@@ -313,7 +329,7 @@ class _DepartmentAttendanceDetailScreenState
             ),
             const SizedBox(height: 20),
             Text(
-              'No $status Staff',
+              'No ${_getStatusName(status)} ${language.staff}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -322,7 +338,7 @@ class _DepartmentAttendanceDetailScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              'There are no staff members with\n$status status for the selected date range',
+              'There are no staff members with\n${_getStatusName(status)} status for the selected date range',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -363,11 +379,11 @@ class _DepartmentAttendanceDetailScreenState
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 2,
             child: Text(
-              'Name',
-              style: TextStyle(
+              language.name,
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
@@ -379,12 +395,13 @@ class _DepartmentAttendanceDetailScreenState
               flex: 1,
               child: Center(
                 child: Text(
-                  'In',
+                  language.clockIn,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[700],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -393,12 +410,13 @@ class _DepartmentAttendanceDetailScreenState
               flex: 1,
               child: Center(
                 child: Text(
-                  'Out',
+                  language.clockOut,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[700],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -406,12 +424,13 @@ class _DepartmentAttendanceDetailScreenState
             flex: 1,
             child: Center(
               child: Text(
-                'Office',
+                language.office,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -420,12 +439,13 @@ class _DepartmentAttendanceDetailScreenState
               flex: 1,
               child: Center(
                 child: Text(
-                  'Total',
+                  language.total,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey[700],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -866,7 +886,7 @@ class _DepartmentAttendanceDetailScreenState
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                status,
+                                _getStatusName(status),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
@@ -896,7 +916,7 @@ class _DepartmentAttendanceDetailScreenState
                         children: [
                           Expanded(
                             child: Text(
-                              'Date',
+                              language.date,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -910,13 +930,14 @@ class _DepartmentAttendanceDetailScreenState
                               width: 64,
                               child: Center(
                                 child: Text(
-                                  'Clock In',
+                                  language.clockIn,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: Colors.grey[600],
                                     letterSpacing: 0.3,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
@@ -924,7 +945,7 @@ class _DepartmentAttendanceDetailScreenState
                               width: 64,
                               child: Center(
                                 child: Text(
-                                  'Clock Out',
+                                  language.clockOut,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
@@ -956,7 +977,7 @@ class _DepartmentAttendanceDetailScreenState
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    'No records available',
+                                    language.noAttendanceRecordsFound,
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey[400],
@@ -967,7 +988,12 @@ class _DepartmentAttendanceDetailScreenState
                             )
                             : ListView.builder(
                               controller: scrollController,
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                              padding: EdgeInsets.fromLTRB(
+                                16,
+                                4,
+                                16,
+                                24 + MediaQuery.of(context).padding.bottom,
+                              ),
                               itemCount: records.length,
                               itemBuilder: (context, index) {
                                 final record = records[index];
@@ -1065,7 +1091,7 @@ class _DepartmentAttendanceDetailScreenState
                                                     ),
                                                     const SizedBox(width: 3),
                                                     Text(
-                                                      'Late',
+                                                      language.late,
                                                       style: TextStyle(
                                                         fontSize: 10,
                                                         fontWeight:
@@ -1190,22 +1216,22 @@ class _DepartmentAttendanceDetailScreenState
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Select Date Range',
-                                    style: TextStyle(
+                                    language.selectDateRange,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
-                                    'Choose your desired date range',
-                                    style: TextStyle(
+                                    language.chooseYourDesiredDateRange,
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.white70,
                                     ),

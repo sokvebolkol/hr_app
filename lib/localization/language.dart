@@ -423,6 +423,8 @@ class Language {
   String get filterMyRequests => "Filter My Requests";
   String get filterStaffRequests => "Filter Staff Requests";
   String get staffMember => "Staff Member";
+  String get name => "Name";
+  String get office => "Office";
 
   // Notification Screens
   String get loadingLeaveStatusUpdates => "Loading leave status updates...";
@@ -1075,9 +1077,9 @@ class Khmer implements Language {
   @override
   String get fingerOut => "ចេញម្រាមដៃ";
   @override
-  String get clockIn => "ចូលការ";
+  String get clockIn => "ចូល";
   @override
-  String get clockOut => "ចេញការ";
+  String get clockOut => "ចេញ";
   @override
   String get status => "ស្ថានភាព";
   @override
@@ -1333,6 +1335,12 @@ class Khmer implements Language {
   String get filterStaffRequests => "ច្រោះការស្នើសុំបុគ្គលិក";
   @override
   String get staffMember => "បុគ្គលិក";
+
+  @override
+  String get name => "ឈ្មោះ";
+
+  @override
+  String get office => "ការិយាល័យ";
 
   // Notification Screens
   @override
