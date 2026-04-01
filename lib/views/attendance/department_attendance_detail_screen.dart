@@ -127,8 +127,14 @@ class _DepartmentAttendanceDetailScreenState
             .where((staff) => staff.dailyRecords.any((r) => r.isLate == true))
             .toList();
       case 'Present':
-        // Show all staff (including late staff)
-        return currentDepartment.staffMembers;
+        // Show all staff (including late staff), but remove those with all daily records having both clockIn and clockOut null
+        return currentDepartment.staffMembers
+            .where(
+              (staff) => staff.dailyRecords.any(
+                (r) => r.clockIn != null || r.clockOut != null,
+              ),
+            )
+            .toList();
       default:
         return currentDepartment.staffMembers;
     }
@@ -435,10 +441,14 @@ class _DepartmentAttendanceDetailScreenState
 
     // Multi-day range: show each daily record individually
     if (showClockColumns && staff.dailyRecords.length > 1) {
-      // For 'Late' tab, only show late records; for 'Present', show all records
+      // For 'Late' tab, only show late records; for 'Present', show all records except those with both clockIn and clockOut null
       final List<DailyRecord> filteredRecords =
           status == 'Late'
               ? staff.dailyRecords.where((r) => r.isLate == true).toList()
+              : status == 'Present'
+              ? staff.dailyRecords
+                  .where((r) => r.clockIn != null || r.clockOut != null)
+                  .toList()
               : staff.dailyRecords;
       if (filteredRecords.isEmpty) return const SizedBox();
       return Padding(
