@@ -13,7 +13,9 @@ import '../leave_detail/my_leave_detail_screen.dart';
 import '../../attendance/my_attendance_adjustment_request.screen.dart';
 
 class HistoryRequestScreen extends StatefulWidget {
-  const HistoryRequestScreen({super.key});
+  final int initialIndex;
+
+  const HistoryRequestScreen({super.key, this.initialIndex = 0});
 
   @override
   State<HistoryRequestScreen> createState() => _LeaveHistoryScreenState();
@@ -30,7 +32,11 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
     _viewModel = LeaveHistoryViewModel();
     _viewModel.fetchLeaveHistory();
     _initializeLanguage();
@@ -69,35 +75,6 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
             ),
           ),
           backgroundColor: primary,
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: [
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.event_note, size: 20),
-                    const SizedBox(width: 6),
-                    Text(language.leaveRequest),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.access_time, size: 20),
-                    const SizedBox(width: 6),
-                    Text(language.adjustmentRequest),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
         body: Consumer<LeaveHistoryViewModel>(
           builder: (context, viewModel, child) {
@@ -109,11 +86,88 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
               return _buildErrorState(viewModel);
             }
 
-            return TabBarView(
-              controller: _tabController,
+            return Column(
               children: [
-                _buildLeaveRequestTab(viewModel),
-                _buildAdjustmentRequestTab(viewModel),
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        color: primary,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.grey[600],
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        letterSpacing: 0.2,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                      tabs: [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(width: 6),
+                              Text(language.leaveRequest),
+                            ],
+                          ),
+                        ),
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(width: 6),
+                              Text(language.adjustmentRequest),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildLeaveRequestTab(viewModel),
+                      _buildAdjustmentRequestTab(viewModel),
+                    ],
+                  ),
+                ),
               ],
             );
           },
@@ -172,7 +226,12 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
 
   Widget _buildAdjustmentHistoryList(List<dynamic> list) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.of(context).padding.bottom,
+      ),
       itemCount: list.length,
       itemBuilder: (_, i) => _buildAdjustmentHistoryCard(list[i]),
     );
@@ -751,7 +810,12 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
 
   Widget _buildLeaveHistoryList(List<LeaveHistoryModel> list) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.of(context).padding.bottom,
+      ),
       itemCount: list.length,
       itemBuilder: (_, i) => _buildLeaveHistoryCard(list[i]),
     );

@@ -361,23 +361,26 @@ class _MyAttendanceAdjustmentRequestScreenState
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              _buildCompactStatusCard(),
-              const SizedBox(height: 16),
-              _buildDetailsCard(),
-              const SizedBox(height: 16),
-              if (_hasDocumentSupport()) _buildDocumentSupportCard(),
-              if (_hasDocumentSupport()) const SizedBox(height: 16),
-              _buildApprovalWorkflowSection(),
-              const SizedBox(height: 16),
-              if (widget.adjustmentRequest.isAttendanceCanCancel)
-                _buildActionButtons(),
-            ],
+      body: SafeArea(
+        top: false,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildCompactStatusCard(),
+                const SizedBox(height: 16),
+                _buildDetailsCard(),
+                const SizedBox(height: 16),
+                if (_hasDocumentSupport()) _buildDocumentSupportCard(),
+                if (_hasDocumentSupport()) const SizedBox(height: 16),
+                _buildApprovalWorkflowSection(),
+                const SizedBox(height: 16),
+                if (widget.adjustmentRequest.isAttendanceCanCancel)
+                  _buildActionButtons(),
+              ],
+            ),
           ),
         ),
       ),

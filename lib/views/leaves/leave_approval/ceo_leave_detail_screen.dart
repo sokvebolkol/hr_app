@@ -26,6 +26,7 @@ class CeoLeaveDetailScreen extends StatefulWidget {
 
 class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
   Language language = LanguageLogic().language;
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -65,70 +66,102 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
       create: (context) => LeaveActionViewModel(), // Same as approver
       child: Consumer<LeaveActionViewModel>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            backgroundColor: Colors.white,
-            appBar: AppBar(
-              elevation: 0,
-              backgroundColor: secondary,
-              foregroundColor: Colors.white,
-              centerTitle: false,
-              title: Text(
-                language.leaveDetail,
-                style: TextStyle(fontWeight: FontWeight.w600),
+          return Stack(
+            children: [
+              Scaffold(
+                backgroundColor: Colors.white,
+                appBar: AppBar(
+                  elevation: 0,
+                  backgroundColor: secondary,
+                  foregroundColor: Colors.white,
+                  centerTitle: false,
+                  title: Text(
+                    language.leaveDetail,
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                body: SingleChildScrollView(
+                  padding: const EdgeInsets.all(2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEmployeeCard(viewModel),
+                      _buildLeaveDetailsCard(viewModel),
+                      const SizedBox(height: 16),
+                      if (widget.leave.file != null &&
+                          widget.leave.file!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _buildSupportingDocumentCard(),
+                      ],
+                      const SizedBox(height: 200), // Space for floating buttons
+                    ],
+                  ),
+                ),
+                floatingActionButton:
+                    widget.isPending
+                        ? Consumer<LeaveActionViewModel>(
+                          builder: (context, vm, child) {
+                            return SafeArea(
+                              child: LeaveActionButtons(
+                                leaveId: widget.leave.lreid.toString(),
+                                approve: language.approve,
+                                reject: language.reject,
+                                employeeName: widget.leave.requesterName,
+                                leaveType: widget.leave.ltyp,
+                                numLeaveDays: widget.leave.numLeaveDays,
+                                fromDate: widget.leave.fromDate,
+                                toDate: widget.leave.toDate,
+                                onAction: _handleLeaveAction,
+                                viewModel: vm,
+                                showApproveRemark:
+                                    false, // CEO does not need remark on approve
+                              ),
+                            );
+                          },
+                        )
+                        : null,
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.centerFloat,
               ),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(2),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildEmployeeCard(viewModel),
-                  _buildLeaveDetailsCard(viewModel),
-                  const SizedBox(height: 16),
-                  if (widget.leave.file != null &&
-                      widget.leave.file!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildSupportingDocumentCard(),
-                  ],
-                  // const SizedBox(height: 16),
-                  // ApprovalWorkflowWidget(
-                  //   approvalList:
-                  //       widget.leave.prioList
-                  //           .map(
-                  //             (approval) =>
-                  //                 ApprovalItemData.fromCeoApprovalItem(
-                  //                   approval,
-                  //                 ),
-                  //           )
-                  //           .toList(),
-                  // ),
-                  const SizedBox(height: 200), // Space for floating buttons
-                ],
-              ),
-            ),
-            floatingActionButton:
-                widget.isPending
-                    ? Consumer<LeaveActionViewModel>(
-                      builder: (context, vm, child) {
-                        return SafeArea(
-                          child: LeaveActionButtons(
-                            leaveId: widget.leave.lreid.toString(),
-                            employeeName: widget.leave.requesterName,
-                            leaveType: widget.leave.ltyp,
-                            numLeaveDays: widget.leave.numLeaveDays,
-                            fromDate: widget.leave.fromDate,
-                            toDate: widget.leave.toDate,
-                            onAction: _handleLeaveAction,
-                            viewModel: vm,
-                            showApproveRemark:
-                                false, // CEO does not need remark on approve
+              if (_isNavigating)
+                Container(
+                  color: Colors.black.withOpacity(0.45),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                        );
-                      },
-                    )
-                    : null,
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerFloat,
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(color: secondary),
+                          const SizedBox(height: 16),
+                          Text(
+                            language.pleaseWait,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
@@ -137,14 +170,18 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
 
   void _handleLeaveAction(bool isApprove, String remark, bool success) {
     if (success) {
-      // Navigate back immediately with refresh instruction
-      Navigator.pop(context, {
-        'action': isApprove ? 'approve' : 'reject',
-        'remark': remark,
-        'success': true,
-        'refresh': true,
-        'leaveId': widget.leave.lreid,
-        'role': 'CEO',
+      setState(() => _isNavigating = true);
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          Navigator.pop(context, {
+            'action': isApprove ? 'approve' : 'reject',
+            'remark': remark,
+            'success': true,
+            'refresh': true,
+            'leaveId': widget.leave.lreid,
+            'role': 'CEO',
+          });
+        }
       });
     }
   }

@@ -5,6 +5,8 @@ import '../viewmodels/leave_action_viewmodel.dart';
 
 class LeaveActionButtons extends StatelessWidget {
   final String leaveId;
+  final String approve;
+  final String reject;
   final String employeeName;
   final String leaveType;
   final double numLeaveDays;
@@ -17,6 +19,8 @@ class LeaveActionButtons extends StatelessWidget {
   const LeaveActionButtons({
     super.key,
     required this.leaveId,
+    required this.approve,
+    required this.reject,
     required this.employeeName,
     required this.leaveType,
     required this.numLeaveDays,
@@ -95,7 +99,7 @@ class LeaveActionButtons extends StatelessWidget {
                           )
                           : const Icon(Icons.close, color: Colors.white),
                   label: Text(
-                    viewModel.isRejecting ? 'Rejecting...' : 'Reject',
+                    viewModel.isRejecting ? 'Rejecting...' : reject,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -125,7 +129,7 @@ class LeaveActionButtons extends StatelessWidget {
                           )
                           : const Icon(Icons.check, color: Colors.white),
                   label: Text(
-                    viewModel.isApproving ? 'Approving...' : 'Approve',
+                    viewModel.isApproving ? 'Approving...' : approve,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -198,9 +202,7 @@ class LeaveActionButtons extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      isApprove
-                                          ? 'Approve Leave'
-                                          : 'Reject Leave',
+                                      isApprove ? approve : reject,
                                       style: const TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,

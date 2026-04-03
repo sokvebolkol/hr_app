@@ -989,7 +989,10 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const HistoryRequestScreen(),
+                      builder:
+                          (context) => HistoryRequestScreen(
+                            initialIndex: _tabController.index,
+                          ),
                     ),
                   );
                 },

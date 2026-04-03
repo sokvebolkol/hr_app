@@ -64,18 +64,21 @@ class _AttendanceClockState extends State<AttendanceClock>
       child: Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: _buildAppBar(),
-        body: Consumer<AttendanceClockViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(child: SpinKitFadingCircle(color: primary));
-            }
+        body: SafeArea(
+          top: false,
+          child: Consumer<AttendanceClockViewModel>(
+            builder: (context, viewModel, child) {
+              if (viewModel.isLoading) {
+                return const Center(child: SpinKitFadingCircle(color: primary));
+              }
 
-            if (viewModel.errorMessage != null) {
-              return _buildErrorState(viewModel);
-            }
+              if (viewModel.errorMessage != null) {
+                return _buildErrorState(viewModel);
+              }
 
-            return _buildMainContent(viewModel);
-          },
+              return _buildMainContent(viewModel);
+            },
+          ),
         ),
       ),
     );

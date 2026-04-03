@@ -529,9 +529,6 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
         _showErrorDialog('No information available');
         return;
       }
-
-      print("🔔 CEO - Opening request for approval");
-
       // Convert to PendingLeaveRequest for ApproverLeaveDetailScreen
       final leaveRequest = notification.toLeaveRequest();
       _isNavigating = false; // Reset flag before navigation

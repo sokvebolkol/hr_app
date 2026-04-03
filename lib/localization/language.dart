@@ -140,6 +140,8 @@ class Language {
   String get noRequestsFoundFor => "No requests found for";
   String get approved => "Approved";
   String get rejected => "Rejected";
+  String get approve => "Approve";
+  String get reject => "Reject";
   String get selectMonth => "Select Month";
   String get twelveMonthsAvailable => "12 previous months available";
   String get goodMorning => "Good morning!";
@@ -354,7 +356,7 @@ class Language {
   String get success => "Success!";
 
   // Leave Request screen strings
-  String get leaveRequest => "Leave Requests";
+  String get leaveRequest => "Leave Request";
   String get loadingLeaveRequestData => "Loading leave request data...";
   String get leaveType => "Leave Type";
   String get selectLeaveType => "Select leave type";
@@ -610,9 +612,9 @@ class Khmer implements Language {
   @override
   String get settings => "ការកំណត់";
   @override
-  String get profile => "ប្រវត្តិរូប";
+  String get profile => "ប្រូហ្វាល់";
   @override
-  String get updateProfile => "ធ្វើបច្ចុប្បន្នភាពប្រវត្តិរូប";
+  String get updateProfile => "ធ្វើបច្ចុប្បន្នភាពប្រូហ្វាល់";
   @override
   String get saveChanges => "រក្សាទុកការផ្លាស់ប្តូរ";
   @override
@@ -804,6 +806,10 @@ class Khmer implements Language {
   String get approved => "បានអនុម័ត";
   @override
   String get rejected => "បានបដិសេធ";
+  @override
+  String get approve => "អនុម័ត";
+  @override
+  String get reject => "បដិសេធ";
   @override
   String get selectMonth => "ជ្រើសរើសខែ";
   @override

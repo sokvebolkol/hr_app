@@ -76,28 +76,31 @@ class _RequestAttendanceAdjustmentScreenState
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        children: [
-          _buildDateCard(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  _buildReasonSection(),
-                  const SizedBox(height: 16),
-                  _buildAttachmentSection(),
-                  const SizedBox(height: 16),
-                  _buildApproversSection(),
-                  const SizedBox(height: 32),
-                  _buildSubmitButton(),
-                  const SizedBox(height: 16),
-                ],
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            _buildDateCard(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildReasonSection(),
+                    const SizedBox(height: 16),
+                    _buildAttachmentSection(),
+                    const SizedBox(height: 16),
+                    _buildApproversSection(),
+                    const SizedBox(height: 32),
+                    _buildSubmitButton(),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

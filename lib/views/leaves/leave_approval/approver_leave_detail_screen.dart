@@ -31,6 +31,7 @@ class ApproverLeaveDetailScreen extends StatefulWidget {
 class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
   String? _currentUserName;
   bool _isLoadingUser = true;
+  bool _isNavigating = false;
   Language language = LanguageLogic().language;
 
   @override
@@ -79,72 +80,116 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
       create: (context) => LeaveActionViewModel(),
       child: Consumer<LeaveActionViewModel>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            backgroundColor: Colors.grey[50],
-            appBar: AppBar(
-              elevation: 0,
-              backgroundColor: primary,
-              foregroundColor: Colors.white,
-              centerTitle: false,
-              title: Text(
-                language.leaveDetail,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildEmployeeCard(viewModel),
-                  const SizedBox(height: 16),
-                  _buildLeaveDetailsCard(),
-                  const SizedBox(height: 16),
-                  if (widget.leave.file != null &&
-                      widget.leave.file!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _buildSupportingDocumentCard(),
-                  ],
-                  const SizedBox(height: 16),
-                  ApprovalWorkflowWidget(
-                    approvalList:
-                        widget.leave.prioList
-                            .map(
-                              (approval) =>
-                                  ApprovalItemData.fromCeoApprovalItem(
-                                    approval,
-                                  ),
-                            )
-                            .toList(),
+          return Stack(
+            children: [
+              Scaffold(
+                backgroundColor: Colors.grey[50],
+                appBar: AppBar(
+                  elevation: 0,
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  centerTitle: false,
+                  title: Text(
+                    language.leaveDetail,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 200),
-                ],
+                ),
+                body: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEmployeeCard(viewModel),
+                      const SizedBox(height: 16),
+                      _buildLeaveDetailsCard(),
+                      const SizedBox(height: 16),
+                      if (widget.leave.file != null &&
+                          widget.leave.file!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _buildSupportingDocumentCard(),
+                      ],
+                      const SizedBox(height: 16),
+                      ApprovalWorkflowWidget(
+                        approvalList:
+                            widget.leave.prioList
+                                .map(
+                                  (approval) =>
+                                      ApprovalItemData.fromCeoApprovalItem(
+                                        approval,
+                                      ),
+                                )
+                                .toList(),
+                      ),
+                      const SizedBox(height: 200),
+                    ],
+                  ),
+                ),
+                floatingActionButton:
+                    widget.isPending &&
+                            !_isLoadingUser &&
+                            !_hasCurrentUserAlreadyActed
+                        ? Consumer<LeaveActionViewModel>(
+                          builder: (context, viewModel, child) {
+                            return SafeArea(
+                              child: LeaveActionButtons(
+                                leaveId: widget.leave.lreid,
+                                approve: language.approve,
+                                reject: language.reject,
+                                employeeName: widget.leave.requesterName,
+                                leaveType: widget.leave.ltyp,
+                                numLeaveDays: widget.leave.numLeaveDays,
+                                fromDate: widget.leave.fromDate,
+                                toDate: widget.leave.toDate,
+                                onAction: _handleLeaveAction,
+                                viewModel: viewModel,
+                                showApproveRemark: true,
+                              ),
+                            );
+                          },
+                        )
+                        : null,
+                floatingActionButtonLocation:
+                    FloatingActionButtonLocation.centerDocked,
               ),
-            ),
-            floatingActionButton:
-                widget.isPending &&
-                        !_isLoadingUser &&
-                        !_hasCurrentUserAlreadyActed
-                    ? Consumer<LeaveActionViewModel>(
-                      builder: (context, viewModel, child) {
-                        return SafeArea(
-                          child: LeaveActionButtons(
-                            leaveId: widget.leave.lreid,
-                            employeeName: widget.leave.requesterName,
-                            leaveType: widget.leave.ltyp,
-                            numLeaveDays: widget.leave.numLeaveDays,
-                            fromDate: widget.leave.fromDate,
-                            toDate: widget.leave.toDate,
-                            onAction: _handleLeaveAction,
-                            viewModel: viewModel,
-                            showApproveRemark: true,
+              if (_isNavigating)
+                Container(
+                  color: Colors.black.withOpacity(0.45),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 24,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                        );
-                      },
-                    )
-                    : null,
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(color: primary),
+                          const SizedBox(height: 16),
+                          Text(
+                            language.pleaseWait,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
@@ -153,8 +198,13 @@ class _ApproverLeaveDetailScreenState extends State<ApproverLeaveDetailScreen> {
 
   void _handleLeaveAction(bool isApprove, String remark, bool success) {
     if (success) {
-      widget.onActionComplete?.call();
-      Navigator.pop(context);
+      setState(() => _isNavigating = true);
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          widget.onActionComplete?.call();
+          Navigator.pop(context);
+        }
+      });
     }
   }
 
