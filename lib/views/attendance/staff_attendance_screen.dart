@@ -287,6 +287,19 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                 flex: 1,
                 child: Center(
                   child: Text(
+                    language.late,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.yellow[700],
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Center(
+                  child: Text(
                     language.leave,
                     style: TextStyle(
                       fontSize: 14,
@@ -305,19 +318,6 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.red[700],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    language.late,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.yellow[700],
                     ),
                   ),
                 ),
@@ -409,6 +409,22 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
               flex: 1,
               child: Center(
                 child: Text(
+                  '${dept.attendanceCounts.late}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        dept.attendanceCounts.late > 0
+                            ? Colors.orange[700]
+                            : Colors.grey[400],
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Text(
                   '${dept.attendanceCounts.leave}',
                   style: TextStyle(
                     fontSize: 14,
@@ -432,22 +448,6 @@ class _StaffAttendanceScreenState extends State<StaffAttendanceScreen> {
                     color:
                         dept.attendanceCounts.absent > 0
                             ? Colors.red[700]
-                            : Colors.grey[400],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Center(
-                child: Text(
-                  '${dept.attendanceCounts.late}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        dept.attendanceCounts.late > 0
-                            ? Colors.orange[700]
                             : Colors.grey[400],
                   ),
                 ),

@@ -116,95 +116,101 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
   }
 
   Widget _buildErrorState(AttendanceCalendarViewModel viewModel) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  shape: BoxShape.circle,
+    return SafeArea(
+      top: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-                child: const Icon(
-                  Icons.error_outline_rounded,
-                  size: 64,
-                  color: Colors.red,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline_rounded,
+                    size: 64,
+                    color: Colors.red,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                language.errorLoadingReport,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(height: 24),
+                Text(
+                  language.errorLoadingReport,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                viewModel.errorMessage!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
-                  height: 1.4,
+                const SizedBox(height: 12),
+                Text(
+                  viewModel.errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    viewModel.clearError();
-                    viewModel.loadCurrentMonthAttendance();
-                  },
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(language.tryAgain),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      viewModel.clearError();
+                      viewModel.loadCurrentMonthAttendance();
+                    },
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(language.tryAgain),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
-    );
+        ), // closes Padding
+      ), // closes Center
+    ); // closes SafeArea
   }
 
   Widget _buildMainContent(AttendanceCalendarViewModel viewModel) {
-    return RefreshIndicator(
-      onRefresh: () => viewModel.loadCurrentMonthAttendance(),
-      color: primary,
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: _buildSummaryCards(viewModel)),
-          SliverToBoxAdapter(child: _buildDateRangeHeader(viewModel)),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _buildAttendanceReportTable(viewModel),
-          ),
-        ],
+    return SafeArea(
+      top: false,
+      child: RefreshIndicator(
+        onRefresh: () => viewModel.loadCurrentMonthAttendance(),
+        color: primary,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildSummaryCards(viewModel)),
+            SliverToBoxAdapter(child: _buildDateRangeHeader(viewModel)),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _buildAttendanceReportTable(viewModel),
+            ),
+          ],
+        ),
       ),
     );
   }

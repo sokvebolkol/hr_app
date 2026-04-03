@@ -921,11 +921,11 @@ class _LeaveHistoryScreenState extends State<HistoryRequestScreen>
     final total = filteredList.length;
 
     final pending =
-        filteredList.where((e) => e.statu == '0' || e.isPending).length;
+        filteredList.where((e) => e.statu == '2' || e.isPending).length;
 
     final approved = filteredList.where((e) => e.statu == '1').length;
 
-    final rejected = filteredList.where((e) => e.statu == '2').length;
+    final rejected = filteredList.where((e) => e.statu == '0').length;
 
     return Container(
       margin: const EdgeInsets.all(16),

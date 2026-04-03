@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:chokchey_hr_app/widgets/function_card.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -367,29 +366,101 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
             },
           ),
         ),
-        bottomNavigationBar: ConvexAppBar(
-          key: ValueKey('${_currentIndex}_${language.code}'),
-          color: Colors.black,
-          backgroundColor: Colors.white,
-          activeColor: secondary,
-          shadowColor: Colors.grey[200],
-          style: TabStyle.fixedCircle,
-          items: [
-            TabItem(icon: Icons.home, title: language.home),
-            TabItem(icon: Icons.person, title: language.profile),
-            TabItem(icon: Icons.menu, title: language.menu),
+        bottomNavigationBar: _buildBottomNavBar(),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.18),
+            blurRadius: 16,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              _buildNavItem(
+                0,
+                Icons.home_rounded,
+                Icons.home_outlined,
+                language.home,
+              ),
+              _buildNavItem(
+                1,
+                Icons.person_rounded,
+                Icons.person_outline_rounded,
+                language.profile,
+              ),
+              _buildNavItem(
+                2,
+                Icons.menu_rounded,
+                Icons.menu_rounded,
+                language.menu,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    int index,
+    IconData activeIcon,
+    IconData inactiveIcon,
+    String label,
+  ) {
+    final isActive = _currentIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _currentIndex = index;
+            if (index == 0) {
+              _dashboardViewModel.refreshProfile();
+              _ceoDashboardViewModel.refresh();
+            }
+          });
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
+              decoration: BoxDecoration(
+                color:
+                    isActive ? secondary.withOpacity(0.13) : Colors.transparent,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(
+                isActive ? activeIcon : inactiveIcon,
+                color: isActive ? secondary : Colors.grey[500],
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: isActive ? secondary : Colors.grey[500],
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.normal,
+              ),
+            ),
           ],
-          initialActiveIndex: _currentIndex,
-          onTap: (int i) {
-            setState(() {
-              _currentIndex = i;
-              // Optionally refresh data when switching to Home or Profile
-              if (_currentIndex == 0) {
-                _dashboardViewModel.refreshProfile();
-                _ceoDashboardViewModel.refresh();
-              }
-            });
-          },
         ),
       ),
     );

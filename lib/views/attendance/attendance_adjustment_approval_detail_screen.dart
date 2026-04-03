@@ -437,7 +437,7 @@ class _AttendanceAdjustmentApprovalDetailScreenState
             _buildDetailRow(
               language.requestedOn,
               DateFormat(
-                'MMMM dd, yyyy at hh:mm a',
+                'MMMM dd, yyyy hh:mm a',
               ).format(widget.request.requestDate),
               Icons.access_time,
             ),
