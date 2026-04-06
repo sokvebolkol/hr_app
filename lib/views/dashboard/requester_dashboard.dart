@@ -525,7 +525,9 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                                         ? const ManagerNotificationScreen()
                                         : const RequesterNotificationScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          if (mounted) viewModel.refresh();
+                        });
                       },
                       icon: const Icon(
                         Icons.notifications,

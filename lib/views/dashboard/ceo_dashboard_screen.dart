@@ -548,7 +548,9 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                           MaterialPageRoute(
                             builder: (context) => const CeoNotificationScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          if (mounted) viewModel.refresh();
+                        });
                       },
                       icon: const Icon(
                         Icons.notifications,

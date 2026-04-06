@@ -444,7 +444,12 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                             builder:
                                 (context) => const ManagerNotificationScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          if (mounted) {
+                            viewModel.refresh();
+                            _managerDashboardViewModel.refresh();
+                          }
+                        });
                       },
                       icon: const Icon(
                         Icons.notifications,
