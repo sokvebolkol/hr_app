@@ -135,14 +135,11 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         final String? token = await messaging.getToken();
-        print('🔥 FCM Token obtained: ${token?.substring(0, 20)}...');
         return token;
       } else {
-        print('❌ Notification permission denied');
         return null;
       }
     } catch (e) {
-      print('❌ Error getting FCM token: $e');
       return null;
     }
   }
@@ -227,7 +224,6 @@ class _LoginScreenState extends State<LoginScreen>
         if (deviceToken != null) {
           await prefs.setString('fcm_token', deviceToken);
           await prefs.setString('device_type', deviceType);
-          print('✅ FCM token and device type saved locally');
         }
 
         Widget targetScreen;
@@ -244,9 +240,10 @@ class _LoginScreenState extends State<LoginScreen>
 
         // ✅ Show success message
 
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => targetScreen),
+          (route) => false,
         );
       } else if (response.statusCode == 401) {
         // ✅ Unauthorized - wrong credentials

@@ -734,30 +734,52 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             ]);
           },
           color: secondary,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(left: 16, right: 16, top: 16),
-                  child: const DateSection(),
-                ),
-                InkWell(
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const StaffAttendanceScreen(
-                                isTodayAttendance: false,
-                              ),
+          notificationPredicate: (notification) => true,
+          child: NestedScrollView(
+            headerSliverBuilder:
+                (context, innerBoxIsScrolled) => [
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            top: 16,
+                          ),
+                          child: const DateSection(),
                         ),
-                      ),
-                  child: _buildTodayAttendanceCard(ceoViewModel),
-                ),
-                _buildFunctionButtons(context),
-                _buildLeaveManagementTabs(ceoViewModel),
+                        InkWell(
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const StaffAttendanceScreen(
+                                        isTodayAttendance: false,
+                                      ),
+                                ),
+                              ),
+                          child: _buildTodayAttendanceCard(ceoViewModel),
+                        ),
+                        _buildFunctionButtons(context),
+                      ],
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _CeoTabBarDelegate(
+                      child: _buildCeoTabBarHeader(ceoViewModel),
+                      height: 68,
+                    ),
+                  ),
+                ],
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildPendingLeavesTab(ceoViewModel.pendingLeaves),
+                _buildApprovedLeavesTab(ceoViewModel),
               ],
             ),
           ),
@@ -1090,215 +1112,197 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     );
   }
 
-  Widget _buildLeaveManagementTabs(CeoDashboardViewModel viewModel) {
+  Widget _buildCeoTabBarHeader(CeoDashboardViewModel viewModel) {
     return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+      color: const Color.fromARGB(237, 255, 255, 255),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Container(
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Custom Tab Bar with Full Background
-          Container(
-            padding: const EdgeInsets.only(top: 4, bottom: 4),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _tabController.animateTo(0),
+                  child: AnimatedBuilder(
+                    animation: _tabController,
+                    builder: (context, child) {
+                      final isSelected = _tabController.index == 0;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected ? secondary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow:
+                              isSelected
+                                  ? [
+                                    BoxShadow(
+                                      color: secondary.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                  : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                language.pendingApproval,
+                                style: TextStyle(
+                                  color:
+                                      isSelected
+                                          ? Colors.white
+                                          : Colors.grey[600],
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            if (viewModel.pendingLeavesCount > 0) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isSelected
+                                          ? Colors.white.withOpacity(0.9)
+                                          : Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 20,
+                                  minHeight: 20,
+                                ),
+                                child: Text(
+                                  viewModel.pendingLeavesCount > 99
+                                      ? '99+'
+                                      : viewModel.pendingLeavesCount.toString(),
+                                  style: TextStyle(
+                                    color:
+                                        isSelected ? secondary : Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _tabController.animateTo(0),
-                    child: AnimatedBuilder(
-                      animation: _tabController,
-                      builder: (context, child) {
-                        final isSelected = _tabController.index == 0;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected ? secondary : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow:
-                                isSelected
-                                    ? [
-                                      BoxShadow(
-                                        color: secondary.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ]
-                                    : null,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  language.pendingApproval,
-                                  style: TextStyle(
-                                    color:
-                                        isSelected
-                                            ? Colors.white
-                                            : Colors.grey[600],
-                                    fontWeight:
-                                        isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                    fontSize: 12,
-                                  ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _tabController.animateTo(1),
+                  child: AnimatedBuilder(
+                    animation: _tabController,
+                    builder: (context, child) {
+                      final isSelected = _tabController.index == 1;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected ? secondary : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow:
+                              isSelected
+                                  ? [
+                                    BoxShadow(
+                                      color: secondary.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                  : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                language.approvalHistory,
+                                style: TextStyle(
+                                  color:
+                                      isSelected
+                                          ? Colors.white
+                                          : Colors.grey[600],
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                  fontSize: 12,
                                 ),
                               ),
-                              if (viewModel.pendingLeavesCount > 0) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isSelected
-                                            ? Colors.white.withOpacity(0.9)
-                                            : Colors.red,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 20,
-                                    minHeight: 20,
-                                  ),
-                                  child: Text(
-                                    viewModel.pendingLeavesCount > 99
-                                        ? '99+'
-                                        : viewModel.pendingLeavesCount
-                                            .toString(),
-                                    style: TextStyle(
-                                      color:
-                                          isSelected ? secondary : Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
+                            ),
+                            if (viewModel.approvedLeavesCount > 0) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isSelected
+                                          ? Colors.white.withOpacity(0.9)
+                                          : Colors.green,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                              ],
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _tabController.animateTo(1),
-                    child: AnimatedBuilder(
-                      animation: _tabController,
-                      builder: (context, child) {
-                        final isSelected = _tabController.index == 1;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected ? secondary : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow:
-                                isSelected
-                                    ? [
-                                      BoxShadow(
-                                        color: secondary.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ]
-                                    : null,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
+                                constraints: const BoxConstraints(
+                                  minWidth: 20,
+                                  minHeight: 20,
+                                ),
                                 child: Text(
-                                  language.approvalHistory,
+                                  viewModel.approvedLeavesCount > 99
+                                      ? '99+'
+                                      : viewModel.approvedLeavesCount
+                                          .toString(),
                                   style: TextStyle(
                                     color:
-                                        isSelected
-                                            ? Colors.white
-                                            : Colors.grey[600],
-                                    fontWeight:
-                                        isSelected
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                    fontSize: 12,
+                                        isSelected ? secondary : Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
-                              if (viewModel.approvedLeavesCount > 0) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isSelected
-                                            ? Colors.white.withOpacity(0.9)
-                                            : Colors.green,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 20,
-                                    minHeight: 20,
-                                  ),
-                                  child: Text(
-                                    viewModel.approvedLeavesCount > 99
-                                        ? '99+'
-                                        : viewModel.approvedLeavesCount
-                                            .toString(),
-                                    style: TextStyle(
-                                      color:
-                                          isSelected ? secondary : Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
                             ],
-                          ),
-                        );
-                      },
-                    ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Tab Content
-          SizedBox(
-            height: 400, // Fixed height for the tab content
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPendingLeavesTab(viewModel.pendingLeaves),
-                _buildApprovedLeavesTab(viewModel),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2038,4 +2042,29 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
       ),
     );
   }
+}
+
+class _CeoTabBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _CeoTabBarDelegate({required this.child, required this.height});
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_CeoTabBarDelegate oldDelegate) => true;
 }
