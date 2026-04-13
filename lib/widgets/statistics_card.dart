@@ -48,12 +48,12 @@ class StatisticsCard extends StatelessWidget {
                 count.toString().padLeft(2, '0'),
                 style: TextStyle(
                   color: color,
-                  fontSize: 48,
+                  fontSize: 35,
                   fontWeight: FontWeight.bold,
                   height: 1,
                 ),
               ),
-              const SizedBox(height: 8),
+              // const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

@@ -841,7 +841,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
     }
 
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
       height: 210,
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -939,7 +939,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
   Widget _buildFunctionButtons(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
       child: SizedBox(
         height: 100,
         child: Row(
