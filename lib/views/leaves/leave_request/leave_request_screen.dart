@@ -636,9 +636,7 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                     decoration: BoxDecoration(
                       color: Colors.blue.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.blue.withOpacity(0.2),
-                      ),
+                      border: Border.all(color: Colors.blue.withOpacity(0.2)),
                     ),
                     child: Row(
                       children: [
@@ -805,8 +803,8 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                     ),
                                   );
                                 }).toList(),
-                            onChanged: (leaid) =>
-                                vm.setSelectedLeaveType(leaid),
+                            onChanged:
+                                (leaid) => vm.setSelectedLeaveType(leaid),
                             validator:
                                 (val) =>
                                     val == null
@@ -1025,8 +1023,7 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                       hintText: language.enterYourReason,
                                       alignLabelWithHint: true,
                                       border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       filled: true,
                                       fillColor: Colors.grey[50],
@@ -1075,51 +1072,139 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                     icon: const Icon(Icons.visibility),
                                     label: Text(language.viewSample),
                                     onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder:
-                                            (context) => AlertDialog(
-                                              title: Text(
-                                                language.sampleDocument,
-                                              ),
-                                              content: Image.network(
-                                                vm.selectedLeaveType!.fileUrl!,
-                                                fit: BoxFit.contain,
-                                                width: isWide ? 350 : 250,
-                                                height: isWide ? 400 : 300,
-                                                errorBuilder: (
-                                                  context,
-                                                  error,
-                                                  stackTrace,
-                                                ) {
-                                                  return Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      const Icon(
-                                                        Icons.error,
-                                                        size: 64,
-                                                        color: Colors.red,
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                      Text(
-                                                        language
-                                                            .failedToLoadSampleDocument,
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed:
-                                                      () => Navigator.pop(
-                                                        context,
-                                                      ),
-                                                  child: Text(language.close),
+                                      final imageUrl =
+                                          vm.selectedLeaveType!.fileUrl!;
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          fullscreenDialog: true,
+                                          builder:
+                                              (context) => Scaffold(
+                                                backgroundColor: Colors.white,
+                                                appBar: AppBar(
+                                                  backgroundColor: Colors.white,
+                                                  foregroundColor:
+                                                      Colors.black87,
+                                                  elevation: 0,
+                                                  title: Text(
+                                                    language.sampleDocument,
+                                                    style: const TextStyle(
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ],
-                                            ),
+                                                body: Stack(
+                                                  alignment: Alignment.center,
+                                                  children: [
+                                                    InteractiveViewer(
+                                                      minScale: 0.5,
+                                                      maxScale: 5.0,
+                                                      child: Center(
+                                                        child: Image.network(
+                                                          imageUrl,
+                                                          fit: BoxFit.contain,
+                                                          loadingBuilder: (
+                                                            context,
+                                                            child,
+                                                            loadingProgress,
+                                                          ) {
+                                                            if (loadingProgress ==
+                                                                null)
+                                                              return child;
+                                                            return Center(
+                                                              child: CircularProgressIndicator(
+                                                                color: primary,
+                                                                value:
+                                                                    loadingProgress.expectedTotalBytes !=
+                                                                            null
+                                                                        ? loadingProgress.cumulativeBytesLoaded /
+                                                                            loadingProgress.expectedTotalBytes!
+                                                                        : null,
+                                                              ),
+                                                            );
+                                                          },
+                                                          errorBuilder: (
+                                                            context,
+                                                            error,
+                                                            stackTrace,
+                                                          ) {
+                                                            return Column(
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: [
+                                                                const Icon(
+                                                                  Icons
+                                                                      .broken_image_outlined,
+                                                                  size: 80,
+                                                                  color:
+                                                                      Colors
+                                                                          .grey,
+                                                                ),
+                                                                const SizedBox(
+                                                                  height: 16,
+                                                                ),
+                                                                Text(
+                                                                  language
+                                                                      .failedToLoadSampleDocument,
+                                                                  style: const TextStyle(
+                                                                    color:
+                                                                        Colors
+                                                                            .black54,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Positioned(
+                                                      bottom: 24,
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 16,
+                                                              vertical: 8,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color:
+                                                              Colors
+                                                                  .grey
+                                                                  .shade200,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                20,
+                                                              ),
+                                                        ),
+                                                        child: const Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              Icons.pinch,
+                                                              color:
+                                                                  Colors
+                                                                      .black54,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text(
+                                                              'Pinch to zoom',
+                                                              style: TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .black54,
+                                                                fontSize: 13,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                        ),
                                       );
                                     },
                                   ),
@@ -1211,8 +1296,8 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                         child: Row(
                                           children: [
                                             CircleAvatar(
-                                              backgroundColor:
-                                                  primary.withOpacity(0.15),
+                                              backgroundColor: primary
+                                                  .withOpacity(0.15),
                                               radius: isWide ? 22 : 18,
                                               child: Text(
                                                 (entry.key + 1).toString(),
@@ -1242,7 +1327,9 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
-                                                    entry.value.approverLevelName,
+                                                    entry
+                                                        .value
+                                                        .approverLevelName,
                                                     style: TextStyle(
                                                       fontSize:
                                                           isWide ? 15 : 13,
@@ -1300,9 +1387,7 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                               )
                               : const Icon(Icons.send),
                       label: Text(
-                        vm.isSubmitting
-                            ? language.submitting
-                            : language.submit,
+                        vm.isSubmitting ? language.submitting : language.submit,
                       ),
                       onPressed: vm.isSubmitting ? null : _submitLeaveRequest,
                     ),

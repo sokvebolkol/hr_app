@@ -984,9 +984,9 @@ class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         foregroundColor: Colors.white,
         title: Text(widget.title),
         actions: [
