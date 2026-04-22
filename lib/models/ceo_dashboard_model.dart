@@ -326,6 +326,8 @@ class AttendanceAdjustmentRequest {
   final int id;
   final String staffId;
   final String adjustType;
+  final String? checkInTime;
+  final String? checkOutTime;
   final String adjustDatetime;
   final String reason;
   final int status;
@@ -351,6 +353,8 @@ class AttendanceAdjustmentRequest {
     required this.id,
     required this.staffId,
     required this.adjustType,
+    this.checkInTime,
+    this.checkOutTime,
     required this.adjustDatetime,
     required this.reason,
     required this.status,
@@ -378,6 +382,8 @@ class AttendanceAdjustmentRequest {
       id: json['id'] as int? ?? 0,
       staffId: json['staff_id']?.toString() ?? '',
       adjustType: json['adjust_type']?.toString() ?? '',
+      checkInTime: json['check_in']?.toString() ?? 'N/A',
+      checkOutTime: json['check_out']?.toString() ?? 'N/A',
       adjustDatetime: json['adjust_datetime']?.toString() ?? '',
       reason: json['reason']?.toString() ?? '',
       status: json['status'] as int? ?? 0,

@@ -6,6 +6,8 @@ class AdjustmentRequestModel {
   final String reason;
   final int status;
   final bool isAttendanceCanCancel;
+  final String checkInTime;
+  final String checkOutTime;
   final String createdBy;
   final String createdAt;
   final String requesterName;
@@ -22,6 +24,8 @@ class AdjustmentRequestModel {
     required this.reason,
     required this.status,
     required this.isAttendanceCanCancel,
+    required this.checkInTime,
+    required this.checkOutTime,
     required this.createdBy,
     required this.createdAt,
     required this.requesterName,
@@ -40,6 +44,8 @@ class AdjustmentRequestModel {
       reason: json['reason'] ?? '',
       status: json['status'] ?? 0,
       isAttendanceCanCancel: json['is_attendance_can_cancel'] ?? false,
+      checkInTime: json['check_in'] ?? '',
+      checkOutTime: json['check_out'] ?? '',
       createdBy: json['created_by'] ?? '',
       createdAt: json['created_at'] ?? '',
       requesterName: json['requester_name'] ?? '',

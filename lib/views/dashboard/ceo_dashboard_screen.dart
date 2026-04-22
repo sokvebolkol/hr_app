@@ -820,10 +820,14 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  viewModel.errorMessage!,
+                  "Please check your internet connection and try again",
                   style: TextStyle(color: Colors.red[700], fontSize: 12),
-                  textAlign: TextAlign.center,
                 ),
+                // Text(
+                //   viewModel.errorMessage!,
+                //   style: TextStyle(color: Colors.red[700], fontSize: 12),
+                //   textAlign: TextAlign.center,
+                // ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => viewModel.refresh(),

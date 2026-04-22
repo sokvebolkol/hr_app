@@ -428,6 +428,16 @@ class _AttendanceAdjustmentApprovalDetailScreenState
               Icons.edit_calendar,
             ),
             _buildDetailRow(
+              language.checkIn,
+              FileHelper().formatTime(widget.request.checkInTime),
+              Icons.login,
+            ),
+            _buildDetailRow(
+              language.checkOut,
+              FileHelper().formatTime(widget.request.checkOutTime),
+              Icons.logout,
+            ),
+            _buildDetailRow(
               language.adjustmentDate,
               DateFormat(
                 'EEEE, MMMM dd, yyyy',

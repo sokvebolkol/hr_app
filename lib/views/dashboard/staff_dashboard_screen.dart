@@ -722,17 +722,21 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      viewModel.errorMessage!.length > 200
-                          ? '${viewModel.errorMessage!.substring(0, 200)}...'
-                          : viewModel.errorMessage!,
-                      style: TextStyle(color: Colors.red[700], fontSize: 12),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                Text(
+                  "Please check your internet connection and try again",
+                  style: TextStyle(color: Colors.red[700], fontSize: 12),
                 ),
+                // Flexible(
+                //   child: SingleChildScrollView(
+                //     child: Text(
+                //       viewModel.errorMessage!.length > 200
+                //           ? '${viewModel.errorMessage!.substring(0, 200)}...'
+                //           : viewModel.errorMessage!,
+                //       style: TextStyle(color: Colors.red[700], fontSize: 12),
+                //       textAlign: TextAlign.center,
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => viewModel.refresh(),

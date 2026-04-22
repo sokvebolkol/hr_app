@@ -464,6 +464,14 @@ class _MyAttendanceAdjustmentRequestScreenState
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
+                      label: language.checkIn,
+                      value: FileHelper().formatTime(
+                        widget.adjustmentRequest.checkInTime,
+                      ),
+                      icon: Icons.login,
+                    ),
+                    const SizedBox(height: 12),
+                    CompactDetailRow(
                       label: language.applied,
                       value: FileHelper.formatDate(createdDate),
                       icon: Icons.schedule,
@@ -479,6 +487,14 @@ class _MyAttendanceAdjustmentRequestScreenState
                       label: language.employee,
                       value: widget.adjustmentRequest.requesterName,
                       icon: Icons.person,
+                    ),
+                    const SizedBox(height: 12),
+                    CompactDetailRow(
+                      label: language.checkOut,
+                      value: FileHelper().formatTime(
+                        widget.adjustmentRequest.checkOutTime,
+                      ),
+                      icon: Icons.logout,
                     ),
                     const SizedBox(height: 12),
                     CompactDetailRow(
@@ -991,7 +1007,7 @@ class _FullScreenDocumentViewerState extends State<_FullScreenDocumentViewer> {
         title: Text(widget.title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
         ],
