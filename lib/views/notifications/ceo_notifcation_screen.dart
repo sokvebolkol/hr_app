@@ -539,7 +539,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
           builder:
               (context) => ApproverLeaveDetailScreen(
                 leave: leaveRequest,
-                isPending: true,
+                isPending: leaveRequest.statu == '2',
                 onActionComplete: _refreshNotifications,
               ),
         ),
