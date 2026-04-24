@@ -413,11 +413,14 @@ class NotificationSummary {
   });
 
   factory NotificationSummary.fromJson(Map<String, dynamic> json) {
+    final rawByType = json['by_type'];
+    final byType =
+        (rawByType is Map) ? Map<String, int>.from(rawByType) : <String, int>{};
     return NotificationSummary(
       total: json['total'] ?? 0,
       unread: json['unread'] ?? 0,
       read: json['read'] ?? 0,
-      byType: Map<String, int>.from(json['by_type'] ?? {}),
+      byType: byType,
       recentUnread: json['recent_unread'] ?? 0,
     );
   }

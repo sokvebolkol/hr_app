@@ -224,6 +224,7 @@ class _LoginScreenState extends State<LoginScreen>
         if (deviceToken != null) {
           await prefs.setString('fcm_token', deviceToken);
           await prefs.setString('device_type', deviceType);
+          print('✅ FCM Token saved: $deviceToken');
         }
 
         Widget targetScreen;

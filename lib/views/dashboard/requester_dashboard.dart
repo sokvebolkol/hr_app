@@ -40,6 +40,7 @@ class RequesterDashboardScreen extends StatefulWidget {
   final bool hideBottomNav;
   final VoidCallback? onNavigateToMenu;
   final VoidCallback? onRefreshNeeded;
+  final VoidCallback? onMandatoryUpdate;
 
   final int initialIndex;
 
@@ -48,6 +49,7 @@ class RequesterDashboardScreen extends StatefulWidget {
     this.hideBottomNav = false,
     this.onNavigateToMenu,
     this.onRefreshNeeded,
+    this.onMandatoryUpdate,
     this.initialIndex = 0,
   });
 
@@ -64,6 +66,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
   bool isApproverUser = false;
   late DashboardViewModel _dashboardViewModel;
   Language language = Language();
+  bool _hasShownUpdateDialog = false;
 
   final List<Widget> _screens = [
     const RequesterDashboardScreen(),
@@ -263,11 +266,14 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                   }
 
                   // Force update check
-                  if (viewModel.appVersion != null) {
+                  if (viewModel.appVersion != null && !_hasShownUpdateDialog) {
                     WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      if (_hasShownUpdateDialog) return;
                       final shouldUpdate = await viewModel.shouldForceUpdate();
 
                       if (shouldUpdate && mounted) {
+                        _hasShownUpdateDialog = true;
+                        widget.onMandatoryUpdate?.call();
                         final updateUrl =
                             Platform.isAndroid
                                 ? viewModel.appVersion!.androidUrl

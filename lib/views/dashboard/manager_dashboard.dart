@@ -22,6 +22,7 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
   int _currentIndex = 0;
   bool _showStaffView = false; // false = Personal, true = Staff
   bool _triggerPersonalRefresh = false;
+  bool _isMandatoryUpdate = false;
   Language language = LanguageLogic().language;
 
   static const _kShowStaffViewKey = 'manager_dashboard_show_staff_view';
@@ -173,6 +174,14 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
                 onNavigateToMenu: () {
                   setState(() => _currentIndex = 1);
                 },
+                onMandatoryUpdate: () {
+                  if (mounted) {
+                    setState(() {
+                      _isMandatoryUpdate = true;
+                      _showStaffView = false;
+                    });
+                  }
+                },
               ),
     );
   }
@@ -217,8 +226,29 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // ✅ Toggle Switch Button
-            _buildToggleSwitchNavItem(),
+            // ✅ Toggle Switch Button (hidden when mandatory update)
+            if (!_isMandatoryUpdate) _buildToggleSwitchNavItem(),
+            if (_isMandatoryUpdate)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.person_rounded, color: primary, size: 24),
+                      const SizedBox(height: 6),
+                      Text(
+                        language.personal,
+                        style: TextStyle(
+                          color: primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             SizedBox(width: isSmallScreen ? 80 : 100), // Space for FAB
             _buildNavItem(
               icon: Icons.menu_rounded,

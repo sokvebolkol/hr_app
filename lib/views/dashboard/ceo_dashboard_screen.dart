@@ -55,6 +55,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
   late CeoDashboardViewModel _ceoDashboardViewModel;
   Language language = Language();
   bool _hasShownUpdateDialog = false;
+  bool _isMandatoryUpdate = false;
 
   @override
   void initState() {
@@ -181,6 +182,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                       await dashboardViewModel.shouldForceUpdate();
                   if (shouldUpdate && mounted) {
                     _hasShownUpdateDialog = true; // Set flag before showing
+                    setState(() => _isMandatoryUpdate = true);
 
                     final updateUrl =
                         Platform.isAndroid
@@ -424,6 +426,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
     return Expanded(
       child: GestureDetector(
         onTap: () {
+          if (_isMandatoryUpdate && index != 0) return;
           setState(() {
             _currentIndex = index;
             if (index == 0) {
