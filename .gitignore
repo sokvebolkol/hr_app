@@ -80,6 +80,7 @@ app.*.map.json
 **/ios/Pods/
 **/ios/Runner.xcworkspace/
 **/ios/build/
+**/ios/
 
 # Xcode
 *.xcuserstate

@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.vebol.employee.hr</string>
+	<string>com.vebol.employee.unlistapp</string>
 	<key>PROJECT_ID</key>
 	<string>hrapiapp</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1045629204112:ios:06c4375a4c1e32df60ca15</string>
+	<string>1:1045629204112:ios:1de1b9e410b88f3560ca15</string>
 </dict>
 </plist>
