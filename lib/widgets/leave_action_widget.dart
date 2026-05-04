@@ -35,32 +35,6 @@ class LeaveActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<LeaveActionViewModel>(
       builder: (context, viewModel, child) {
-        if (viewModel.hasActionTaken) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green[200]!),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle, color: Colors.green[700], size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Action completed successfully',
-                  style: TextStyle(
-                    color: Colors.green[700],
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(16),
@@ -380,6 +354,8 @@ class LeaveActionButtons extends StatelessWidget {
                                                   .isEmpty)
                                           ? null
                                           : () async {
+                                            final messenger =
+                                                ScaffoldMessenger.of(context);
                                             Navigator.pop(dialogContext);
                                             bool success;
                                             if (isApprove) {
@@ -400,25 +376,8 @@ class LeaveActionButtons extends StatelessWidget {
                                                   );
                                             }
 
-                                            // Show success/error message
-                                            if (success) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    viewModel.successMessage ??
-                                                        (isApprove
-                                                            ? 'Leave request approved successfully'
-                                                            : 'Leave request rejected successfully'),
-                                                  ),
-                                                  backgroundColor: Colors.green,
-                                                ),
-                                              );
-                                            } else {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
+                                            if (!success) {
+                                              messenger.showSnackBar(
                                                 SnackBar(
                                                   content: Text(
                                                     viewModel.errorMessage ??
@@ -428,7 +387,7 @@ class LeaveActionButtons extends StatelessWidget {
                                                 ),
                                               );
                                             }
-                                            // Call the callback
+                                            // Call the callback — parent handles navigation
                                             onAction(
                                               isApprove,
                                               remarkController.text.trim(),

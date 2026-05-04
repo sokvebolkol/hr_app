@@ -28,6 +28,10 @@ class ManagerDashboardViewModel extends ChangeNotifier {
       _attendanceSummary?.totalPendingApprovals ?? 0;
   int get approvedLeavesCount => _attendanceSummary?.approvedLeavesCount ?? 0;
   int get rejectedLeavesCount => _attendanceSummary?.rejectedLeavesCount ?? 0;
+  int get approvedAttendanceCount =>
+      _attendanceSummary?.approvedAttendanceCount ?? 0;
+  int get rejectedAttendanceCount =>
+      _attendanceSummary?.rejectedAttendanceCount ?? 0;
   double get attendanceRate => _attendanceSummary?.attendanceRate ?? 0;
 
   List<LeaveRequest> get pendingLeaves =>
@@ -38,6 +42,10 @@ class ManagerDashboardViewModel extends ChangeNotifier {
       _attendanceSummary?.rejectedLeaves ?? [];
   List<AttendanceAdjustmentRequest> get pendingAttendanceRequests =>
       _attendanceSummary?.pendingAttendanceNeedToApprove ?? [];
+  List<AttendanceAdjustmentRequest> get approvedAttendanceRequests =>
+      _attendanceSummary?.approvedAttendance ?? [];
+  List<AttendanceAdjustmentRequest> get rejectedAttendanceRequests =>
+      _attendanceSummary?.rejectedAttendance ?? [];
 
   // Initialize
   void initialize() {

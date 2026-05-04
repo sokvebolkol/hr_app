@@ -1541,6 +1541,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             children: [
               StatisticsCard(
                 title: language.approved,
+                viewAll: language.viewAll,
                 count: approvedCount,
                 color: Colors.green,
                 onTap: () {
@@ -1560,6 +1561,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               const SizedBox(width: 16),
               StatisticsCard(
                 title: language.rejected,
+                viewAll: language.viewAll,
                 count: rejectedCount,
                 color: Colors.red,
                 onTap: () {

@@ -45,10 +45,14 @@ class AttendanceSummary {
   final int pendingAttendanceCount;
   final int approvedLeavesCount;
   final int rejectedLeavesCount;
+  final int approvedAttendanceCount;
+  final int rejectedAttendanceCount;
   final List<LeaveRequest> leaveNeedToApprove;
   final List<LeaveRequest> approvedLeaves;
   final List<LeaveRequest> rejectedLeaves;
   final List<AttendanceAdjustmentRequest> pendingAttendanceNeedToApprove;
+  final List<AttendanceAdjustmentRequest> approvedAttendance;
+  final List<AttendanceAdjustmentRequest> rejectedAttendance;
 
   AttendanceSummary({
     required this.date,
@@ -63,10 +67,14 @@ class AttendanceSummary {
     required this.pendingAttendanceCount,
     required this.approvedLeavesCount,
     required this.rejectedLeavesCount,
+    required this.approvedAttendanceCount,
+    required this.rejectedAttendanceCount,
     required this.leaveNeedToApprove,
     required this.approvedLeaves,
     required this.rejectedLeaves,
     required this.pendingAttendanceNeedToApprove,
+    required this.approvedAttendance,
+    required this.rejectedAttendance,
   });
 
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
@@ -88,6 +96,8 @@ class AttendanceSummary {
         ),
         approvedLeavesCount: _parseToInt(json['approved_leaves_count']),
         rejectedLeavesCount: _parseToInt(json['rejected_leaves_count']),
+        approvedAttendanceCount: _parseToInt(json['approved_attendance_count']),
+        rejectedAttendanceCount: _parseToInt(json['rejected_attendance_count']),
         leaveNeedToApprove:
             (json['leave_need_to_approve'] as List? ?? [])
                 .map((e) => LeaveRequest.fromJson(e))
@@ -102,6 +112,14 @@ class AttendanceSummary {
                 .toList(),
         pendingAttendanceNeedToApprove:
             attendanceList
+                .map((e) => AttendanceAdjustmentRequest.fromJson(e))
+                .toList(),
+        approvedAttendance:
+            (json['approved_attendance'] as List? ?? [])
+                .map((e) => AttendanceAdjustmentRequest.fromJson(e))
+                .toList(),
+        rejectedAttendance:
+            (json['rejected_attendance'] as List? ?? [])
                 .map((e) => AttendanceAdjustmentRequest.fromJson(e))
                 .toList(),
       );

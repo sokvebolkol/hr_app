@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class StatisticsCard extends StatelessWidget {
   final String title;
+  final String viewAll;
   final int count;
   final Color color;
   final VoidCallback? onTap;
@@ -9,6 +10,7 @@ class StatisticsCard extends StatelessWidget {
   const StatisticsCard({
     super.key,
     required this.title,
+    required this.viewAll,
     required this.count,
     required this.color,
     this.onTap,
@@ -58,7 +60,7 @@ class StatisticsCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    'View All',
+                    viewAll,
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                   const SizedBox(width: 4),

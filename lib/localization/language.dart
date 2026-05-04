@@ -139,6 +139,10 @@ class Language {
   String get allLeaveRequestsAreUpToDate => "All leave requests are up to date";
   String get noRequestsFoundFor => "No requests found for";
   String get approved => "Approved";
+  String get leaveApproved => "Leave Approved";
+  String get leaveRejected => "Leave Rejected";
+  String get attendanceApproved => "Attendance Approved";
+  String get attendanceRejected => "Attendance Rejected";
   String get rejected => "Rejected";
   String get approve => "Approve";
   String get reject => "Reject";
@@ -462,6 +466,7 @@ class Language {
   String get type => "Type";
   String get remark => "Remark";
   String get tapToView => "Tap to view";
+  String get viewAll => "View All";
   String get failedToLoadDocument => "Failed to load document";
   String get leaveInformation => "Leave Information";
   String get adjustmentInformation => "Adjustment Information";
@@ -804,6 +809,14 @@ class Khmer implements Language {
   String get noRequestsFoundFor => "រកមិនឃើញសំណើសម្រាប់";
   @override
   String get approved => "បានអនុម័ត";
+  @override
+  String get leaveApproved => "ច្បាប់បានអនុម័ត";
+  @override
+  String get leaveRejected => "ច្បាប់បានបដិសេធ";
+  @override
+  String get attendanceApproved => "វត្តមានបានអនុម័ត";
+  @override
+  String get attendanceRejected => "វត្តមានបានបដិសេធ";
   @override
   String get rejected => "បានបដិសេធ";
   @override
@@ -1410,6 +1423,8 @@ class Khmer implements Language {
   String get remark => "ចំណាំ";
   @override
   String get tapToView => "ចុចដើម្បីមើល";
+  @override
+  String get viewAll => "មើលទាំងអស់";
   @override
   String get failedToLoadDocument => "មានបញ្ហាក្នុងការផ្ទុកឯកសារ";
   @override

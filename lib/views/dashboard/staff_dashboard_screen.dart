@@ -21,6 +21,7 @@ import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/date_section.dart';
 import '../../widgets/statistics_card.dart';
 import '../attendance/attendance_adjustment_approval_detail_screen.dart';
+import '../attendance/attendance_approval_history_screen.dart';
 import '../attendance/staff_attendance_screen.dart';
 import '../auth/login-screen.dart';
 import '../chokchey_team/chockchey_team_screen.dart';
@@ -1529,13 +1530,14 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
           ),
         ),
 
-        // Statistics Cards
+        // Leave Statistics Cards
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               StatisticsCard(
-                title: language.approved,
+                title: language.leaveApproved,
+                viewAll: language.viewAll,
                 count: approvedCount,
                 color: Colors.green,
                 onTap: () {
@@ -1554,7 +1556,8 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               ),
               const SizedBox(width: 16),
               StatisticsCard(
-                title: language.rejected,
+                title: language.leaveRejected,
+                viewAll: language.viewAll,
                 count: rejectedCount,
                 color: Colors.red,
                 onTap: () {
@@ -1563,6 +1566,53 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                     MaterialPageRoute(
                       builder:
                           (context) => ApprovalHistoryScreen(
+                            filterType: 'rejected',
+                            viewModel: viewModel,
+                            initialMonth: _selectedMonth,
+                          ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        // Attendance Statistics Cards
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Row(
+            children: [
+              StatisticsCard(
+                title: language.attendanceApproved,
+                viewAll: language.viewAll,
+                count: viewModel.approvedAttendanceCount,
+                color: Colors.teal,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => AttendanceApprovalHistoryScreen(
+                            filterType: 'approved',
+                            viewModel: viewModel,
+                            initialMonth: _selectedMonth,
+                          ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 16),
+              StatisticsCard(
+                title: language.attendanceRejected,
+                viewAll: language.viewAll,
+                count: viewModel.rejectedAttendanceCount,
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => AttendanceApprovalHistoryScreen(
                             filterType: 'rejected',
                             viewModel: viewModel,
                             initialMonth: _selectedMonth,
