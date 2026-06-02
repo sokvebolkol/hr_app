@@ -74,6 +74,10 @@ class Language {
   String get pleaseEnterBothStaffIdAndPassword =>
       "Please enter both Staff ID and Password.";
   String get copyrightText => "© 2024 Chokchey HR. All rights reserved.";
+  String get loginWithMicrosoft => "Sign in with Microsoft";
+  String get signingInWithMicrosoft => "Signing in...";
+  String get microsoftLoginFailed => "Microsoft sign-in failed. Please try again.";
+  String get orDivider => "or";
   String get pleaseCreateStrongPassword =>
       "Please create a strong password that you haven\'t used before.";
 
@@ -1536,4 +1540,12 @@ class Khmer implements Language {
   String get pleaseEnterStaffIdOrCode => "សូមបញ្ចូលលេខបុគ្គលិក ឬកូដរបស់អ្នក";
   @override
   String get staffIdOrCode4Digits => "លេខបុគ្គលិក ឬកូដត្រូវតែមានចំនួន ៤ ខ្ទង់";
+  @override
+  String get loginWithMicrosoft => "ចូលដោយ Microsoft";
+  @override
+  String get signingInWithMicrosoft => "កំពុងចូល...";
+  @override
+  String get microsoftLoginFailed => "ការចូលតាម Microsoft បានបរាជ័យ។ សូមព្យាយាមម្ដងទៀត";
+  @override
+  String get orDivider => "ឬ";
 }

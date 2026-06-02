@@ -13,6 +13,8 @@ import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../services/global_service.dart';
+import 'package:msal_auth/msal_auth.dart';
+import '../../services/ms_auth_service.dart';
 import '../../widgets/environment_switcher_bottom_sheet.dart';
 import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
@@ -36,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _isMsLoading = false;
   String _appVersion = '1.0.0';
 
   // For 7-tap gesture to open environment switcher
@@ -297,6 +300,108 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _loginWithMicrosoft() async {
+    setState(() => _isMsLoading = true);
+    HapticFeedback.lightImpact();
+
+    try {
+      final accessToken = await MsAuthService.signIn();
+
+      // null means the user explicitly cancelled — just stop the spinner.
+      if (accessToken == null) {
+        if (mounted) setState(() => _isMsLoading = false);
+        return;
+      }
+
+      final deviceName = await _getDeviceName();
+      final deviceToken = await _getFCMToken();
+      final deviceType = Platform.isAndroid ? 'android' : 'ios';
+
+      final response = await http
+          .post(
+            Uri.parse('${ServerService().baseUrl}auth/microsoft'),
+            headers: {'Content-Type': 'application/json'},
+            body: convert.jsonEncode({
+              'access_token': accessToken,
+              'device_name': deviceName,
+              'device_type': deviceType,
+              'device_token': deviceToken ?? '',
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw Exception(language.connectionTimeout),
+          );
+
+      if (response.statusCode == 200) {
+        final data = convert.jsonDecode(response.body);
+
+        if (data['success'] == false || data['token'] == null) {
+          final errorMessage = data['message'] ?? language.microsoftLoginFailed;
+          _showErrorDialog(title: language.loginFailed, message: errorMessage);
+          return;
+        }
+
+        final token = data['token'];
+        final userId = data['userLoginInfo']['uid'];
+        final isApprover = data['userProfile']['is_approver'] ?? false;
+        final ceoUser = data['userProfile']['is_ceo'] ?? false;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('userId', userId);
+        await prefs.setBool('isApprover', isApprover);
+        await prefs.setBool('ceoUser', ceoUser);
+
+        if (deviceToken != null) {
+          await prefs.setString('fcm_token', deviceToken);
+          await prefs.setString('device_type', deviceType);
+        }
+
+        if (!mounted) return;
+
+        Widget targetScreen;
+        if (ceoUser) {
+          targetScreen = const CeoDashboardScreen();
+        } else if (isApprover) {
+          targetScreen = const ManagerDashboard();
+        } else {
+          targetScreen = const RequesterDashboardScreen();
+        }
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => targetScreen),
+          (route) => false,
+        );
+      } else {
+        String errorMessage = language.microsoftLoginFailed;
+        try {
+          final data = convert.jsonDecode(response.body);
+          errorMessage = data['message'] ?? errorMessage;
+        } catch (_) {}
+        _showErrorDialog(title: language.loginFailed, message: errorMessage);
+      }
+    } on SocketException {
+      _showErrorDialog(
+        title: language.networkError,
+        message: language.noInternetConnection,
+      );
+    } on MsalException catch (e) {
+      _showErrorDialog(
+        title: language.loginFailed,
+        message: e.message.isNotEmpty ? e.message : language.microsoftLoginFailed,
+      );
+    } catch (_) {
+      _showErrorDialog(
+        title: language.loginFailed,
+        message: language.microsoftLoginFailed,
+      );
+    } finally {
+      if (mounted) setState(() => _isMsLoading = false);
+    }
+  }
+
   // ✅ NEW: Password change required dialog
   Future<void> _showPasswordChangeRequiredDialog() async {
     return showDialog(
@@ -537,25 +642,30 @@ class _LoginScreenState extends State<LoginScreen>
               SafeArea(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  child: Container(
-                    height:
-                        MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 60),
-                            _buildHeader(),
-                            const SizedBox(height: 60),
-                            _buildLoginCard(),
-                            const Spacer(),
-                            _buildFooter(),
-                            const SizedBox(height: 40),
-                          ],
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height -
+                          MediaQuery.of(context).padding.top,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: SlideTransition(
+                            position: _slideAnimation,
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 60),
+                                _buildHeader(),
+                                const SizedBox(height: 32),
+                                _buildLoginCard(),
+                                const Spacer(),
+                                _buildFooter(),
+                                const SizedBox(height: 32),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -673,6 +783,10 @@ class _LoginScreenState extends State<LoginScreen>
             _buildLoginButton(),
             const SizedBox(height: 20),
             _buildForgotPasswordButton(),
+            const SizedBox(height: 8),
+            _buildOrDivider(),
+            const SizedBox(height: 16),
+            _buildMicrosoftLoginButton(),
           ],
         ),
       ),
@@ -889,6 +1003,68 @@ class _LoginScreenState extends State<LoginScreen>
       child: Text(
         language.forgotPassword,
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _buildOrDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            language.orDivider,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+          ),
+        ),
+        Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+      ],
+    );
+  }
+
+  Widget _buildMicrosoftLoginButton() {
+    return SizedBox(
+      height: 52,
+      child: OutlinedButton(
+        onPressed: (_isLoading || _isMsLoading) ? null : _loginWithMicrosoft,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Colors.grey.shade300),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          backgroundColor: Colors.white,
+        ),
+        child: _isMsLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: primary),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/microsoft_logo.png',
+                    width: 20,
+                    height: 20,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.window,
+                      size: 20,
+                      color: Color(0xFF00A4EF),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    language.loginWithMicrosoft,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

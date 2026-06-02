@@ -1,0 +1,14 @@
+{
+  "client_id" : "8f4255de-a679-47c3-8415-2446db13e41f",
+  "authorization_user_agent" : "DEFAULT",
+  "redirect_uri" : "msauth://com.vebol.employee.hr/kCueV98f7QrMBT09jQIUZxsafZY%3D",
+  "authorities" : [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADMyOrg",
+        "tenant_id": "f3901143-69d8-4274-a01e-4b269d7e4a36"
+      }
+    }
+  ]
+}

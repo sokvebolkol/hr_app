@@ -14,11 +14,11 @@ class ServerService {
   static const String uatUrl =
       'https://uat-coapp.chokchey.com.kh/api/'; // uat running
   static const String devUrl =
-      'http://192.168.53.122:8000/api/'; // local running
+      'http://192.168.53.196:8000/api/'; // local running
 
   static const String _envKey = 'selected_environment';
 
-  String _baseUrl = prodUrl;
+  String _baseUrl = devUrl;
   String _baseUrlName = "Production";
   Environment _currentEnvironment = Environment.production;
 

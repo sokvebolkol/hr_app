@@ -77,6 +77,21 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Microsoft MSAL BrowserTabActivity for OAuth redirect -->
+        <activity
+            android:name="com.microsoft.identity.client.BrowserTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="msauth"
+                    android:host="com.vebol.employee.hr"
+                    android:path="/kCueV98f7QrMBT09jQIUZxsafZY=" />
+            </intent-filter>
+        </activity>
     </application>
 
     <queries>

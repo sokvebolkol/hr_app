@@ -71,6 +71,7 @@ dependencies:
   convex_bottom_bar: ^3.2.0
   intl: ^0.20.2
   device_info_plus: ^11.5.0
+  msal_auth: ^3.5.0
 
 dev_dependencies:
   flutter_test:
@@ -96,6 +97,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/auth_config.json
     - assets/icon/icon.png
     - assets/images/logo_256x256.png
     - assets/images/logo_512x512.png
@@ -106,6 +108,7 @@ flutter:
     - assets/images/special-leave-document-support.png
     - assets/images/wedding-document-support.png
     - assets/images/empty-box.png
+    - assets/images/microsoft_logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
