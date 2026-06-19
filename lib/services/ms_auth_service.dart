@@ -31,9 +31,7 @@ class MsAuthService {
     // If a cached account exists, try silent auth first (no UI prompt needed).
     try {
       await pca.currentAccount;
-      final result = await pca.acquireTokenSilent(
-        scopes: ['User.Read'],
-      );
+      final result = await pca.acquireTokenSilent(scopes: ['User.Read']);
       return result.accessToken;
     } on MsalUserCancelException {
       return null;
