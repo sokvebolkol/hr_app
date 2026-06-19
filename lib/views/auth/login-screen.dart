@@ -390,7 +390,8 @@ class _LoginScreenState extends State<LoginScreen>
     } on MsalException catch (e) {
       _showErrorDialog(
         title: language.loginFailed,
-        message: e.message.isNotEmpty ? e.message : language.microsoftLoginFailed,
+        message:
+            e.message.isNotEmpty ? e.message : language.microsoftLoginFailed,
       );
     } catch (_) {
       _showErrorDialog(
@@ -644,7 +645,8 @@ class _LoginScreenState extends State<LoginScreen>
                   physics: const BouncingScrollPhysics(),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      minHeight: MediaQuery.of(context).size.height -
+                      minHeight:
+                          MediaQuery.of(context).size.height -
                           MediaQuery.of(context).padding.top,
                     ),
                     child: IntrinsicHeight(
@@ -710,8 +712,8 @@ class _LoginScreenState extends State<LoginScreen>
         GestureDetector(
           onTap: _handleLogoTap,
           child: Container(
-            width: 110,
-            height: 110,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
@@ -731,6 +733,20 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          "Chokchey HR",
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Human Resource Portal",
+          style: TextStyle(fontSize: 15, color: Colors.grey[700]),
         ),
       ],
     );
@@ -759,18 +775,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildLoginCard() {
     return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(16),
       child: Form(
         key: _formKey,
         child: Column(
@@ -782,8 +787,6 @@ class _LoginScreenState extends State<LoginScreen>
             const SizedBox(height: 32),
             _buildLoginButton(),
             const SizedBox(height: 20),
-            _buildForgotPasswordButton(),
-            const SizedBox(height: 8),
             _buildOrDivider(),
             const SizedBox(height: 16),
             _buildMicrosoftLoginButton(),
@@ -801,8 +804,8 @@ class _LoginScreenState extends State<LoginScreen>
           language.staffId,
           style: TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
           ),
         ),
         const SizedBox(height: 8),
@@ -811,34 +814,47 @@ class _LoginScreenState extends State<LoginScreen>
           keyboardType: TextInputType.number,
           textInputAction: TextInputAction.next,
           maxLength: 4,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 2,
+          ),
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(4),
           ],
           decoration: InputDecoration(
             hintText: language.enterStaffId,
-            prefixIcon: Icon(Icons.person_outline, color: primary),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 0,
+            ),
+            prefixIcon: const Icon(
+              Icons.badge_outlined,
+              color: Colors.black87,
+              size: 22,
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 42,
+              minHeight: 42,
+            ),
+            border: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            focusedBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: primary, width: 2),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Colors.red),
+            errorBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.red),
             ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
+            contentPadding: const EdgeInsets.only(
+              left: 4,
+              top: 14,
+              bottom: 14,
             ),
             counterText: "", // Hide character counter
           ),
@@ -865,13 +881,20 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          language.password,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              language.password,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            _buildForgotPasswordButton(),
+          ],
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -879,42 +902,52 @@ class _LoginScreenState extends State<LoginScreen>
           obscureText: !_isPasswordVisible,
           textInputAction: TextInputAction.done,
           onFieldSubmitted: (_) => _login(),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             hintText: language.enterPassword,
-            prefixIcon: Icon(Icons.lock_outlined, color: primary),
+            hintStyle: TextStyle(
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.w400,
+            ),
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              color: Colors.black87,
+              size: 22,
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 42,
+              minHeight: 42,
+            ),
             suffixIcon: IconButton(
+              splashRadius: 20,
               onPressed: () {
                 setState(() => _isPasswordVisible = !_isPasswordVisible);
                 HapticFeedback.lightImpact();
               },
               icon: Icon(
                 _isPasswordVisible
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: Colors.grey.shade600,
+                    ? Icons.visibility_rounded
+                    : Icons.visibility_off_rounded,
+                color: Colors.grey.shade500,
+                size: 22,
               ),
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            border: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.grey.shade300),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+            focusedBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: primary, width: 2),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Colors.red),
+            errorBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.red),
             ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
+            contentPadding: const EdgeInsets.only(
+              left: 4,
+              top: 14,
+              bottom: 14,
             ),
           ),
           validator: (value) {
@@ -998,11 +1031,14 @@ class _LoginScreenState extends State<LoginScreen>
       },
       style: TextButton.styleFrom(
         foregroundColor: primary,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(0, 0),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
       ),
       child: Text(
         language.forgotPassword,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -1035,36 +1071,41 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           backgroundColor: Colors.white,
         ),
-        child: _isMsLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: primary),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/images/microsoft_logo.png',
-                    width: 20,
-                    height: 20,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.window,
-                      size: 20,
-                      color: Color(0xFF00A4EF),
-                    ),
+        child:
+            _isMsLoading
+                ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: primary,
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    language.loginWithMicrosoft,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
+                )
+                : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/microsoft_logo.png',
+                      width: 20,
+                      height: 20,
+                      errorBuilder:
+                          (_, __, ___) => const Icon(
+                            Icons.window,
+                            size: 20,
+                            color: Color(0xFF00A4EF),
+                          ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 10),
+                    Text(
+                      language.loginWithMicrosoft,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  ],
+                ),
       ),
     );
   }

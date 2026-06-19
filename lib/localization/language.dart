@@ -76,8 +76,9 @@ class Language {
   String get copyrightText => "© 2024 Chokchey HR. All rights reserved.";
   String get loginWithMicrosoft => "Sign in with Microsoft";
   String get signingInWithMicrosoft => "Signing in...";
-  String get microsoftLoginFailed => "Microsoft sign-in failed. Please try again.";
-  String get orDivider => "or";
+  String get microsoftLoginFailed =>
+      "Microsoft sign-in failed. Please try again.";
+  String get orDivider => "or continue with";
   String get pleaseCreateStrongPassword =>
       "Please create a strong password that you haven\'t used before.";
 
@@ -1545,7 +1546,8 @@ class Khmer implements Language {
   @override
   String get signingInWithMicrosoft => "កំពុងចូល...";
   @override
-  String get microsoftLoginFailed => "ការចូលតាម Microsoft បានបរាជ័យ។ សូមព្យាយាមម្ដងទៀត";
+  String get microsoftLoginFailed =>
+      "ការចូលតាម Microsoft បានបរាជ័យ។ សូមព្យាយាមម្ដងទៀត";
   @override
-  String get orDivider => "ឬ";
+  String get orDivider => "ឬបន្តដោយ";
 }
