@@ -35,33 +35,48 @@ class StatisticsCard extends StatelessWidget {
             ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: color,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                count.toString().padLeft(2, '0'),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 35,
-                  fontWeight: FontWeight.bold,
-                  height: 1,
+              const SizedBox(height: 8),
+              // Scales down when the card height/width is tight so the big
+              // number never forces a vertical overflow.
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    count.toString().padLeft(2, '0'),
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 35,
+                      fontWeight: FontWeight.bold,
+                      height: 1,
+                    ),
+                  ),
                 ),
               ),
-              // const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text(
-                    viewAll,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  Flexible(
+                    child: Text(
+                      viewAll,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Icon(

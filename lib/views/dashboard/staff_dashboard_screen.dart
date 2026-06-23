@@ -675,7 +675,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                     pinned: true,
                     delegate: _StaffTabBarDelegate(
                       child: _buildStaffTabBarHeader(managerViewModel),
-                      height: 68,
+                      height: 76,
                     ),
                   ),
                 ],
@@ -1332,37 +1332,46 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
         Expanded(
           child:
               totalPendingCount == 0
-                  ? Container(
-                    padding: const EdgeInsets.all(40),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.assignment_turned_in_rounded,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          language.noPendingRequests,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
+                  ? SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 40,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.assignment_turned_in_rounded,
+                            size: 64,
+                            color: Colors.grey[400],
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _selectedMonthPending == 'All'
-                              ? language.allLeaveRequestsAreUpToDate
-                              : '${language.noRequestsFoundFor} $_selectedMonthPending',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
+                          const SizedBox(height: 16),
+                          Text(
+                            language.noPendingRequests,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            _selectedMonthPending == 'All'
+                                ? language.allLeaveRequestsAreUpToDate
+                                : '${language.noRequestsFoundFor} $_selectedMonthPending',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   )
                   : ListView(
@@ -1475,7 +1484,8 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
       // Store month options for later use if needed
     });
 
-    return Column(
+    return SingleChildScrollView(
+      child: Column(
       children: [
         // Month Filter
         Container(
@@ -1625,6 +1635,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
           ),
         ),
       ],
+      ),
     );
   }
 
@@ -2180,9 +2191,14 @@ class _StaffTabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return child;
+    // Force the child to fill the full declared extent. Otherwise the child's
+    // intrinsic height (which varies with the count badge) can be smaller than
+    // maxExtent, making paintExtent < layoutExtent and tripping the
+    // "SliverGeometry is not valid" assertion in a pinned header.
+    return SizedBox.expand(child: child);
   }
 
   @override
-  bool shouldRebuild(_StaffTabBarDelegate oldDelegate) => true;
+  bool shouldRebuild(_StaffTabBarDelegate oldDelegate) =>
+      oldDelegate.child != child || oldDelegate.height != height;
 }

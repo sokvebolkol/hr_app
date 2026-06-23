@@ -190,6 +190,8 @@ class Language {
   String get attendance => " Attendance";
   String get workingDays => "working days";
   String get lastMonth => "Last Month";
+  String get threeMonths => "3 Months";
+  String get custom => "Custom";
   String get last7Days => "Last 7 Days";
   String get last30Days => "Last 30 Days";
   String get apply => "Apply";
@@ -906,6 +908,10 @@ class Khmer implements Language {
   String get workingDays => "ថ្ងៃធ្វើការ";
   @override
   String get lastMonth => "ខែមុន";
+  @override
+  String get threeMonths => "៣ ខែ";
+  @override
+  String get custom => "ផ្ទាល់ខ្លួន";
   @override
   String get last7Days => "៧ ថ្ងៃចុងក្រោយ";
   @override

@@ -81,6 +81,8 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
                     children: [
                       Text(
                         name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -90,6 +92,8 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
                           widget.position!.isNotEmpty)
                         Text(
                           widget.position!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],

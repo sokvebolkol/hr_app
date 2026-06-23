@@ -8,6 +8,7 @@ import '../../../localization/language.dart';
 import '../../../localization/language_logic.dart';
 import '../../../models/ceo_dashboard_model.dart';
 import '../../../widgets/leave_action_widget.dart';
+import '../../../widgets/approvalworkflowwidget.dart';
 import '../../../viewmodels/leave_action_viewmodel.dart';
 
 class CeoLeaveDetailScreen extends StatefulWidget {
@@ -93,6 +94,20 @@ class _CeoLeaveDetailScreenState extends State<CeoLeaveDetailScreen> {
                         const SizedBox(height: 16),
                         _buildSupportingDocumentCard(),
                       ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: ApprovalWorkflowWidget(
+                          approvalList:
+                              widget.leave.prioList
+                                  .map(
+                                    (approval) =>
+                                        ApprovalItemData.fromCeoApprovalItem(
+                                          approval,
+                                        ),
+                                  )
+                                  .toList(),
+                        ),
+                      ),
                       const SizedBox(height: 200), // Space for floating buttons
                     ],
                   ),

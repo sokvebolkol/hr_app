@@ -119,6 +119,7 @@ class LeaveDetails {
 
 class AttendanceSummary {
   final int totalDays;
+  final int workingDays;
   final int daysWithData;
   final int daysWithoutData;
   final int completeDays;
@@ -128,6 +129,7 @@ class AttendanceSummary {
 
   AttendanceSummary({
     required this.totalDays,
+    required this.workingDays,
     required this.daysWithData,
     required this.daysWithoutData,
     required this.completeDays,
@@ -139,6 +141,7 @@ class AttendanceSummary {
   factory AttendanceSummary.fromJson(Map<String, dynamic> json) {
     return AttendanceSummary(
       totalDays: _parseToInt(json['total_days']),
+      workingDays: _parseToInt(json['working_days']),
       daysWithData: _parseToInt(json['days_with_data']),
       daysWithoutData: _parseToInt(json['days_without_data']),
       completeDays: _parseToInt(json['complete_days']),

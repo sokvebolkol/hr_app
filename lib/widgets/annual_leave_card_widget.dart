@@ -113,13 +113,23 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(
-                          child: Text(
-                            '$usedLeaveText: $usedLeave',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: logoPink,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            overflow: TextOverflow.ellipsis,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$usedLeaveText: $usedLeave',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: logoPink,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
