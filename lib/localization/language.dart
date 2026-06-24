@@ -516,6 +516,18 @@ class Language {
   String get adjustmentDetail => "Adjustment Detail";
   String get employeeInformation => "Employee Information";
   String get processed => "PROCESSED";
+
+  // Leave action buttons / confirm dialog
+  String get rejecting => "Rejecting...";
+  String get approving => "Approving...";
+  String get confirmYourDecision => "Confirm your decision";
+  String get approvalRemarkOptional => "Approval Remark (Optional)";
+  String get rejectionRemarkRequired => "Rejection Remark (Required)";
+  String get addNoteForApproval => "Add a note for approval...";
+  String get addReasonForRejection => "Add a reason for rejection...";
+  String get actionFailed => "Action failed";
+  String get approveAttendance => "Approve Attendance";
+  String get rejectAttendance => "Reject Attendance";
   String get adjustmentDate => "Adjustment Date";
   String get requestedOn => "Requested On";
 
@@ -1516,6 +1528,26 @@ class Khmer implements Language {
   String get employeeInformation => "ព័ត៌មានបុគ្គលិក";
   @override
   String get processed => "បានដំណើរការ";
+  @override
+  String get rejecting => "កំពុងបដិសេធ...";
+  @override
+  String get approving => "កំពុងអនុម័ត...";
+  @override
+  String get confirmYourDecision => "បញ្ជាក់ការសម្រេចចិត្តរបស់អ្នក";
+  @override
+  String get approvalRemarkOptional => "កំណត់សម្គាល់ការអនុម័ត (ស្រេចចិត្ត)";
+  @override
+  String get rejectionRemarkRequired => "កំណត់សម្គាល់ការបដិសេធ (ចាំបាច់)";
+  @override
+  String get addNoteForApproval => "បន្ថែមកំណត់សម្គាល់សម្រាប់ការអនុម័ត...";
+  @override
+  String get addReasonForRejection => "បន្ថែមមូលហេតុសម្រាប់ការបដិសេធ...";
+  @override
+  String get actionFailed => "សកម្មភាពបរាជ័យ";
+  @override
+  String get approveAttendance => "អនុម័តវត្តមាន";
+  @override
+  String get rejectAttendance => "បដិសេធវត្តមាន";
   @override
   String get adjustmentDate => "កាលបរិច្ឆេទកែតម្រូវ";
   @override

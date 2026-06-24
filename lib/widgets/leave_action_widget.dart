@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/leave_action_viewmodel.dart';
+import '../localization/language_logic.dart';
 
 class LeaveActionButtons extends StatelessWidget {
   final String leaveId;
@@ -33,6 +34,7 @@ class LeaveActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language = LanguageLogic().language;
     return Consumer<LeaveActionViewModel>(
       builder: (context, viewModel, child) {
         return Container(
@@ -73,7 +75,7 @@ class LeaveActionButtons extends StatelessWidget {
                           )
                           : const Icon(Icons.close, color: Colors.white),
                   label: Text(
-                    viewModel.isRejecting ? 'Rejecting...' : reject,
+                    viewModel.isRejecting ? language.rejecting : reject,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -103,7 +105,7 @@ class LeaveActionButtons extends StatelessWidget {
                           )
                           : const Icon(Icons.check, color: Colors.white),
                   label: Text(
-                    viewModel.isApproving ? 'Approving...' : approve,
+                    viewModel.isApproving ? language.approving : approve,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -119,6 +121,7 @@ class LeaveActionButtons extends StatelessWidget {
   }
 
   void _showActionDialog(BuildContext context, bool isApprove) {
+    final language = LanguageLogic().language;
     final TextEditingController remarkController = TextEditingController();
     final actionColor = isApprove ? Colors.green : Colors.red;
 
@@ -185,7 +188,7 @@ class LeaveActionButtons extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Confirm your decision',
+                                      language.confirmYourDecision,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.white.withOpacity(0.9),
@@ -220,31 +223,29 @@ class LeaveActionButtons extends StatelessWidget {
                                   children: [
                                     _buildInfoRow(
                                       Icons.person_outline,
-                                      'Employee',
+                                      language.employee,
                                       employeeName,
                                       actionColor,
                                     ),
                                     const SizedBox(height: 12),
                                     _buildInfoRow(
                                       Icons.category_outlined,
-                                      'Leave Type',
+                                      language.leaveType,
                                       leaveType,
                                       actionColor,
                                     ),
                                     const SizedBox(height: 12),
                                     _buildInfoRow(
                                       Icons.access_time,
-                                      'Duration',
-                                      '$numLeaveDays day${numLeaveDays != 1 ? 's' : ''}',
+                                      language.duration,
+                                      '$numLeaveDays ${numLeaveDays != 1 ? language.days.toLowerCase() : language.day}',
                                       actionColor,
                                     ),
                                     const SizedBox(height: 12),
                                     _buildInfoRow(
                                       Icons.calendar_today_outlined,
-                                      'Dates',
-                                      DateFormat(
-                                        'MMM dd - dd, yyyy',
-                                      ).format(fromDate),
+                                      language.date,
+                                      '${DateFormat('MMM dd, yyyy').format(fromDate)} → ${DateFormat('MMM dd, yyyy').format(toDate)}',
                                       actionColor,
                                     ),
                                   ],
@@ -264,8 +265,8 @@ class LeaveActionButtons extends StatelessWidget {
                                     const SizedBox(width: 8),
                                     Text(
                                       isApprove
-                                          ? 'Approval Remark (Optional)'
-                                          : 'Rejection Remark (Required)',
+                                          ? language.approvalRemarkOptional
+                                          : language.rejectionRemarkRequired,
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 15,
@@ -283,8 +284,8 @@ class LeaveActionButtons extends StatelessWidget {
                                   decoration: InputDecoration(
                                     hintText:
                                         isApprove
-                                            ? 'Add a note for approval...'
-                                            : 'Add a reason for rejection...',
+                                            ? language.addNoteForApproval
+                                            : language.addReasonForRejection,
                                     hintStyle: TextStyle(
                                       color: Colors.grey[400],
                                     ),
@@ -335,7 +336,7 @@ class LeaveActionButtons extends StatelessWidget {
                                     ),
                                   ),
                                   child: Text(
-                                    'Cancel',
+                                    language.cancel,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -381,7 +382,7 @@ class LeaveActionButtons extends StatelessWidget {
                                                 SnackBar(
                                                   content: Text(
                                                     viewModel.errorMessage ??
-                                                        'Action failed',
+                                                        language.actionFailed,
                                                   ),
                                                   backgroundColor: Colors.red,
                                                 ),
@@ -422,7 +423,9 @@ class LeaveActionButtons extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        isApprove ? 'Approve' : 'Reject',
+                                        isApprove
+                                            ? language.approve
+                                            : language.reject,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,

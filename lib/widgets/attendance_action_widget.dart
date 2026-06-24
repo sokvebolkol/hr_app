@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/attendance_adjustment_action_viewmodel.dart';
+import '../localization/language_logic.dart';
 
 class AttendanceActionButtons extends StatelessWidget {
   final String adjustmentId;
@@ -23,6 +24,7 @@ class AttendanceActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language = LanguageLogic().language;
     return Consumer<AttendanceAdjustmentActionViewModel>(
       builder: (context, viewModel, child) {
         return Container(
@@ -63,7 +65,7 @@ class AttendanceActionButtons extends StatelessWidget {
                           )
                           : const Icon(Icons.close, color: Colors.white),
                   label: Text(
-                    viewModel.isRejecting ? 'Rejecting...' : 'Reject',
+                    viewModel.isRejecting ? language.rejecting : language.reject,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -93,7 +95,9 @@ class AttendanceActionButtons extends StatelessWidget {
                           )
                           : const Icon(Icons.check, color: Colors.white),
                   label: Text(
-                    viewModel.isApproving ? 'Approving...' : 'Approve',
+                    viewModel.isApproving
+                        ? language.approving
+                        : language.approve,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -109,6 +113,7 @@ class AttendanceActionButtons extends StatelessWidget {
   }
 
   void _showActionDialog(BuildContext context, bool isApprove) {
+    final language = LanguageLogic().language;
     final TextEditingController remarkController = TextEditingController();
     final actionColor = isApprove ? Colors.green : Colors.red;
 
@@ -167,8 +172,8 @@ class AttendanceActionButtons extends StatelessWidget {
                                   children: [
                                     Text(
                                       isApprove
-                                          ? 'Approve Attendance'
-                                          : 'Reject Attendance',
+                                          ? language.approveAttendance
+                                          : language.rejectAttendance,
                                       style: const TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
@@ -177,7 +182,7 @@ class AttendanceActionButtons extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Confirm your decision',
+                                      language.confirmYourDecision,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.white.withOpacity(0.9),
@@ -212,21 +217,21 @@ class AttendanceActionButtons extends StatelessWidget {
                                   children: [
                                     _buildInfoRow(
                                       Icons.person_outline,
-                                      'Employee',
+                                      language.employee,
                                       employeeName,
                                       actionColor,
                                     ),
                                     const SizedBox(height: 12),
                                     _buildInfoRow(
                                       Icons.edit_calendar,
-                                      'Adjustment Type',
+                                      language.adjustmentType,
                                       adjustmentType,
                                       actionColor,
                                     ),
                                     const SizedBox(height: 12),
                                     _buildInfoRow(
                                       Icons.calendar_today_outlined,
-                                      'Adjustment Date',
+                                      language.adjustmentDate,
                                       DateFormat(
                                         'EEEE, MMM dd, yyyy',
                                       ).format(adjustDate),
@@ -248,8 +253,8 @@ class AttendanceActionButtons extends StatelessWidget {
                                   const SizedBox(width: 8),
                                   Text(
                                     isApprove
-                                        ? 'Approval Remark (Optional)'
-                                        : 'Rejection Remark (Required)',
+                                        ? language.approvalRemarkOptional
+                                        : language.rejectionRemarkRequired,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 15,
@@ -267,8 +272,8 @@ class AttendanceActionButtons extends StatelessWidget {
                                 decoration: InputDecoration(
                                   hintText:
                                       isApprove
-                                          ? 'Add a note for approval...'
-                                          : 'Add a reason for rejection...',
+                                          ? language.addNoteForApproval
+                                          : language.addReasonForRejection,
                                   hintStyle: TextStyle(color: Colors.grey[400]),
                                   filled: true,
                                   fillColor: Colors.grey[50],
@@ -316,7 +321,7 @@ class AttendanceActionButtons extends StatelessWidget {
                                     ),
                                   ),
                                   child: Text(
-                                    'Cancel',
+                                    language.cancel,
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -365,7 +370,7 @@ class AttendanceActionButtons extends StatelessWidget {
                                                 SnackBar(
                                                   content: Text(
                                                     viewModel.errorMessage ??
-                                                        'Action failed',
+                                                        language.actionFailed,
                                                   ),
                                                   backgroundColor: Colors.red,
                                                 ),
@@ -406,7 +411,9 @@ class AttendanceActionButtons extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        isApprove ? 'Approve' : 'Reject',
+                                        isApprove
+                                            ? language.approve
+                                            : language.reject,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,

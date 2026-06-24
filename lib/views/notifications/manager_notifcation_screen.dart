@@ -483,7 +483,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: notification.isRead ? Colors.white : Colors.blue.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blue.shade200),
         boxShadow: [
@@ -538,26 +538,6 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                   notification.timeAgo,
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
-                const Spacer(),
-                if (notification.isRecent)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      language.newLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ],

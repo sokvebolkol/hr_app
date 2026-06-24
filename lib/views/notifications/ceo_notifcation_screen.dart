@@ -369,6 +369,7 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
+        color: notification.isRead ? Colors.white : secondary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: secondary.withOpacity(0.3)),
         boxShadow: [
@@ -438,26 +439,6 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                   notification.timeAgo,
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
-                const Spacer(),
-                if (notification.isRecent)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      language.newLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ],

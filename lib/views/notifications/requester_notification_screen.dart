@@ -385,6 +385,11 @@ class _RequesterNotificationScreenState
         iconData = Icons.notifications_outlined;
     }
 
+    // Read notifications use a plain white background.
+    if (notification.isRead) {
+      cardColor = Colors.white;
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
@@ -458,26 +463,6 @@ class _RequesterNotificationScreenState
                   notification.timeAgo,
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                 ),
-                const Spacer(),
-                if (notification.isRecent)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'NEW',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ],

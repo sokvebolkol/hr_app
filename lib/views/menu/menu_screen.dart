@@ -237,7 +237,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   },
                 ),
                 _buildDivider(),
-                _buildLandingScreenSelector(),
+                isCeoUser ? SizedBox() : _buildLandingScreenSelector(),
                 _buildDivider(),
                 _buildLanguageSelector(),
 
@@ -349,7 +349,11 @@ class _MenuScreenState extends State<MenuScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Row(
             children: [
-              Icon(Icons.format_line_spacing_rounded, color: themeColor, size: 24),
+              Icon(
+                Icons.format_line_spacing_rounded,
+                color: themeColor,
+                size: 24,
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
