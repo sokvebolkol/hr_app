@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -37,7 +38,11 @@ void main() async {
   try {
     final languageLogic = LanguageLogic();
     await languageLogic.initialize();
-    HttpOverrides.global = MyHttpOverrides();
+    // Only bypass TLS certificate validation in debug builds (e.g. to allow a
+    // pentester's proxy cert). Release builds keep normal certificate checks.
+    if (kDebugMode) {
+      HttpOverrides.global = MyHttpOverrides();
+    }
 
     // Check internet connection before Firebase initialization
     final hasInternet = await checkInternetConnection();

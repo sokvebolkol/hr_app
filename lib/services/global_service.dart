@@ -18,7 +18,7 @@ class ServerService {
 
   static const String _envKey = 'selected_environment';
 
-  String _baseUrl = devUrl;
+  String _baseUrl = prodUrl;
   String _baseUrlName = "Production";
   Environment _currentEnvironment = Environment.production;
 
