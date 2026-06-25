@@ -5,6 +5,7 @@ import 'custom_progress_bar.dart';
 class AnnualLeaveBalanceWidget extends StatelessWidget {
   final String usedLeave;
   final String title;
+  final String dayAvailableText;
   final String viewDetailsText;
   final String availableLeave;
   final String usedLeaveText;
@@ -15,6 +16,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
     super.key,
     required this.usedLeave,
     required this.title,
+    required this.dayAvailableText,
     required this.viewDetailsText,
     required this.availableLeave,
     required this.usedLeaveText,
@@ -30,7 +32,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
     double progress = total > 0 ? used / total : 0;
 
     return Container(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: primary,
         borderRadius: BorderRadius.circular(12.0),
@@ -39,26 +41,36 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               TextButton(
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 onPressed: onViewDetails,
                 child: Text(
                   viewDetailsText,
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -69,79 +81,60 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          flex: 5,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 16,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: logoPink,
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(3),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Text(
-                                    '$usedLeaveText: $usedLeave days',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 16,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.rectangle,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Text(
-                                    '$availableLeaveText: $availableLeave days',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
                           flex: 1,
                           child: Text(
                             availableLeave,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 24,
+                              fontSize: 32,
                               fontWeight: FontWeight.bold,
                             ),
-                            textAlign: TextAlign.right,
+                            // textAlign: TextAlign.right,
                           ),
                         ),
                       ],
+                    ),
+                    Text(
+                      dayAvailableText,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     EllipticalProgressBar(
                       progress: progress,
                       backgroundColor: Colors.grey.shade200,
                       progressColor: logoPink,
-                      height: 25.0,
+                      height: 10.0,
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '$usedLeaveText: $usedLeave',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: logoPink,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            '$availableLeaveText: $total',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.end,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

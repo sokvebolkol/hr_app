@@ -4,6 +4,7 @@ import '../models/app_version.dart';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
 import '../models/adjustment_request_model.dart';
+import '../models/monthly_summary_model.dart';
 import '../models/user_model.dart';
 import '../services/global_service.dart';
 import '../services/http_service.dart';
@@ -118,6 +119,17 @@ class DashboardRepository {
         leaveBalance = _createDefaultLeaveBalance();
       }
 
+      // Parse current-month attendance summary (present/late/absent/leave)
+      MonthlySummaryModel? monthlySummary;
+      try {
+        final summaryData = data['summary_current_month'];
+        if (summaryData != null && summaryData is Map<String, dynamic>) {
+          monthlySummary = MonthlySummaryModel.fromJson(summaryData);
+        }
+      } catch (error) {
+        ErrorHandler.logError(error, StackTrace.current);
+      }
+
       // Parse app version - it's directly under data, not in summary
       AppVersion? appVersion;
       try {
@@ -138,6 +150,7 @@ class DashboardRepository {
         leaves: leaves,
         adjustmentRequests: adjustmentRequests,
         leaveBalance: leaveBalance,
+        monthlySummary: monthlySummary,
         appVersion: appVersion,
       );
     } catch (e, stackTrace) {
@@ -186,10 +199,19 @@ class DashboardRepository {
     }
   }
 
-  // Logout user (clear local data)
+  // Logout user (clear local data), keeping device-level settings (landing
+  // screen choice and selected environment) so they survive logout/login.
   Future<void> logout() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
+    final landingScreenIndex = pref.getInt('landingScreenIndex');
+    final selectedEnvironment = pref.getString('selected_environment');
     await pref.clear();
+    if (landingScreenIndex != null) {
+      await pref.setInt('landingScreenIndex', landingScreenIndex);
+    }
+    if (selectedEnvironment != null) {
+      await pref.setString('selected_environment', selectedEnvironment);
+    }
   }
 }
 
@@ -198,6 +220,7 @@ class DashboardData {
   final List<LeaveModel> leaves;
   final List<AdjustmentRequestModel> adjustmentRequests;
   final LeaveBalanceModel leaveBalance;
+  final MonthlySummaryModel? monthlySummary;
   final AppVersion? appVersion;
 
   DashboardData({
@@ -205,6 +228,7 @@ class DashboardData {
     required this.leaves,
     required this.adjustmentRequests,
     required this.leaveBalance,
+    this.monthlySummary,
     this.appVersion,
   });
 }

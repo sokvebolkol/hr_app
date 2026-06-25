@@ -4,6 +4,7 @@ import '../models/app_version.dart';
 import '../models/leave_balance_model.dart';
 import '../models/leave_model.dart';
 import '../models/adjustment_request_model.dart';
+import '../models/monthly_summary_model.dart';
 import '../models/user_model.dart';
 import '../models/user_profile_model.dart';
 import '../repositories/dashboard_repository.dart';
@@ -23,6 +24,7 @@ class DashboardViewModel extends ChangeNotifier {
   List<LeaveModel> _leaves = [];
   List<AdjustmentRequestModel> _adjustmentRequests = [];
   LeaveBalanceModel? _leaveBalance;
+  MonthlySummaryModel? _monthlySummary;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -33,6 +35,7 @@ class DashboardViewModel extends ChangeNotifier {
   List<LeaveModel> get leaves => _leaves;
   List<AdjustmentRequestModel> get adjustmentRequests => _adjustmentRequests;
   LeaveBalanceModel? get leaveBalance => _leaveBalance;
+  MonthlySummaryModel? get monthlySummary => _monthlySummary;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -88,6 +91,7 @@ class DashboardViewModel extends ChangeNotifier {
       _leaves = dashboardData.leaves;
       _adjustmentRequests = dashboardData.adjustmentRequests;
       _leaveBalance = dashboardData.leaveBalance;
+      _monthlySummary = dashboardData.monthlySummary;
       _appVersion = dashboardData.appVersion;
       _userProfile = userProfile;
       _setLoading(false);

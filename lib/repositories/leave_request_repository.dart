@@ -6,6 +6,7 @@ import '../constants/constant.dart';
 import '../models/leave_type_model.dart';
 import '../models/approver_model.dart';
 import '../services/global_service.dart';
+import '../services/http_service.dart';
 
 class LeaveRequestRepository {
   final ServerService _serverService = ServerService();
@@ -19,8 +20,11 @@ class LeaveRequestRepository {
         throw Exception('Token not found in local storage');
       }
 
-      final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}leave-request-screen'),
+      // Use the shared HttpService (same path as the dashboard): it checks the
+      // connection/server first, applies a sane timeout, and throws typed,
+      // readable errors instead of hanging silently.
+      final response = await HttpService.get(
+        url: '${_serverService.baseUrl}leave-request-screen',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -29,27 +33,35 @@ class LeaveRequestRepository {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final decoded = json.decode(response.body);
+        // Some endpoints wrap the payload in a `data` object; fall back to the
+        // root if it isn't present so both shapes parse correctly.
+        final data =
+            (decoded is Map && decoded['data'] is Map)
+                ? decoded['data']
+                : decoded;
 
         return LeaveRequestData(
           leaveTypes:
-              (data['leaveTypes'] as List)
+              ((data['leaveTypes'] ?? []) as List)
                   .map((e) => LeaveTypeModel.fromJson(e))
                   .toList(),
           approvers:
-              (data['approvers'] as List)
+              ((data['approvers'] ?? []) as List)
                   .map((e) => ApproverModel.fromJson(e))
                   .toList(),
-          holidays: List<String>.from(data['holidays']),
-          userId: data['userId'],
+          holidays: List<String>.from(data['holidays'] ?? []),
+          userId: data['userId']?.toString() ?? '',
         );
       } else {
         throw Exception(
-          'Failed to fetch leave request data: ${response.statusCode}',
+          'Failed to fetch leave request data (${response.statusCode}): ${response.body}',
         );
       }
     } catch (e) {
-      throw Exception('Error fetching leave request data');
+      // Surface the real cause so failures are diagnosable instead of hidden
+      // behind a generic message.
+      throw Exception('Error fetching leave request data: $e');
     }
   }
 

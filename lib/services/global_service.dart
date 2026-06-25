@@ -31,18 +31,21 @@ class ServerService {
     final prefs = await SharedPreferences.getInstance();
     final savedEnv = prefs.getString(_envKey);
 
-    if (savedEnv != null) {
-      switch (savedEnv) {
-        case 'production':
-          _setEnvironment(Environment.production, saveToPrefs: false);
-          break;
-        case 'uat':
-          _setEnvironment(Environment.uat, saveToPrefs: false);
-          break;
-        case 'development':
-          _setEnvironment(Environment.development, saveToPrefs: false);
-          break;
-      }
+    switch (savedEnv) {
+      case 'production':
+        _setEnvironment(Environment.production, saveToPrefs: false);
+        break;
+      case 'uat':
+        _setEnvironment(Environment.uat, saveToPrefs: false);
+        break;
+      case 'development':
+        _setEnvironment(Environment.development, saveToPrefs: false);
+        break;
+      default:
+        // No saved environment (e.g. fresh install or after a logout that
+        // cleared prefs): default to production rather than leaving the
+        // local dev URL, which is unreachable from real devices.
+        _setEnvironment(Environment.production, saveToPrefs: false);
     }
   }
 
@@ -100,15 +103,19 @@ class ServerService {
   Future<void> clearUserSession() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Get environment setting before clearing
+    // Get settings to preserve before clearing
     final savedEnv = prefs.getString(_envKey);
+    final landingScreenIndex = prefs.getInt('landingScreenIndex');
 
     // Clear all data
     await prefs.clear();
 
-    // Restore environment setting
+    // Restore preserved settings
     if (savedEnv != null) {
       await prefs.setString(_envKey, savedEnv);
+    }
+    if (landingScreenIndex != null) {
+      await prefs.setInt('landingScreenIndex', landingScreenIndex);
     }
 
     print('🔐 User session cleared for environment switch');

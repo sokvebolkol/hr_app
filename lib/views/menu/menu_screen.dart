@@ -237,6 +237,8 @@ class _MenuScreenState extends State<MenuScreen> {
                   },
                 ),
                 _buildDivider(),
+                _buildLandingScreenSelector(),
+                _buildDivider(),
                 _buildLanguageSelector(),
 
                 // Show Environment Settings only if not production
@@ -335,6 +337,80 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
             Icon(Icons.chevron_right, color: Colors.grey.shade300, size: 22),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandingScreenSelector() {
+    return Consumer<ProfileViewModel>(
+      builder: (context, viewModel, child) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            children: [
+              Icon(Icons.format_line_spacing_rounded, color: themeColor, size: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  viewModel.languageLogic.language.landingScreen,
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildLandingButton(
+                      viewModel,
+                      kLandingScreenDashboard,
+                      viewModel.languageLogic.language.dashboard,
+                    ),
+                    _buildLandingButton(
+                      viewModel,
+                      kLandingScreenLeave,
+                      viewModel.languageLogic.language.leave,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLandingButton(
+    ProfileViewModel viewModel,
+    int index,
+    String label,
+  ) {
+    final isSelected = viewModel.landingScreenIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        if (viewModel.landingScreenIndex != index) {
+          viewModel.setLandingScreen(index);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? themeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
         ),
       ),
     );
@@ -612,9 +688,18 @@ class _MenuScreenState extends State<MenuScreen> {
       // Call ViewModel logout to clear local data
       await _viewModel.logout();
 
-      // Clear all SharedPreferences
+      // Clear all SharedPreferences, but keep device-level settings (landing
+      // screen choice and selected environment) so they survive logout/login.
       SharedPreferences prefs = await SharedPreferences.getInstance();
+      final landingScreenIndex = prefs.getInt('landingScreenIndex');
+      final selectedEnvironment = prefs.getString('selected_environment');
       await prefs.clear();
+      if (landingScreenIndex != null) {
+        await prefs.setInt('landingScreenIndex', landingScreenIndex);
+      }
+      if (selectedEnvironment != null) {
+        await prefs.setString('selected_environment', selectedEnvironment);
+      }
 
       if (mounted) {
         // Navigate to Welcome Screen and remove all previous routes

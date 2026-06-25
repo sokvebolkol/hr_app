@@ -1,9 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile_model.dart';
 import '../repositories/profile_repository.dart';
 import '../localization/language_logic.dart';
+
+// Landing screen preference values stored under 'landingScreenIndex'.
+const int kLandingScreenDashboard = 0;
+const int kLandingScreenLeave = 1;
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileRepository _repository = ProfileRepository();
@@ -42,6 +47,11 @@ class ProfileViewModel extends ChangeNotifier {
   String get gender => _userProfile?.gender ?? "";
   String get currentLanguage =>
       _languageLogic.language.code == "EN" ? "English" : "ខ្មែរ (Khmer)";
+
+  // Landing screen preference (which screen opens after launching the app).
+  // Defaults to Dashboard.
+  int _landingScreenIndex = kLandingScreenDashboard;
+  int get landingScreenIndex => _landingScreenIndex;
 
   // Profile items for display
   List<ProfileItem> get profileItems => [
@@ -95,7 +105,26 @@ class ProfileViewModel extends ChangeNotifier {
   // Initialize profile data
   Future<void> initialize() async {
     await _languageLogic.initialize();
+    await _loadLandingScreenPreference();
     await fetchUserProfile();
+  }
+
+  // Load the saved landing screen preference (defaults to Dashboard).
+  Future<void> _loadLandingScreenPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    _landingScreenIndex =
+        prefs.getInt('landingScreenIndex') ?? kLandingScreenDashboard;
+    notifyListeners();
+  }
+
+  // Persist the selected landing screen preference.
+  Future<void> setLandingScreen(int index) async {
+    if (_landingScreenIndex == index) return;
+    _landingScreenIndex = index;
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('landingScreenIndex', index);
   }
 
   // Fetch user profile

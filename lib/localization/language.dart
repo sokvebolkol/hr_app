@@ -11,6 +11,8 @@ class Language {
   String get register => "Register";
   String get selectLanguage => "Select Language";
   String get language => "Language";
+  String get landingScreen => "Landing Screen";
+  String get dashboard => "Dashboard";
   String get cancel => "Cancel";
   String get logging => "Logging in...";
   String get staffId => "Staff ID";
@@ -130,7 +132,7 @@ class Language {
   String get menu => "Menu";
   String get errorLoadingDashboard => "Error Loading Dashboard";
   String get todaysAttendance => "Today's Attendance";
-  String get viewDetails => "View Details >";
+  String get viewDetails => "Details >";
   String get late => "Late";
   String get leave => "Leave";
   String get absent => "Absent";
@@ -185,6 +187,8 @@ class Language {
   String get startDate => "Start Date";
   String get endDate => "End Date";
   String get thisMonth => "This Month";
+  String get attendance => " Attendance";
+  String get workingDays => "working days";
   String get lastMonth => "Last Month";
   String get last7Days => "Last 7 Days";
   String get last30Days => "Last 30 Days";
@@ -285,6 +289,7 @@ class Language {
   String get clockInOut => "Clock In | Out";
   String get attendanceLogs => "Attendance Logs";
   String get attendanceRequests => "Attendance Requests";
+  String get requestAdjustment => "Request Adjustment";
 
   // Attendance Report Screen
   String get attendanceReport => "Attendance Report";
@@ -415,9 +420,9 @@ class Language {
   String get errorLoadingLeaveBalance => "Error loading leave balance";
   String get daysUsed => "days used";
   String get leaveRequestStatistics => "Leave Request Statistics";
-  String get remainingLeaveBalance => "Remaining Leave Balance";
-  String get usedLeave => "Used Leave";
-  String get availableLeave => "Available Leave";
+  String get remainingLeaveBalance => "Leave Balance";
+  String get usedLeave => "Used";
+  String get dayAvailableText => "day available";
   String get accountInactiveLoggingOut =>
       "Your account is inactive. Logging out...";
   String get updateAvailable => "Update Required";
@@ -568,6 +573,12 @@ class Khmer implements Language {
 
   @override
   String get language => "ភាសា";
+
+  @override
+  String get landingScreen => "ទំព័រចាប់ផ្តើម";
+
+  @override
+  String get dashboard => "ទំព័រដើម";
 
   @override
   String get cancel => "បោះបង់";
@@ -786,7 +797,7 @@ class Khmer implements Language {
   @override
   String get todaysAttendance => "វត្តមានថ្ងៃនេះ";
   @override
-  String get viewDetails => "មើលព័ត៌មានលម្អិត >";
+  String get viewDetails => "ព័ត៌មានលម្អិត >";
   @override
   String get late => "យឺត";
   @override
@@ -889,6 +900,10 @@ class Khmer implements Language {
   String get endDate => "កាលបរិច្ឆេទបញ្ចប់";
   @override
   String get thisMonth => "ខែនេះ";
+  @override
+  String get attendance => " វត្តមាន";
+  @override
+  String get workingDays => "ថ្ងៃធ្វើការ";
   @override
   String get lastMonth => "ខែមុន";
   @override
@@ -1076,6 +1091,8 @@ class Khmer implements Language {
   String get attendanceLogs => "កំណត់ត្រាវត្តមាន";
   @override
   String get attendanceRequests => "ស្នើសុំវត្តមាន";
+  @override
+  String get requestAdjustment => "ស្នើសុំកែតម្រូវ";
 
   // Attendance Report Screen
   @override
@@ -1325,9 +1342,9 @@ class Khmer implements Language {
   @override
   String get remainingLeaveBalance => "សមតុល្យច្បាប់នៅសល់";
   @override
-  String get usedLeave => "ច្បាប់បានប្រើ";
+  String get usedLeave => "បានប្រើ";
   @override
-  String get availableLeave => "ច្បាប់នៅសល់";
+  String get dayAvailableText => "ច្បាប់នៅសល់";
   @override
   String get accountInactiveLoggingOut =>
       "គណនីរបស់អ្នកមិនសកម្ម។ កំពុងចេញពីប្រព័ន្ធ...";

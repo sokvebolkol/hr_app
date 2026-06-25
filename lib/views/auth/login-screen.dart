@@ -19,6 +19,8 @@ import '../../widgets/environment_switcher_bottom_sheet.dart';
 import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
+import '../leaves/leave_request/leave_request_screen.dart';
+import '../../viewmodels/profile_viewmodel.dart';
 import 'confirm-password-screen.dart';
 import 'forgot-password.dart';
 import 'welcome.dart';
@@ -244,11 +246,15 @@ class _LoginScreenState extends State<LoginScreen>
 
         // ✅ Show success message
 
-        Navigator.pushAndRemoveUntil(
-          context,
+        // Capture the navigator before removing the login route so the
+        // follow-up landing push doesn't rely on this removed context.
+        final navigator = Navigator.of(context);
+        navigator.pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => targetScreen),
           (route) => false,
         );
+
+        _openLandingScreenIfNeeded(navigator, prefs);
       } else if (response.statusCode == 401) {
         // ✅ Unauthorized - wrong credentials
         _showErrorDialog(
@@ -369,11 +375,15 @@ class _LoginScreenState extends State<LoginScreen>
           targetScreen = const RequesterDashboardScreen();
         }
 
-        Navigator.pushAndRemoveUntil(
-          context,
+        // Capture the navigator before removing the login route so the
+        // follow-up landing push doesn't rely on this removed context.
+        final navigator = Navigator.of(context);
+        navigator.pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => targetScreen),
           (route) => false,
         );
+
+        _openLandingScreenIfNeeded(navigator, prefs);
       } else {
         String errorMessage = language.microsoftLoginFailed;
         try {
@@ -513,6 +523,22 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
     );
+  }
+
+  // Honour the user's landing screen preference after login. If they chose
+  // "Leave", open the Leave Request form on top of their dashboard so the back
+  // button returns them to the dashboard. Defaults to Dashboard.
+  void _openLandingScreenIfNeeded(
+    NavigatorState navigator,
+    SharedPreferences prefs,
+  ) {
+    final landingScreenIndex =
+        prefs.getInt('landingScreenIndex') ?? kLandingScreenDashboard;
+    if (landingScreenIndex == kLandingScreenLeave) {
+      navigator.push(
+        MaterialPageRoute(builder: (_) => const LeaveRequestScreen()),
+      );
+    }
   }
 
   // ✅ NEW: Formal error dialog
@@ -804,7 +830,7 @@ class _LoginScreenState extends State<LoginScreen>
           language.staffId,
           style: TextStyle(
             fontSize: 14,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: Colors.grey.shade800,
           ),
         ),
@@ -889,7 +915,7 @@ class _LoginScreenState extends State<LoginScreen>
               language.password,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: Colors.grey.shade800,
               ),
             ),

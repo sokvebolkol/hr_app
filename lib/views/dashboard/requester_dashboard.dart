@@ -369,7 +369,6 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                               });
                             },
                           ),
-                          const SizedBox(width: 60), // Space for FAB
                           _buildNavItem(
                             icon: Icons.menu,
                             label: language.menu,
@@ -383,67 +382,6 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                         ],
                       ),
                     ),
-            floatingActionButton:
-                widget.hideBottomNav
-                    ? null
-                    : Container(
-                      width: 74,
-                      height: 74,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          // Main soft shadow
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 25,
-                            offset: const Offset(0, 10),
-                          ),
-
-                          // Ambient light
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                          // Primary glow
-                          BoxShadow(
-                            color: primary.withOpacity(0.18),
-                            blurRadius: 20,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: FloatingActionButton(
-                          elevation: 0,
-                          backgroundColor: primary,
-                          shape: const CircleBorder(),
-                          child: const Icon(
-                            Icons.add_rounded,
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          onPressed: () async {
-                            HapticFeedback.mediumImpact();
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const LeaveRequestScreen(),
-                              ),
-                            );
-                            if (result == true && mounted) {
-                              _dashboardViewModel.refresh();
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-            floatingActionButtonLocation:
-                widget.hideBottomNav
-                    ? null
-                    : FloatingActionButtonLocation.centerDocked,
           ),
         );
       },
@@ -649,10 +587,7 @@ class _DashboardHomeContent extends StatefulWidget {
 
 class _DashboardHomeContentState extends State<_DashboardHomeContent>
     with TickerProviderStateMixin {
-  late ScrollController _scrollController;
-  late Timer _timer;
   late TabController _tabController;
-  int _currentScrollIndex = 0;
   Language language = Language();
 
   Future<void> _initializeLanguage() async {
@@ -693,21 +628,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
         },
       },
       {
-        'icon': Icons.edit_calendar_outlined,
-        'label': language.attendanceRequests,
-        'onPressed': (BuildContext context) async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AttendanceAdjustmentScreen(),
-            ),
-          );
-          if (result == true) {
-            viewModel.refresh();
-          }
-        },
-      },
-      {
         'icon': Icons.calendar_month,
         'label': language.holidays,
         'onPressed': (BuildContext context) {
@@ -726,15 +646,7 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
   void initState() {
     super.initState();
     _initializeLanguage();
-    _scrollController = ScrollController();
     _tabController = TabController(length: 2, vsync: this);
-
-    // Start auto-slide after 3 seconds delay
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        _startAutoSlide();
-      }
-    });
 
     // Refresh profile data when dashboard content is first created
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -743,30 +655,8 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     });
   }
 
-  void _startAutoSlide() {
-    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      final vm = Provider.of<DashboardViewModel>(context, listen: false);
-      final items = _getFunctionButtons(context, vm);
-
-      if (_scrollController.hasClients && items.length > 1) {
-        _currentScrollIndex = (_currentScrollIndex + 1) % items.length;
-
-        const double itemWidth = 110.0 + 16.0;
-        final double targetOffset = _currentScrollIndex * itemWidth;
-
-        _scrollController.animateTo(
-          targetOffset,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOutCubic,
-        );
-      }
-    });
-  }
-
   @override
   void dispose() {
-    _timer.cancel();
-    _scrollController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -833,43 +723,138 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     );
   }
 
+  // Two-column summary row: Leave Balance | This Month attendance summary.
   Widget _buildLeaveBalanceSection(DashboardViewModel viewModel) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) => ChangeNotifierProvider(
-                    create: (context) => LeaveBalanceViewModel(),
-                    child: const LeaveBalanceDetailScreen(),
-                  ),
-            ),
-          );
-        },
-        child: AnnualLeaveBalanceWidget(
-          title: language.remainingLeaveBalance,
-          usedLeave: viewModel.usedLeave,
-          viewDetailsText: language.viewDetails,
-          availableLeave: viewModel.availableLeave,
-          usedLeaveText: language.usedLeave,
-          availableLeaveText: language.availableLeave,
-          onViewDetails: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => ChangeNotifierProvider(
-                      create: (context) => LeaveBalanceViewModel(),
-                      child: const LeaveBalanceDetailScreen(),
-                    ),
-              ),
-            );
-          },
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: _buildLeaveBalanceCard(viewModel)),
+            const SizedBox(width: 12),
+            Expanded(child: _buildMonthSummaryCard(viewModel)),
+          ],
         ),
       ),
+    );
+  }
+
+  void _openLeaveBalanceDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => ChangeNotifierProvider(
+              create: (context) => LeaveBalanceViewModel(),
+              child: const LeaveBalanceDetailScreen(),
+            ),
+      ),
+    );
+  }
+
+  Widget _buildLeaveBalanceCard(DashboardViewModel viewModel) {
+    return GestureDetector(
+      onTap: _openLeaveBalanceDetail,
+      child: AnnualLeaveBalanceWidget(
+        title: language.remainingLeaveBalance,
+        dayAvailableText: language.dayAvailableText,
+        usedLeave: viewModel.usedLeave,
+        viewDetailsText: language.viewDetails,
+        availableLeave: viewModel.availableLeave,
+        usedLeaveText: language.usedLeave,
+        availableLeaveText: language.total,
+        onViewDetails: _openLeaveBalanceDetail,
+      ),
+    );
+  }
+
+  Widget _buildMonthSummaryCard(DashboardViewModel viewModel) {
+    final summary = viewModel.monthlySummary;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              children: [
+                TextSpan(
+                  text: language.thisMonth,
+                  style: const TextStyle(color: primary),
+                ),
+                TextSpan(
+                  text: language.attendance,
+                  style: const TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildMonthStat(
+                    language.present,
+                    summary?.present ?? 0,
+                    Colors.green.shade600,
+                  ),
+                  _buildMonthStat(
+                    language.late,
+                    summary?.late ?? 0,
+                    Colors.orange.shade700,
+                  ),
+                  _buildMonthStat(
+                    language.absent,
+                    summary?.absent ?? 0,
+                    Colors.red.shade600,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+          const SizedBox(height: 8),
+          Text(
+            '${summary?.workingDay ?? 0} ${language.workingDays}',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthStat(String label, int value, Color valueColor) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$value',
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+      ],
     );
   }
 
@@ -880,34 +865,109 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     final functionButtons = _getFunctionButtons(context, viewModel);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        height: 100,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children:
-                functionButtons.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final button = entry.value;
-
-                  return Row(
-                    children: [
-                      SizedBox(
-                        width: 165,
-                        child: FunctionIconCardWidget(
-                          iconData: button['icon'] as IconData,
-                          label: button['label'] as String,
-                          onPressed: () => button['onPressed'](context),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Leave Request card with Request Adjustment stacked below
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: _buildLeaveRequestCard(context)),
+                  const SizedBox(height: 12),
+                  FunctionIconCardWidget(
+                    iconData: Icons.edit_calendar_outlined,
+                    label: language.requestAdjustment,
+                    iconSize: 26,
+                    textSize: 13,
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => const AttendanceAdjustmentScreen(),
                         ),
-                      ),
-                      // Add spacing between items except for the last one
-                      if (index < functionButtons.length - 1)
-                        const SizedBox(width: 16),
-                    ],
-                  );
-                }).toList(),
-          ),
+                      );
+                      if (result == true) {
+                        viewModel.refresh();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Stacked secondary function cards
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int i = 0; i < functionButtons.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 12),
+                    FunctionIconCardWidget(
+                      iconData: functionButtons[i]['icon'] as IconData,
+                      label: functionButtons[i]['label'] as String,
+                      iconSize: 26,
+                      textSize: 13,
+                      onPressed: () => functionButtons[i]['onPressed'](context),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Prominent Leave Request entry card shown beside the function buttons.
+  Widget _buildLeaveRequestCard(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LeaveRequestScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: primary.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.event_note, color: primary, size: 36),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              language.leaveRequest,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: primary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

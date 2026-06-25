@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import '../dashboard/requester_dashboard.dart';
+import '../leaves/leave_request/leave_request_screen.dart';
+import '../../viewmodels/profile_viewmodel.dart';
 import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -167,10 +169,23 @@ class _SplashScreenState extends State<SplashScreen> {
           targetScreen = const RequesterDashboardScreen();
         }
 
-        Navigator.pushReplacement(
-          context,
+        // Capture the navigator before the splash route is replaced so the
+        // follow-up push doesn't rely on this (about to be removed) context.
+        final navigator = Navigator.of(context);
+        navigator.pushReplacement(
           MaterialPageRoute(builder: (_) => targetScreen),
         );
+
+        // Honour the user's landing screen preference. If they chose "Leave",
+        // open the Leave Request form on top of their dashboard so the back
+        // button returns them to the dashboard. Defaults to Dashboard.
+        final landingScreenIndex =
+            prefs.getInt('landingScreenIndex') ?? kLandingScreenDashboard;
+        if (landingScreenIndex == kLandingScreenLeave) {
+          navigator.push(
+            MaterialPageRoute(builder: (_) => const LeaveRequestScreen()),
+          );
+        }
       } else {
         print('🔓 No valid token - redirecting to login');
         Navigator.pushReplacement(

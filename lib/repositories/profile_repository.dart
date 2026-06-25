@@ -133,9 +133,19 @@ class ProfileRepository {
       // Even if the API call fails, we should still clear local data
       print('Error during logout API call: $e');
     } finally {
-      // Always clear local data regardless of API response
+      // Always clear local data regardless of API response, but keep device
+      // level settings (landing screen choice and selected environment) so
+      // they survive logout/login.
       SharedPreferences pref = await SharedPreferences.getInstance();
+      final landingScreenIndex = pref.getInt('landingScreenIndex');
+      final selectedEnvironment = pref.getString('selected_environment');
       await pref.clear();
+      if (landingScreenIndex != null) {
+        await pref.setInt('landingScreenIndex', landingScreenIndex);
+      }
+      if (selectedEnvironment != null) {
+        await pref.setString('selected_environment', selectedEnvironment);
+      }
     }
   }
 }

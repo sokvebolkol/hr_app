@@ -51,7 +51,7 @@ class _DateSectionState extends State<DateSection> {
               widget.style ??
               const TextStyle(
                 fontSize: 16.0,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
         ),
