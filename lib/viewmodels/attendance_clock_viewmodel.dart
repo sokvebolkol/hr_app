@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/attendance_model.dart';
 import '../repositories/attendance_repository.dart';
 import '../services/location_service.dart';
@@ -20,6 +21,7 @@ class AttendanceClockViewModel extends ChangeNotifier {
   Timer? _timer;
   String _currentTime = '';
   String? _deviceName;
+  String _userBranchCode = '';
 
   // Getters
   AttendanceClockData? get attendanceData => _attendanceData;
@@ -30,6 +32,7 @@ class AttendanceClockViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get currentTime => _currentTime;
   String get deviceName => _deviceName ?? 'Unknown Device';
+  String get userBranchCode => _userBranchCode;
 
   List<Branch> get branches => _attendanceData?.branches ?? [];
 
@@ -144,9 +147,18 @@ class AttendanceClockViewModel extends ChangeNotifier {
 
       _attendanceData = data;
 
+      // The API may return user.branch_id as null; the user's branch code
+      // (bcode) saved at login is the reliable source for matching.
+      _userBranchCode = data.user.branchId;
+      if (_userBranchCode.isEmpty) {
+        final pref = await SharedPreferences.getInstance();
+        _userBranchCode = pref.getString('bcode') ?? '';
+      }
+
       // Auto-select user's branch if it has valid coordinates
       final userBranch = data.branches.firstWhere(
-        (branch) => branch.branchId == data.user.branchId,
+        (branch) =>
+            _userBranchCode.isNotEmpty && branch.branchId == _userBranchCode,
         orElse: () => data.branches.first,
       );
 

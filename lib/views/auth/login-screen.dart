@@ -23,7 +23,6 @@ import '../leaves/leave_request/leave_request_screen.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import 'confirm-password-screen.dart';
 import 'forgot-password.dart';
-import 'welcome.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -176,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen>
             Uri.parse('${ServerService().baseUrl}login'),
             body: {
               "ecard": eCard,
-              "upassword": password,
+              "password": password,
               "device_name": deviceName,
               "device_type": deviceType,
               "device_token": deviceToken ?? '',
@@ -217,12 +216,14 @@ class _LoginScreenState extends State<LoginScreen>
 
         final token = data['token'];
         final userId = data['userLoginInfo']['uid'];
+        final bcode = data['userLoginInfo']['bcode']?.toString() ?? '';
         final isApprover = data['userProfile']['is_approver'] ?? false;
         final ceoUser = data['userProfile']['is_ceo'] ?? false;
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('userId', userId);
+        await prefs.setString('bcode', bcode);
         await prefs.setBool('isApprover', isApprover);
         await prefs.setBool('ceoUser', ceoUser);
 
@@ -350,12 +351,14 @@ class _LoginScreenState extends State<LoginScreen>
 
         final token = data['token'];
         final userId = data['userLoginInfo']['uid'];
+        final bcode = data['userLoginInfo']['bcode']?.toString() ?? '';
         final isApprover = data['userProfile']['is_approver'] ?? false;
         final ceoUser = data['userProfile']['is_ceo'] ?? false;
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('userId', userId);
+        await prefs.setString('bcode', bcode);
         await prefs.setBool('isApprover', isApprover);
         await prefs.setBool('ceoUser', ceoUser);
 
@@ -500,11 +503,9 @@ class _LoginScreenState extends State<LoginScreen>
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => WelcomeScreen(),
-                        ),
-                      );
+                      // Close the dialog only. The awaiting login flow then
+                      // pushes ConfirmPasswordScreen with the user's eCard.
+                      Navigator.of(context).pop();
                     },
                     icon: const Icon(Icons.arrow_forward, size: 20),
                     label: Text(language.changePasswordNow),
@@ -877,11 +878,7 @@ class _LoginScreenState extends State<LoginScreen>
             errorBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.red),
             ),
-            contentPadding: const EdgeInsets.only(
-              left: 4,
-              top: 14,
-              bottom: 14,
-            ),
+            contentPadding: const EdgeInsets.only(left: 4, top: 14, bottom: 14),
             counterText: "", // Hide character counter
           ),
           onChanged: (value) {
@@ -970,11 +967,7 @@ class _LoginScreenState extends State<LoginScreen>
             errorBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.red),
             ),
-            contentPadding: const EdgeInsets.only(
-              left: 4,
-              top: 14,
-              bottom: 14,
-            ),
+            contentPadding: const EdgeInsets.only(left: 4, top: 14, bottom: 14),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {

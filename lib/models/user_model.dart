@@ -8,12 +8,9 @@ class UserModel {
   final String ustatus;
   final String exdate;
   final String uname;
-  final String? u1;
-  final String? u2;
-  final String? u3;
-  final String? u4;
-  final String? u5;
   final String changepassword;
+  final String? profileImage;
+  final String? updatedAt;
   final String? gender;
   final String? dob;
 
@@ -27,33 +24,46 @@ class UserModel {
     required this.ustatus,
     required this.exdate,
     required this.uname,
-    this.u1,
-    this.u2,
-    this.u3,
-    this.u4,
-    this.u5,
     required this.changepassword,
+    this.profileImage,
+    this.updatedAt,
     this.gender,
     this.dob,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-    ucode: json['ucode'],
-    uid: json['uid'],
-    ulevel: json['ulevel'],
-    bcode: json['bcode'],
-    datecreate: json['datecreate'],
-    isapprover: json['isapprover'],
-    ustatus: json['ustatus'],
-    exdate: json['exdate'],
-    uname: json['uname'],
-    u1: json['u1'],
-    u2: json['u2'],
-    u3: json['u3'],
-    u4: json['u4'],
-    u5: json['u5'],
-    changepassword: json['changepassword'],
+    ucode: json['ucode']?.toString() ?? '',
+    uid: json['uid']?.toString() ?? '',
+    ulevel: json['ulevel'] is int
+        ? json['ulevel'] as int
+        : int.tryParse(json['ulevel']?.toString() ?? '') ?? 0,
+    bcode: json['bcode']?.toString() ?? '',
+    datecreate: json['datecreate']?.toString() ?? '',
+    isapprover: json['isapprover']?.toString() ?? 'N',
+    ustatus: json['ustatus']?.toString() ?? '',
+    exdate: json['exdate']?.toString() ?? '',
+    uname: json['uname']?.toString() ?? '',
+    changepassword: json['changepassword']?.toString() ?? 'N',
+    profileImage: json['profile_image']?.toString(),
+    updatedAt: json['updated_at']?.toString(),
     gender: json['gender']?.toString(),
     dob: json['dob']?.toString(),
   );
+
+  Map<String, dynamic> toJson() => {
+    'ucode': ucode,
+    'uid': uid,
+    'ulevel': ulevel,
+    'bcode': bcode,
+    'datecreate': datecreate,
+    'isapprover': isapprover,
+    'ustatus': ustatus,
+    'exdate': exdate,
+    'uname': uname,
+    'changepassword': changepassword,
+    'profile_image': profileImage,
+    'updated_at': updatedAt,
+    'gender': gender,
+    'dob': dob,
+  };
 }

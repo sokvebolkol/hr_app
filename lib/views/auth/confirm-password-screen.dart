@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
-import '../dashboard/ceo_dashboard_screen.dart';
-import '../dashboard/manager_dashboard.dart';
-import '../dashboard/requester_dashboard.dart';
 import 'login-screen.dart';
 
-// ignore: must_be_immutable
+/// Set New Password screen used by the Forgot Password / first-login reset
+/// flows (user is not authenticated). Logged-in users change their password
+/// via [ChangePasswordScreen] instead.
 class ConfirmPasswordScreen extends StatefulWidget {
-  bool isChangePassword;
-  ConfirmPasswordScreen({super.key, this.eCard, this.isChangePassword = false});
+  const ConfirmPasswordScreen({super.key, this.eCard});
   final String? eCard; // Pass eCard from previous screen
 
   @override
@@ -73,29 +70,12 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
 
       if (response.statusCode == 200) {
         if (!mounted) return;
-        if (widget.isChangePassword) {
-          final prefs = await SharedPreferences.getInstance();
-          final isCeo = prefs.getBool('ceoUser') ?? false;
-          final isApprover = prefs.getBool('isApprover') ?? false;
-          Widget targetScreen;
-          if (isCeo) {
-            targetScreen = const CeoDashboardScreen(initialIndex: 2);
-          } else if (isApprover) {
-            targetScreen = const ManagerDashboard(initialIndex: 1);
-          } else {
-            targetScreen = const RequesterDashboardScreen(initialIndex: 1);
-          }
-          if (!mounted) return;
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => targetScreen),
-            (route) => false,
-          );
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => LoginScreen()),
-            (route) => false,
-          );
-        }
+        // Reset flow: send the user back to Login to sign in with the new
+        // password.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+          (route) => false,
+        );
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

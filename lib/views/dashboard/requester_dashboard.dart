@@ -364,9 +364,17 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                             label: language.home,
                             isSelected: _currentIndex == 0,
                             onTap: () {
+                              final wasOnHome = _currentIndex == 0;
                               setState(() {
                                 _currentIndex = 0;
                               });
+                              // Honour the landing screen preference: if the
+                              // user chose "Leave", open the Leave Request
+                              // form on top of the dashboard when switching
+                              // back to Home.
+                              if (!wasOnHome) {
+                                _openLeaveLandingIfNeeded();
+                              }
                             },
                           ),
                           _buildNavItem(
@@ -563,6 +571,19 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     if (state == AppLifecycleState.resumed &&
         (_currentIndex == 0 || widget.hideBottomNav)) {
       _dashboardViewModel.refreshProfile();
+    }
+  }
+
+  // Open the Leave Request form when the landing screen preference is set to
+  // "Leave". Pushed on top of the dashboard so back returns to the dashboard.
+  Future<void> _openLeaveLandingIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    final landingScreenIndex =
+        prefs.getInt('landingScreenIndex') ?? kLandingScreenDashboard;
+    if (landingScreenIndex == kLandingScreenLeave && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const LeaveRequestScreen()),
+      );
     }
   }
 

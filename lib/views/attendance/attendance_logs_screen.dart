@@ -80,7 +80,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     return AppBar(
       title: Text(
         language.attendanceReport,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
       ),
       backgroundColor: primary,
       foregroundColor: Colors.white,
@@ -305,7 +305,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                         language.monthlySummary,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.3,
                         ),
@@ -395,7 +395,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
             value,
             style: TextStyle(
               color: accentColor,
-              fontSize: 26,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               height: 1,
             ),
@@ -445,7 +445,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: primary,
-                    fontSize: 14,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -453,7 +453,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
               Text(
                 '${summary.workingDays} ${language.workingDays}',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
@@ -495,13 +495,13 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
         decoration: BoxDecoration(
           color: isSelected ? primary : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? primary : Colors.grey[300]!,
-            width: 1.3,
+            width: 1,
           ),
           boxShadow:
               isSelected
@@ -520,7 +520,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: 14,
+                size: 10,
                 color: isSelected ? Colors.white : Colors.grey[600],
               ),
               const SizedBox(width: 5),
@@ -529,7 +529,7 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
               label,
               style: TextStyle(
                 color: isSelected ? Colors.white : Colors.grey[700],
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),

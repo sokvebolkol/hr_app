@@ -406,8 +406,8 @@ class _AttendanceClockState extends State<AttendanceClock>
                   items:
                       viewModel.branches.map((branch) {
                         final isUserBranch =
-                            branch.branchId ==
-                            viewModel.attendanceData?.user.branchId;
+                            viewModel.userBranchCode.isNotEmpty &&
+                            branch.branchId == viewModel.userBranchCode;
                         final hasCoordinates = branch.hasValidCoordinates;
 
                         return DropdownMenuItem(

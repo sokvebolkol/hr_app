@@ -11,7 +11,7 @@ import '../../services/global_service.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../auth/welcome.dart';
-import '../auth/confirm-password-screen.dart';
+import '../auth/change_password_screen.dart';
 import '../profile/profile_screen.dart';
 import '../settings/environment_selector_screen.dart';
 
@@ -498,30 +498,13 @@ class _MenuScreenState extends State<MenuScreen> {
   // ✅ Updated Change Password Navigation
   Future<void> _navigateToChangePassword(viewModel) async {
     try {
-      if (viewModel.employeeCard.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                viewModel.languageLogic.language.unableToRetrieveUserInfo,
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Navigate to ConfirmPasswordScreen with eCard
+      // The change-password endpoint is token-authenticated, so no eCard is
+      // needed here.
       if (mounted) {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) => ConfirmPasswordScreen(
-                  eCard: viewModel.employeeCard,
-                  isChangePassword: true,
-                ),
+            builder: (context) => const ChangePasswordScreen(),
           ),
         );
       }
