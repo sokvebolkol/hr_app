@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import '../constants/constant.dart';
 import '../models/leave_type_model.dart';
 import '../models/approver_model.dart';
 import '../repositories/leave_request_repository.dart';
@@ -28,6 +29,10 @@ class LeaveRequestViewModel extends ChangeNotifier {
   // Submission state
   bool _isSubmitting = false;
 
+  // Maternity Leave is capped at 90 calendar days — unlike normal leave
+  // types, this includes weekends and public holidays in the count.
+  static const int maternityLeaveMaxDays = 90;
+
   // Getters
   List<LeaveTypeModel> get leaveTypes => _leaveTypes;
   List<ApproverModel> get approvers => _approvers;
@@ -52,6 +57,13 @@ class LeaveRequestViewModel extends ChangeNotifier {
 
   double get totalLeaveDays {
     if (_leaveDateRange != null) {
+      // Maternity Leave is counted in full calendar days (weekends and
+      // holidays included) — it isn't deducted like normal working-day
+      // leave, so it must match the same count used for the 90-day limit.
+      if (isMaternityLeaveType) {
+        return calendarDaysInRange.toDouble();
+      }
+
       int workingDays = 0;
       DateTime current = _leaveDateRange!.start;
 
@@ -77,6 +89,22 @@ class LeaveRequestViewModel extends ChangeNotifier {
     }
     return 0;
   }
+
+  // Total calendar days in the selected range, inclusive of both ends —
+  // counts weekends and holidays, unlike [totalLeaveDays] which only counts
+  // working days.
+  int get calendarDaysInRange {
+    if (_leaveDateRange == null) return 0;
+    return _leaveDateRange!.end.difference(_leaveDateRange!.start).inDays + 1;
+  }
+
+  // Match by the canonical leave type code (same one used elsewhere, e.g.
+  // leave_request_repository.dart) rather than the display text, which may
+  // not literally contain "maternity" depending on backend wording/locale.
+  bool get isMaternityLeaveType => _selectedLeaveType?.leaid == maternityLeave;
+
+  bool get exceedsMaternityLeaveLimit =>
+      isMaternityLeaveType && calendarDaysInRange > maternityLeaveMaxDays;
 
   String get leaveDateLabel {
     if (_leaveDateRange == null) return '';

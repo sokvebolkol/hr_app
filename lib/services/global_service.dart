@@ -18,13 +18,9 @@ class ServerService {
 
   static const String _envKey = 'selected_environment';
 
-  // String _baseUrl = prodUrl;
-  // String _baseUrlName = "Production";
-  // Environment _currentEnvironment = Environment.production;
-
-  String _baseUrl = uatUrl;
-  String _baseUrlName = "UAT";
-  Environment _currentEnvironment = Environment.uat;
+  String _baseUrl = prodUrl;
+  String _baseUrlName = "Production";
+  Environment _currentEnvironment = Environment.production;
 
   String get baseUrl => _baseUrl;
   String get baseUrlName => _baseUrlName;
@@ -49,7 +45,8 @@ class ServerService {
         // No saved environment (e.g. fresh install or after a logout that
         // cleared prefs): default to production rather than leaving the
         // local dev URL, which is unreachable from real devices.
-        _setEnvironment(Environment.production, saveToPrefs: false);
+        // _setEnvironment(Environment.production, saveToPrefs: false);
+        _setEnvironment(Environment.uat, saveToPrefs: false);
     }
   }
 

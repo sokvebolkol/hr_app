@@ -379,6 +379,9 @@ class Language {
   String get pleaseSelectLeaveType => "Please select leave type";
   String get leaveDate => "Leave Date";
   String get pleaseSelectLeaveDate => "Please select leave date";
+  String get calendarDays => "Calendar Days";
+  String maternityLeaveExceedsLimit(int maxDays, int selectedDays) =>
+      "Maternity leave cannot exceed $maxDays days, including weekends and holidays. Your selected range is $selectedDays days.";
   String get totalLeave => "Total Leave";
   String get day => "day";
   String get leaveFor => "Leave For";
@@ -1270,6 +1273,11 @@ class Khmer implements Language {
   String get leaveDate => "កាលបរិច្ឆេទច្បាប់";
   @override
   String get pleaseSelectLeaveDate => "សូមជ្រើសរើសកាលបរិច្ឆេទច្បាប់";
+  @override
+  String get calendarDays => "ថ្ងៃប្រតិទិន";
+  @override
+  String maternityLeaveExceedsLimit(int maxDays, int selectedDays) =>
+      "ច្បាប់សម្រាលកូនមិនអាចលើសពី $maxDays ថ្ងៃ រួមទាំងថ្ងៃឈប់សម្រាក និងចុងសប្តាហ៍។ ចន្លោះពេលដែលអ្នកបានជ្រើសរើសគឺ $selectedDays ថ្ងៃ។";
   @override
   String get totalLeave => "ច្បាប់សរុប";
   @override

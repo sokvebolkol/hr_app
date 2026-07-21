@@ -842,6 +842,17 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                               );
                               if (picked != null) {
                                 vm.setLeaveDateRange(picked);
+                                if (vm.exceedsMaternityLeaveLimit) {
+                                  _showSnackBar(
+                                    language.maternityLeaveExceedsLimit(
+                                      LeaveRequestViewModel
+                                          .maternityLeaveMaxDays,
+                                      vm.calendarDaysInRange,
+                                    ),
+                                    Colors.red,
+                                    Icons.error_outline,
+                                  );
+                                }
                               }
                             },
                             child: AbsorbPointer(
@@ -863,11 +874,19 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                 controller: TextEditingController(
                                   text: vm.leaveDateLabel,
                                 ),
-                                validator:
-                                    (_) =>
-                                        vm.leaveDateRange == null
-                                            ? language.pleaseSelectLeaveDate
-                                            : null,
+                                validator: (_) {
+                                  if (vm.leaveDateRange == null) {
+                                    return language.pleaseSelectLeaveDate;
+                                  }
+                                  if (vm.exceedsMaternityLeaveLimit) {
+                                    return language.maternityLeaveExceedsLimit(
+                                      LeaveRequestViewModel
+                                          .maternityLeaveMaxDays,
+                                      vm.calendarDaysInRange,
+                                    );
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
                           ),
@@ -905,6 +924,46 @@ class _LeaveRequestBodyState extends State<_LeaveRequestBody> {
                                     ),
                                   ),
                                 ],
+                              ),
+                            ),
+
+                          // Maternity leave limit warning banner
+                          if (vm.exceedsMaternityLeaveLimit)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        language.maternityLeaveExceedsLimit(
+                                          LeaveRequestViewModel
+                                              .maternityLeaveMaxDays,
+                                          vm.calendarDaysInRange,
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
 
