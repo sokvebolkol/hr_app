@@ -100,7 +100,18 @@ class LeaveBalanceViewModel extends ChangeNotifier {
       if (response != null && response.data.isNotEmpty) {
         _leaveBalance =
             response.data.first; // Get the first item from data array
-        _approvedLeaveRequests = response.approvedLeaveRequest;
+        // The backend's approved_leave_request list isn't reliably scoped to
+        // the requested year, so filter client-side: keep requests whose
+        // start or end date falls within the selected year (covers leave
+        // that spans a year boundary, e.g. long Maternity Leave).
+        _approvedLeaveRequests =
+            response.approvedLeaveRequest
+                .where(
+                  (request) =>
+                      request.fromDate.year == _selectedYear ||
+                      request.toDate.year == _selectedYear,
+                )
+                .toList();
         _joinDate = response.joinDate; // Store join date for year filtering
         _isViewMaternityLeave = response.isViewMaternityLeave;
       } else {

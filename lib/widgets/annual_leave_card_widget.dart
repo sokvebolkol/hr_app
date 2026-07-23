@@ -115,7 +115,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                         Flexible(
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 6,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
@@ -125,7 +125,7 @@ class AnnualLeaveBalanceWidget extends StatelessWidget {
                             child: Text(
                               '$usedLeaveText: $usedLeave',
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 10,
                                 color: logoPink,
                               ),
                               overflow: TextOverflow.ellipsis,

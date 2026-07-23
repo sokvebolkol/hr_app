@@ -67,7 +67,7 @@ class _RequestAttendanceAdjustmentScreenState
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text(language.adjustmentRequest),
+        title: Text(language.requestAdjustment),
         backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 0,

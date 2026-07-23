@@ -291,7 +291,7 @@ class Language {
   String get clockInOut => "Clock In | Out";
   String get attendanceLogs => "Attendance Logs";
   String get attendanceRequests => "Attendance Requests";
-  String get requestAdjustment => "Request Adjustment";
+  String get requestAdjustment => "Attendance Requests";
 
   // Attendance Report Screen
   String get attendanceReport => "Attendance Report";
@@ -411,6 +411,7 @@ class Language {
   String get calendar => "Calendar";
   String get total => "Total";
   String get totalUsed => "Total Used";
+  String get totalRequests => "Total Requests";
   String get annualLeaveUsed => "Annual Leave";
   String get pending => "Pending";
   String get leaveBalance => "Leave Balance";
@@ -1113,7 +1114,7 @@ class Khmer implements Language {
   @override
   String get attendanceRequests => "ស្នើសុំវត្តមាន";
   @override
-  String get requestAdjustment => "ស្នើសុំកែតម្រូវ";
+  String get requestAdjustment => "ស្នើសុំកែតម្រូវវត្តមាន";
 
   // Attendance Report Screen
   @override
@@ -1337,6 +1338,8 @@ class Khmer implements Language {
   String get total => "សរុប";
   @override
   String get totalUsed => "បានប្រើសរុប";
+  @override
+  String get totalRequests => "ចំនួនសំណើសរុប";
   @override
   String get annualLeaveUsed => "ច្បាប់ប្រចាំឆ្នាំ";
   @override

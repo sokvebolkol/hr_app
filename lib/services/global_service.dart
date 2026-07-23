@@ -46,7 +46,7 @@ class ServerService {
         // cleared prefs): default to production rather than leaving the
         // local dev URL, which is unreachable from real devices.
         // _setEnvironment(Environment.production, saveToPrefs: false);
-        _setEnvironment(Environment.uat, saveToPrefs: false);
+        _setEnvironment(Environment.production, saveToPrefs: false);
     }
   }
 
