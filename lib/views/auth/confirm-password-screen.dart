@@ -3,11 +3,16 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart' as http;
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
+import '../../utils/password_rules.dart';
 import 'login-screen.dart';
 
 /// Set New Password screen used by the Forgot Password / first-login reset
 /// flows (user is not authenticated). Logged-in users change their password
 /// via [ChangePasswordScreen] instead.
+///
+/// On success, `set-new-password` revokes every token issued for this user
+/// (all devices), so any locally stored session must be cleared and the
+/// user sent back to Login.
 class ConfirmPasswordScreen extends StatefulWidget {
   const ConfirmPasswordScreen({super.key, this.eCard});
   final String? eCard; // Pass eCard from previous screen
@@ -25,36 +30,59 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Rebuild live for the requirements checklist.
+    _newPasswordController.addListener(() => setState(() {}));
+    _confirmPasswordController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  bool get _matchesConfirm =>
+      _newPasswordController.text.isNotEmpty &&
+      _newPasswordController.text == _confirmPasswordController.text;
+
+  bool get _canSubmit =>
+      !_isLoading &&
+      PasswordRules.isValid(_newPasswordController.text) &&
+      _matchesConfirm;
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
   Future<void> _submit() async {
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in both fields")),
-      );
+      _showError("Please fill in both fields");
       return;
     }
 
-    // ✅ ADD THIS VALIDATION
-    if (newPassword.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password must be at least 6 characters")),
-      );
+    final ruleError = PasswordRules.firstError(newPassword);
+    if (ruleError != null) {
+      _showError(ruleError);
       return;
     }
 
     if (newPassword != confirmPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      _showError("Passwords do not match");
       return;
     }
 
     if (widget.eCard == null || widget.eCard!.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("E-Card is missing.")));
+      _showError("E-Card is missing.");
       return;
     }
 
@@ -70,23 +98,24 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
 
       if (response.statusCode == 200) {
         if (!mounted) return;
-        // Reset flow: send the user back to Login to sign in with the new
-        // password.
+
+        // The backend revokes every token on success, so any locally stored
+        // session is now invalid. Clear it (keeping device-level settings
+        // like landing screen / environment) before returning to Login.
+        await ServerService().clearUserSession();
+
+        if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => LoginScreen()),
           (route) => false,
         );
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to reset password: ${response.body}")),
-        );
+        _showError("Failed to reset password: ${response.body}");
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Network error. Please try again.")),
-      );
+      _showError("Network error. Please try again.");
     } finally {
       if (mounted) {
         setState(() {
@@ -96,9 +125,38 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
     }
   }
 
+  Widget _buildRequirement(String label, bool met) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: met ? Colors.green : Colors.grey[300],
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check, size: 12, color: Colors.white),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: met ? Colors.green[700] : Colors.grey[600],
+              fontWeight: met ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final newPassword = _newPasswordController.text;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -187,33 +245,84 @@ class _ConfirmPasswordScreenState extends State<ConfirmPasswordScreen> {
                   fillColor: Colors.grey[100],
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Password requirements checklist
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildRequirement(
+                      "At least ${PasswordRules.minLength} characters",
+                      PasswordRules.hasMinLength(newPassword),
+                    ),
+                    _buildRequirement(
+                      "Contains an uppercase letter",
+                      PasswordRules.hasUppercase(newPassword),
+                    ),
+                    _buildRequirement(
+                      "Contains a lowercase letter",
+                      PasswordRules.hasLowercase(newPassword),
+                    ),
+                    _buildRequirement(
+                      "Contains a number",
+                      PasswordRules.hasNumber(newPassword),
+                    ),
+                    _buildRequirement(
+                      "Contains a symbol (e.g. ! @ # \$)",
+                      PasswordRules.hasSymbol(newPassword),
+                    ),
+                    _buildRequirement(
+                      "Not a common password",
+                      PasswordRules.isNotDisallowed(newPassword),
+                    ),
+                    _buildRequirement("Passwords match", _matchesConfirm),
+                  ],
+                ),
+              ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: _canSubmit ? 1 : 0.55,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      backgroundColor: primary,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: primary,
+                      disabledForegroundColor: Colors.white70,
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      elevation: 2,
                     ),
-                    backgroundColor: primary,
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    elevation: 2,
+                    icon:
+                        _isLoading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: SpinKitCircle(
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            )
+                            : const Icon(Icons.check_circle_outline),
+                    label: Text(_isLoading ? "Resetting..." : "Reset Password"),
+                    onPressed: _canSubmit ? _submit : null,
                   ),
-                  icon:
-                      _isLoading
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: SpinKitCircle(color: Colors.white, size: 20),
-                          )
-                          : const Icon(Icons.check_circle_outline),
-                  label: Text(_isLoading ? "Resetting..." : "Reset Password"),
-                  onPressed: _isLoading ? null : _submit,
                 ),
               ),
             ],

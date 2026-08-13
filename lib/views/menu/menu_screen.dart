@@ -83,7 +83,6 @@ class _MenuScreenState extends State<MenuScreen> {
                       bottom: 0,
                       child: _buildItem(),
                     ),
-
                     Positioned(
                       top: 90,
                       left: 0,
@@ -253,8 +252,8 @@ class _MenuScreenState extends State<MenuScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (context) => const EnvironmentSelectorScreen(),
+                          builder: (context) =>
+                              const EnvironmentSelectorScreen(),
                         ),
                       );
                     },
@@ -281,13 +280,12 @@ class _MenuScreenState extends State<MenuScreen> {
                 child: CircleAvatar(
                   radius: 55,
                   backgroundColor: Colors.grey.shade200,
-                  backgroundImage:
-                      viewModel.profileImagePath.isNotEmpty
-                          ? NetworkImage(viewModel.profileImagePath)
-                          : const AssetImage('assets/images/profile.png'),
+                  backgroundImage: viewModel.profileImagePath.isNotEmpty
+                      ? NetworkImage(viewModel.profileImagePath)
+                      : const AssetImage('assets/images/profile.png')
+                          as ImageProvider<Object>,
                 ),
               ),
-
               const SizedBox(height: 16),
               Text(
                 viewModel.fullName,
@@ -537,33 +535,32 @@ class _MenuScreenState extends State<MenuScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder:
-            (context) => WillPopScope(
-              onWillPop: () async => false,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+        builder: (context) => WillPopScope(
+          onWillPop: () async => false,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SpinKitFadingCircle(color: themeColor, size: 50),
+                  const SizedBox(height: 16),
+                  Text(
+                    viewModel.languageLogic.language.loggingOut,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SpinKitFadingCircle(color: themeColor, size: 50),
-                      const SizedBox(height: 16),
-                      Text(
-                        viewModel.languageLogic.language.loggingOut,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
             ),
+          ),
+        ),
       );
 
       try {
@@ -583,19 +580,19 @@ class _MenuScreenState extends State<MenuScreen> {
         // Call logout API
         final response = await http
             .post(
-              Uri.parse('${ServerService().baseUrl}logout'),
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer $token',
-              },
-              body: convert.jsonEncode({'token': token}),
-            )
+          Uri.parse('${ServerService().baseUrl}logout'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: convert.jsonEncode({'token': token}),
+        )
             .timeout(
-              const Duration(seconds: 15),
-              onTimeout: () {
-                throw Exception('Request timeout');
-              },
-            );
+          const Duration(seconds: 15),
+          onTimeout: () {
+            throw Exception('Request timeout');
+          },
+        );
 
         if (mounted) {
           Navigator.of(context).pop(); // Close loading dialog

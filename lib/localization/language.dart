@@ -129,6 +129,8 @@ class Language {
   String get isAvailableAndMustBeInstalled =>
       "is available and must be installed to continue using the app";
   String get updateNow => "Update Now";
+  String get whatsNew => "What's New";
+  String get requiredUpdate => "Required Update";
   String get menu => "Menu";
   String get errorLoadingDashboard => "Error Loading Dashboard";
   String get todaysAttendance => "Today's Attendance";
@@ -806,6 +808,10 @@ class Khmer implements Language {
       "មានហើយ ហើយត្រូវតែដំឡើងដើម្បីបន្តប្រើកម្មវិធី។";
   @override
   String get updateNow => "ធ្វើបច្ចុប្បន្នភាពឥឡូវនេះ";
+  @override
+  String get whatsNew => "កំណែថ្មីៗ";
+  @override
+  String get requiredUpdate => "ការធ្វើបច្ចុប្បន្នភាពចាំបាច់";
   @override
   String get menu => "ម៉ឺនុយ";
   @override

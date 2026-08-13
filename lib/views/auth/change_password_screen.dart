@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/constant.dart';
 import '../../services/global_service.dart';
+import '../../utils/password_rules.dart';
 import '../dashboard/ceo_dashboard_screen.dart';
 import '../dashboard/manager_dashboard.dart';
 import '../dashboard/requester_dashboard.dart';
@@ -59,14 +60,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final password = _newPasswordController.text;
     if (password.isEmpty) return 0;
     int score = 0;
-    if (password.length >= 6) score++;
+    if (PasswordRules.hasMinLength(password)) score++;
     if (password.length >= 10) score++;
-    if (RegExp(r'[A-Z]').hasMatch(password) &&
-        RegExp(r'[a-z]').hasMatch(password)) {
+    if (PasswordRules.hasUppercase(password) &&
+        PasswordRules.hasLowercase(password)) {
       score++;
     }
-    if (RegExp(r'[0-9]').hasMatch(password)) score++;
-    if (RegExp(r'[^A-Za-z0-9]').hasMatch(password)) score++;
+    if (PasswordRules.hasNumber(password)) score++;
+    if (PasswordRules.hasSymbol(password)) score++;
     return score; // 0–5
   }
 
@@ -96,19 +97,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     }
   }
 
-  bool get _hasMinLength => _newPasswordController.text.length >= 6;
-  bool get _hasNumber => RegExp(r'[0-9]').hasMatch(_newPasswordController.text);
-  bool get _hasLetter =>
-      RegExp(r'[A-Za-z]').hasMatch(_newPasswordController.text);
+  bool get _hasMinLength =>
+      PasswordRules.hasMinLength(_newPasswordController.text);
+  bool get _hasUppercase =>
+      PasswordRules.hasUppercase(_newPasswordController.text);
+  bool get _hasLowercase =>
+      PasswordRules.hasLowercase(_newPasswordController.text);
+  bool get _hasNumber => PasswordRules.hasNumber(_newPasswordController.text);
+  bool get _hasSymbol => PasswordRules.hasSymbol(_newPasswordController.text);
+  bool get _isNotCommonPassword =>
+      PasswordRules.isNotDisallowed(_newPasswordController.text);
   bool get _matchesConfirm =>
       _newPasswordController.text.isNotEmpty &&
       _newPasswordController.text == _confirmPasswordController.text;
+  bool get _differsFromCurrent =>
+      _currentPasswordController.text.isEmpty ||
+      _newPasswordController.text != _currentPasswordController.text;
 
   bool get _canSubmit =>
       !_isLoading &&
       _currentPasswordController.text.isNotEmpty &&
-      _hasMinLength &&
-      _matchesConfirm;
+      PasswordRules.isValid(_newPasswordController.text) &&
+      _matchesConfirm &&
+      _differsFromCurrent;
 
   // ---------------------------------------------------------------------------
   // Submit
@@ -133,6 +144,17 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     final currentPassword = _currentPasswordController.text;
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
+
+    final ruleError = PasswordRules.firstError(newPassword);
+    if (ruleError != null) {
+      _showError(ruleError);
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      _showError("Passwords do not match");
+      return;
+    }
 
     if (newPassword == currentPassword) {
       _showError("New password must be different from the current password");
@@ -540,10 +562,32 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        _buildRequirement("At least 6 characters", _hasMinLength),
-                        _buildRequirement("Contains a letter", _hasLetter),
+                        _buildRequirement(
+                          "At least ${PasswordRules.minLength} characters",
+                          _hasMinLength,
+                        ),
+                        _buildRequirement(
+                          "Contains an uppercase letter",
+                          _hasUppercase,
+                        ),
+                        _buildRequirement(
+                          "Contains a lowercase letter",
+                          _hasLowercase,
+                        ),
                         _buildRequirement("Contains a number", _hasNumber),
+                        _buildRequirement(
+                          "Contains a symbol (e.g. ! @ # \$)",
+                          _hasSymbol,
+                        ),
+                        _buildRequirement(
+                          "Not a common password",
+                          _isNotCommonPassword,
+                        ),
                         _buildRequirement("Passwords match", _matchesConfirm),
+                        _buildRequirement(
+                          "Different from current password",
+                          _differsFromCurrent,
+                        ),
                       ],
                     ),
                   ),

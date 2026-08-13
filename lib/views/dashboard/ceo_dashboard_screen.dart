@@ -265,9 +265,10 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        if (dashboardViewModel
-                                                .appVersion
-                                                ?.releaseNotes
+                                        if (dashboardViewModel.appVersion
+                                                ?.releaseNotesFor(
+                                                  language.code,
+                                                )
                                                 .isNotEmpty ??
                                             false) ...[
                                           const SizedBox(height: 16),
@@ -279,9 +280,10 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                                                   BorderRadius.circular(12),
                                             ),
                                             child: Text(
-                                              dashboardViewModel
-                                                  .appVersion!
-                                                  .releaseNotes,
+                                              dashboardViewModel.appVersion!
+                                                  .releaseNotesFor(
+                                                    language.code,
+                                                  ),
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: Colors.grey[700],

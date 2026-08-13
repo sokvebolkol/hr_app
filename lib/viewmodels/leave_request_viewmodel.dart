@@ -80,6 +80,8 @@ class LeaveRequestViewModel extends ChangeNotifier {
         current = current.add(const Duration(days: 1));
       }
 
+      if (workingDays == 0) return 0;
+
       if (_leaveFor == 'Half Day') {
         if (workingDays == 1) return 0.5;
         if (workingDays == 2) return 1.5;

@@ -255,9 +255,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
-                                        if (dashboardViewModel
-                                                .appVersion
-                                                ?.releaseNotes
+                                        if (dashboardViewModel.appVersion
+                                                ?.releaseNotesFor(
+                                                  language.code,
+                                                )
                                                 .isNotEmpty ??
                                             false) ...[
                                           const SizedBox(height: 16),
@@ -269,9 +270,10 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                                                   BorderRadius.circular(12),
                                             ),
                                             child: Text(
-                                              dashboardViewModel
-                                                  .appVersion!
-                                                  .releaseNotes,
+                                              dashboardViewModel.appVersion!
+                                                  .releaseNotesFor(
+                                                    language.code,
+                                                  ),
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: Colors.grey[700],

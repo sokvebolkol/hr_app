@@ -305,7 +305,11 @@ class FileHelper {
     return false;
   }
 
-  static void showUpdateDialog(BuildContext context, String latestVersion) {
+  static Future<void> showUpdateDialog(
+      BuildContext context, String latestVersion) async {
+    final languageLogic = LanguageLogic();
+    await languageLogic.initialize();
+    final Language language = languageLogic.language;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -362,8 +366,8 @@ class FileHelper {
                     print('Could not launch $url');
                   }
                 },
-                child: const Text(
-                  "Update Now",
+                child: Text(
+                  language.updateNow,
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
@@ -385,7 +389,7 @@ class FileHelper {
   static bool _isConnected = true;
   static bool _wasDisconnected = false;
   static StreamSubscription<List<ConnectivityResult>>?
-  _connectivitySubscription;
+      _connectivitySubscription;
 
   static void monitorNetworkStatus(BuildContext? context) {
     print('🌐 Starting network monitoring...');
@@ -521,24 +525,23 @@ class FileHelper {
 
       final overlay = Overlay.of(context);
       _currentOverlayEntry = OverlayEntry(
-        builder:
-            (context) => Positioned(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              child: Material(
-                color: Colors.transparent,
-                child: CustomToast(
-                  title: title,
-                  message: message,
-                  backgroundColor: backgroundColor,
-                  icon: icon,
-                  onActionPressed: () {
-                    _removeCustomToast();
-                  },
-                ),
-              ),
+        builder: (context) => Positioned(
+          top: MediaQuery.of(context).padding.top + 16,
+          left: 16,
+          right: 16,
+          child: Material(
+            color: Colors.transparent,
+            child: CustomToast(
+              title: title,
+              message: message,
+              backgroundColor: backgroundColor,
+              icon: icon,
+              onActionPressed: () {
+                _removeCustomToast();
+              },
             ),
+          ),
+        ),
       );
 
       overlay.insert(_currentOverlayEntry!);
@@ -649,24 +652,23 @@ class FileHelper {
 
       final overlay = Overlay.of(context);
       _currentOverlayEntryServerError = OverlayEntry(
-        builder:
-            (context) => Positioned(
-              top: MediaQuery.of(context).padding.top + 16,
-              left: 16,
-              right: 16,
-              child: Material(
-                color: Colors.transparent,
-                child: CustomToast(
-                  title: title,
-                  message: message,
-                  backgroundColor: backgroundColor,
-                  icon: icon,
-                  onActionPressed: () {
-                    _removeCustomToastServerError();
-                  },
-                ),
-              ),
+        builder: (context) => Positioned(
+          top: MediaQuery.of(context).padding.top + 16,
+          left: 16,
+          right: 16,
+          child: Material(
+            color: Colors.transparent,
+            child: CustomToast(
+              title: title,
+              message: message,
+              backgroundColor: backgroundColor,
+              icon: icon,
+              onActionPressed: () {
+                _removeCustomToastServerError();
+              },
             ),
+          ),
+        ),
       );
 
       overlay.insert(_currentOverlayEntryServerError!);
@@ -689,40 +691,38 @@ class FileHelper {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => Scaffold(
-              backgroundColor: Colors.black,
-              appBar: AppBar(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                title: const Text('Supporting Document'),
-              ),
-              body: Center(
-                child: InteractiveViewer(
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return const Center(
-                        child: SpinKitFadingCircle(
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      );
-                    },
-                    errorBuilder:
-                        (_, __, ___) => const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            color: Colors.white,
-                            size: 64,
-                          ),
-                        ),
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            title: const Text('Supporting Document'),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return const Center(
+                    child: SpinKitFadingCircle(
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                  );
+                },
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Colors.white,
+                    size: 64,
                   ),
                 ),
               ),
             ),
+          ),
+        ),
       ),
     );
   }
@@ -820,28 +820,27 @@ class FileHelper {
                               ),
                             );
                           },
-                          errorBuilder:
-                              (ctx, _, __) => Container(
-                                color: Colors.grey[100],
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.broken_image,
-                                      size: 48,
-                                      color: Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Failed to load image',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
+                          errorBuilder: (ctx, _, __) => Container(
+                            color: Colors.grey[100],
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.broken_image,
+                                  size: 48,
+                                  color: Colors.grey[400],
                                 ),
-                              ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Failed to load image',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         Container(
                           margin: const EdgeInsets.all(8),

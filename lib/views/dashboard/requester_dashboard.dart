@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -30,6 +29,7 @@ import '../menu/menu_screen.dart';
 import '../../models/leave_model.dart';
 import '../../utils/file_helper.dart';
 import '../../widgets/custom_alert_dialog.dart';
+import '../../widgets/app_update_bottom_sheet.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../notifications/manager_notifcation_screen.dart';
@@ -279,27 +279,12 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                                 ? viewModel.appVersion!.androidUrl
                                 : viewModel.appVersion!.iosUrl;
 
-                        CustomAlertDialog.show(
+                        AppUpdateBottomSheet.show(
                           // ignore: use_build_context_synchronously
                           context,
-                          title: language.updateAvailable,
-                          message:
-                              '${language.aNewVersion} ${viewModel.appVersion?.version} '
-                              '${language.isAvailableAndMustBeInstalled}\n\n'
-                              '${viewModel.appVersion?.releaseNotes ?? ''}',
-                          icon: Icons.system_update,
-                          iconColor: primary,
-                          primaryButtonText: 'Update Now',
-                          onPrimaryPressed: () async {
-                            final uri = Uri.parse(updateUrl);
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(
-                                uri,
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
-                          },
-                          barrierDismissible: false,
+                          appVersion: viewModel.appVersion!,
+                          updateUrl: updateUrl,
+                          language: language,
                         );
                       }
                     });
