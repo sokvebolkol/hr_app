@@ -14,32 +14,39 @@ class AppUpdateBottomSheet extends StatelessWidget {
   final String updateUrl;
   final Language language;
 
+  /// When true the sheet cannot be dismissed and offers no "Later" option.
+  /// When false (a user-initiated check) the user can close it.
+  final bool isMandatory;
+
   const AppUpdateBottomSheet({
     super.key,
     required this.appVersion,
     required this.updateUrl,
     required this.language,
+    this.isMandatory = true,
   });
 
-  /// Show the sheet. Blocks dismissal (back button and drag) because the
-  /// update is mandatory.
+  /// Show the sheet. A mandatory update blocks dismissal (back button and
+  /// drag); an optional one can be closed.
   static Future<void> show(
     BuildContext context, {
     required AppVersion appVersion,
     required String updateUrl,
     required Language language,
+    bool isMandatory = true,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      isDismissible: false,
-      enableDrag: false,
+      isDismissible: !isMandatory,
+      enableDrag: !isMandatory,
       backgroundColor: Colors.transparent,
       builder:
           (_) => AppUpdateBottomSheet(
             appVersion: appVersion,
             updateUrl: updateUrl,
             language: language,
+            isMandatory: isMandatory,
           ),
     );
   }
@@ -72,8 +79,8 @@ class AppUpdateBottomSheet extends StatelessWidget {
     final maxSheetHeight = MediaQuery.of(context).size.height * 0.85;
 
     return PopScope(
-      // Mandatory update — user cannot back out of the sheet.
-      canPop: false,
+      // A mandatory update cannot be backed out of.
+      canPop: !isMandatory,
       child: Container(
         constraints: BoxConstraints(maxHeight: maxSheetHeight),
         decoration: const BoxDecoration(
@@ -91,8 +98,11 @@ class AppUpdateBottomSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${language.aNewVersion} ${appVersion.version} '
-                      '${language.isAvailableAndMustBeInstalled}',
+                      isMandatory
+                          ? '${language.aNewVersion} ${appVersion.version} '
+                              '${language.isAvailableAndMustBeInstalled}'
+                          : '${language.aNewVersion} ${appVersion.version} '
+                              '${language.isAvailableToInstall}',
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.5,
@@ -233,7 +243,7 @@ class AppUpdateBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            language.updateAvailable,
+            isMandatory ? language.updateAvailable : language.newVersionReady,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 20,
@@ -263,37 +273,39 @@ class AppUpdateBottomSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.35)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.lock_outline_rounded,
-                      size: 12,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      language.requiredUpdate,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+              if (isMandatory) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.35)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.lock_outline_rounded,
+                        size: 12,
                         color: Colors.white,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 5),
+                      Text(
+                        language.requiredUpdate,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ],
@@ -320,26 +332,55 @@ class AppUpdateBottomSheet extends StatelessWidget {
           ),
         ],
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: _launchUpdate,
-          icon: const Icon(Icons.download_rounded, size: 20),
-          label: Text(language.updateNow),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _launchUpdate,
+              icon: const Icon(Icons.download_rounded, size: 20),
+              label: Text(language.updateNow),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                elevation: 2,
+              ),
             ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-            elevation: 2,
           ),
-        ),
+          // Optional updates can be postponed.
+          if (!isMandatory) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  language.later,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

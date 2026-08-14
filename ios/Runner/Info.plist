@@ -46,6 +46,36 @@
 	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!--
+		App Transport Security: declared explicitly rather than relying on
+		defaults. Arbitrary loads are disabled, so all connections must use
+		HTTPS with TLS 1.2 or higher and forward secrecy. Note that the
+		specific cipher suites negotiated are controlled by the server;
+		weak ciphers must be disabled in the server TLS configuration.
+	-->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>chokchey.com.kh</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<true/>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>CHOKCHEY needs camera access to take photos for your profile, leave requests, and attendance documentation.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

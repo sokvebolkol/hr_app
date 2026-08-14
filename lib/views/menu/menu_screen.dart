@@ -12,6 +12,8 @@ import '../../viewmodels/profile_viewmodel.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../auth/welcome.dart';
 import '../auth/change_password_screen.dart';
+import '../../services/app_update_service.dart';
+import '../../widgets/app_update_bottom_sheet.dart';
 import '../profile/profile_screen.dart';
 import '../settings/environment_selector_screen.dart';
 
@@ -233,6 +235,15 @@ class _MenuScreenState extends State<MenuScreen> {
                   title: viewModel.languageLogic.language.changePassword,
                   onTap: () async {
                     await _navigateToChangePassword(viewModel);
+                  },
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  viewModel: viewModel,
+                  icon: Icons.system_update_outlined,
+                  title: viewModel.languageLogic.language.checkForUpdate,
+                  onTap: () async {
+                    await _checkForUpdate(viewModel);
                   },
                 ),
                 _buildDivider(),
@@ -490,6 +501,183 @@ class _MenuScreenState extends State<MenuScreen> {
       thickness: 0.5,
       color: Colors.grey.shade300,
       indent: 58,
+    );
+  }
+
+  /// User-initiated update check from the menu.
+  /// Shows a loading dialog, then either the update sheet or an
+  /// "up to date" confirmation.
+  Future<void> _checkForUpdate(viewModel) async {
+    final language = viewModel.languageLogic.language;
+
+    // Blocking progress dialog while the check runs.
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SpinKitFadingCircle(color: themeColor, size: 36),
+                    const SizedBox(height: 16),
+                    Text(
+                      language.checkingForUpdate,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+    );
+
+    final result = await AppUpdateService.instance.check();
+
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss progress dialog
+    if (!mounted) return;
+
+    switch (result.state) {
+      case UpdateCheckState.updateAvailable:
+        // Optional: user can postpone even if the backend marks it mandatory,
+        // because they reached this from the menu. The startup force-update
+        // flow still enforces mandatory upgrades.
+        await AppUpdateBottomSheet.show(
+          context,
+          appVersion: result.latest!,
+          updateUrl: result.updateUrl,
+          language: language,
+          isMandatory: false,
+        );
+        break;
+
+      case UpdateCheckState.upToDate:
+        await _showUpToDateDialog(language, result.currentVersion);
+        break;
+
+      case UpdateCheckState.failed:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(language.couldNotCheckForUpdate),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        break;
+    }
+  }
+
+  Future<void> _showUpToDateDialog(dynamic language, String version) {
+    return showDialog<void>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 450),
+                  curve: Curves.elasticOut,
+                  builder:
+                      (context, value, child) =>
+                          Transform.scale(scale: value, child: child),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.verified_rounded,
+                      color: Colors.green,
+                      size: 44,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  language.youAreUpToDate,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  language.usingLatestVersion,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                if (version.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${language.currentVersion}: $version',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: themeColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(language.ok),
+                ),
+              ),
+            ],
+          ),
     );
   }
 

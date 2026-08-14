@@ -131,6 +131,28 @@ class Language {
   String get updateNow => "Update Now";
   String get whatsNew => "What's New";
   String get requiredUpdate => "Required Update";
+
+  // Check for update (user initiated)
+  String get checkForUpdate => "Check for Update";
+  String get checkingForUpdate => "Checking for update...";
+  String get newVersionReady => "Update Available";
+  String get isAvailableToInstall => "is available to install.";
+  String get later => "Later";
+  String get youAreUpToDate => "You're up to date";
+  String get usingLatestVersion =>
+      "You are using the latest version of the app.";
+  String get couldNotCheckForUpdate =>
+      "Could not check for updates. Please check your connection and try again.";
+  String get currentVersion => "Current version";
+
+  // Device integrity (root / jailbreak detection)
+  String get deviceNotSecure => "Device Security Warning";
+  String get deviceNotSecureWarning =>
+      "This device appears to be rooted or jailbroken, which may put your "
+      "account and company data at risk.\n\nYou can continue using the app, "
+      "but please contact the HR department if you did not make these changes "
+      "to your device.";
+  String get iUnderstand => "I Understand";
   String get menu => "Menu";
   String get errorLoadingDashboard => "Error Loading Dashboard";
   String get todaysAttendance => "Today's Attendance";
@@ -812,6 +834,38 @@ class Khmer implements Language {
   String get whatsNew => "កំណែថ្មីៗ";
   @override
   String get requiredUpdate => "ការធ្វើបច្ចុប្បន្នភាពចាំបាច់";
+
+  // Check for update (user initiated)
+  @override
+  String get checkForUpdate => "ពិនិត្យបច្ចុប្បន្នភាព";
+  @override
+  String get checkingForUpdate => "កំពុងពិនិត្យបច្ចុប្បន្នភាព...";
+  @override
+  String get newVersionReady => "មានបច្ចុប្បន្នភាពថ្មី";
+  @override
+  String get isAvailableToInstall => "អាចដំឡើងបានហើយ។";
+  @override
+  String get later => "ពេលក្រោយ";
+  @override
+  String get youAreUpToDate => "កម្មវិធីទាន់សម័យ";
+  @override
+  String get usingLatestVersion => "អ្នកកំពុងប្រើកំណែថ្មីបំផុតរបស់កម្មវិធី។";
+  @override
+  String get couldNotCheckForUpdate =>
+      "មិនអាចពិនិត្យបច្ចុប្បន្នភាពបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្តងទៀត។";
+  @override
+  String get currentVersion => "កំណែបច្ចុប្បន្ន";
+
+  // Device integrity (root / jailbreak detection)
+  @override
+  String get deviceNotSecure => "ការព្រមានសុវត្ថិភាពឧបករណ៍";
+  @override
+  String get deviceNotSecureWarning =>
+      "ឧបករណ៍នេះហាក់ដូចជាត្រូវបាន root ឬ jailbreak ដែលអាចធ្វើឱ្យគណនី "
+      "និងទិន្នន័យក្រុមហ៊ុនរបស់អ្នកមានគ្រោះថ្នាក់។\n\nអ្នកអាចបន្តប្រើកម្មវិធីបាន "
+      "ប៉ុន្តែសូមទាក់ទងផ្នែកធនធានមនុស្ស ប្រសិនបើអ្នកមិនបានធ្វើការផ្លាស់ប្តូរនេះ។";
+  @override
+  String get iUnderstand => "ខ្ញុំយល់";
   @override
   String get menu => "ម៉ឺនុយ";
   @override

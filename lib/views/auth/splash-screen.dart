@@ -12,6 +12,7 @@ import 'login-screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../utils/internet_helper.dart';
+import '../../widgets/device_integrity_guard.dart';
 import 'welcome.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -141,6 +142,15 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       // Minimum splash time for branding (reduced from 1 second)
       await Future.delayed(const Duration(milliseconds: 800));
+
+      // Advisory warning on rooted / jailbroken devices. Shown once per app
+      // launch, before routing, so it appears for every role and for the
+      // login path too. The user acknowledges and continues; nothing is
+      // restricted.
+      if (mounted) {
+        await DeviceIntegrityGuard.showLaunchWarningIfNeeded(context);
+      }
+      if (!mounted) return;
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');

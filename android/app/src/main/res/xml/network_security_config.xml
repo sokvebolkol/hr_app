@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <base-config>
+    <!--
+        Cleartext (plain HTTP) is disabled app-wide. All API traffic must use
+        HTTPS so it cannot be downgraded or read in transit. If a local dev
+        server is needed, serve it over HTTPS rather than adding an exception
+        here.
+
+        Note: cipher suite and TLS version negotiation is handled by the
+        platform TLS stack and the server. Disabling weak ciphers (RC4, 3DES,
+        NULL/anonymous, export grade) and TLS 1.0/1.1 must be done in the
+        server configuration.
+    -->
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
 
+    <!--
+        Debug builds additionally trust user-installed CAs so a proxy (e.g.
+        Burp/Charles) can be used during testing. This block is ignored in
+        release builds.
+    -->
     <debug-overrides>
         <trust-anchors>
+            <certificates src="system" />
             <certificates src="user" />
         </trust-anchors>
     </debug-overrides>
