@@ -101,5 +101,24 @@
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
+
+        <!-- Android 11+ package visibility: without these, url_launcher
+             cannot resolve a handler for Teams deep links and the "Open in
+             Teams" action silently fails. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="msteams" />
+        </intent>
+
+        <!-- Direct visibility of the Teams app package. -->
+        <package android:name="com.microsoft.teams" />
     </queries>
 </manifest>

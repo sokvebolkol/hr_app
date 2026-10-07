@@ -14,7 +14,7 @@ class ServerService {
   static const String uatUrl =
       'https://uat-coapp.chokchey.com.kh/api/'; // uat running
   static const String devUrl =
-      'http://192.168.53.186:8000/api/'; // local running
+      'http://192.168.111.96:8000/api/'; // local running
 
   static const String _envKey = 'selected_environment';
 
@@ -46,7 +46,7 @@ class ServerService {
         // cleared prefs): default to production rather than leaving the
         // local dev URL, which is unreachable from real devices.
         // _setEnvironment(Environment.production, saveToPrefs: false);
-        _setEnvironment(Environment.production, saveToPrefs: false);
+        _setEnvironment(Environment.development, saveToPrefs: false);
     }
   }
 

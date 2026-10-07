@@ -93,6 +93,45 @@ class HttpService {
     }
   }
 
+  /// GET that returns the response regardless of status code.
+  ///
+  /// Keeps the connection/server pre-check and transport-level error
+  /// handling of [get], but does NOT call
+  /// [ErrorHandler.handleHttpResponse]. Use when the caller needs the
+  /// response body of a 4xx — for example to surface the API's own
+  /// `message`, or to tell a stale-cursor 422 apart from a validation 422.
+  static Future<http.Response> getAllowingErrors({
+    required String url,
+    Map<String, String>? headers,
+    bool checkConnection = true,
+  }) async {
+    try {
+      if (checkConnection) {
+        await _checkConnectionAndServer();
+      }
+
+      return await http
+          .get(Uri.parse(url), headers: headers)
+          .timeout(_timeout);
+    } on NetworkException {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } on SocketException {
+      throw ServerException(
+        message: 'Unable to connect to server. Please try again later',
+      );
+    } on TimeoutException {
+      throw TimeoutException();
+    } on HttpException {
+      throw ServerException(message: 'Network request failed');
+    } on FormatException {
+      throw DataParseException();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Make POST request with error handling
   static Future<http.Response> post({
     required String url,

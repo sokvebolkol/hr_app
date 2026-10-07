@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile_model.dart';
 import '../services/global_service.dart';
+import '../services/announcement_unread_service.dart';
 
 class ProfileRepository {
   final ServerService _serverService = ServerService();
@@ -146,6 +147,10 @@ class ProfileRepository {
       if (selectedEnvironment != null) {
         await pref.setString('selected_environment', selectedEnvironment);
       }
+
+      // Drop the Teams read markers so the next user on this device does
+      // not inherit the previous user's badge state.
+      await AnnouncementUnreadService.instance.reset();
     }
   }
 }

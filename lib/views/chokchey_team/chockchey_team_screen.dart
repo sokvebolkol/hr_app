@@ -122,7 +122,7 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              FontAwesomeIcons.users,
+                              FontAwesomeIcons.users.data,
                               size: 36,
                               color: secondary,
                             ),
@@ -305,23 +305,23 @@ class _ChockcheyTeamScreenState extends State<ChockcheyTeamScreen>
                           ),
                           const SizedBox(height: 12),
                           _buildFeatureItem(
-                            FontAwesomeIcons.bullhorn,
+                            FontAwesomeIcons.bullhorn.data,
                             'Company-wide announcements',
                           ),
                           _buildFeatureItem(
-                            FontAwesomeIcons.clipboardList,
+                            FontAwesomeIcons.clipboardList.data,
                             'Internal memos and updates',
                           ),
                           _buildFeatureItem(
-                            FontAwesomeIcons.bell,
+                            FontAwesomeIcons.bell.data,
                             'Real-time notifications',
                           ),
                           _buildFeatureItem(
-                            FontAwesomeIcons.userGroup,
+                            FontAwesomeIcons.userGroup.data,
                             'Department-specific messages',
                           ),
                           _buildFeatureItem(
-                            FontAwesomeIcons.sitemap,
+                            FontAwesomeIcons.sitemap.data,
                             'Team structure overview',
                           ),
                         ],

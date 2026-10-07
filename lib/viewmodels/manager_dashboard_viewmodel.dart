@@ -10,10 +10,15 @@ class ManagerDashboardViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  /// Month currently applied to the attendance history, as `YYYY-MM`.
+  /// Null means "All", i.e. the API's default of the last 12 months.
+  String? _selectedMonth;
+
   // Getters
   AttendanceSummary? get attendanceSummary => _attendanceSummary;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String? get selectedMonth => _selectedMonth;
 
   // Quick stats getters
   int get totalStaff => _attendanceSummary?.totalStaff ?? 0;
@@ -48,17 +53,24 @@ class ManagerDashboardViewModel extends ChangeNotifier {
       _attendanceSummary?.rejectedAttendance ?? [];
 
   // Initialize
-  void initialize() {
-    loadAttendanceSummary();
+  void initialize({String? month}) {
+    loadAttendanceSummary(month: month);
   }
 
-  // Load attendance summary
-  Future<void> loadAttendanceSummary() async {
+  /// Loads the dashboard summary.
+  ///
+  /// [month] is `YYYY-MM` (e.g. `2026-09`) and scopes `approved_attendance`,
+  /// `rejected_attendance` and their counts to that month. Pass null for
+  /// "All", which leaves the API on its default of the last 12 months.
+  ///
+  /// The value is remembered so [refresh] re-applies the same filter.
+  Future<void> loadAttendanceSummary({String? month}) async {
     try {
+      _selectedMonth = month;
       _setLoading(true);
       _setError(null);
 
-      final response = await _repository.getAttendanceSummary();
+      final response = await _repository.getAttendanceSummary(month: month);
       if (response.success) {
         _attendanceSummary = response.data.summary;
       } else {
@@ -77,9 +89,19 @@ class ManagerDashboardViewModel extends ChangeNotifier {
     }
   }
 
-  // Refresh data
+  /// Reloads using the month filter already in effect, so a pull-to-refresh
+  /// does not silently reset the view back to "All".
   Future<void> refresh() async {
-    await loadAttendanceSummary();
+    await loadAttendanceSummary(month: _selectedMonth);
+  }
+
+  /// Converts a picker label such as "September 2026" into the `YYYY-MM`
+  /// the API expects. Returns null for "All" or anything unparseable, which
+  /// the caller should treat as "no month filter".
+  static String? toApiMonth(String? label, DateTime? date) {
+    if (label == null || label == 'All' || date == null) return null;
+    final month = date.month.toString().padLeft(2, '0');
+    return '${date.year}-$month';
   }
 
   // Clear error

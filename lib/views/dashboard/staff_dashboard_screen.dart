@@ -864,7 +864,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               width: screenWidth / 2 * 0.87,
               child: FunctionIconCardWidget(
                 iconColor: secondary.withOpacity(0.8),
-                iconData: FontAwesomeIcons.networkWired,
+                iconData: FontAwesomeIcons.networkWired.data,
                 iconSize: 30,
                 label: language.chokcheyTeam,
                 textSize: 14,
@@ -883,7 +883,7 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
               width: screenWidth / 2 * 0.87,
               child: FunctionIconCardWidget(
                 iconColor: secondary.withOpacity(0.8),
-                iconData: FontAwesomeIcons.userClock,
+                iconData: FontAwesomeIcons.userClock.data,
                 iconSize: 30,
                 label: language.staffAttendances,
                 textSize: 14,
@@ -1641,6 +1641,22 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     );
   }
 
+  /// Reloads the manager summary scoped to [monthLabel] (e.g.
+  /// "September 2026"), which the API wants as `YYYY-MM`. "All" sends no
+  /// month at all, so the backend falls back to the last 12 months.
+  ///
+  /// The attendance cards keep reading `approvedAttendanceCount` /
+  /// `rejectedAttendanceCount` straight from the response, so they show the
+  /// API's counts for the selected month rather than a locally filtered
+  /// length.
+  void _reloadForSelectedMonth(String monthLabel) {
+    final apiMonth = ManagerDashboardViewModel.toApiMonth(
+      monthLabel,
+      _monthStringToDate[monthLabel],
+    );
+    widget.managerViewModel.loadAttendanceSummary(month: apiMonth);
+  }
+
   // Helper method to generate month options from leaves
   // Helper to check if a date is in the selected month
   bool _isSameMonth(DateTime date, String selectedMonth) {
@@ -1975,6 +1991,11 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
                               _selectedMonth = month;
                             });
                             Navigator.pop(context);
+                            // Reload server-side so approved/rejected
+                            // attendance and their counts are scoped to the
+                            // chosen month. "All" sends no month, which the
+                            // API treats as the last 12 months.
+                            _reloadForSelectedMonth(month);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(

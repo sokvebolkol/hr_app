@@ -10,6 +10,9 @@ import '../attendance/attendance_adjustment_approval_detail_screen.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
+import '../../widgets/announcement_badge_tab_label.dart';
+import '../../services/announcement_unread_service.dart';
+import '../announcements/announcement_list_screen.dart';
 
 class ManagerNotificationScreen extends StatefulWidget {
   const ManagerNotificationScreen({super.key});
@@ -41,7 +44,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    _tabController = TabController(length: 2, vsync: this);
+    // 3 tabs: Personal, Staff Member, Announcement.
+    _tabController = TabController(length: 3, vsync: this);
     _initializeLanguage();
 
     // Load notifications only once when screen opens
@@ -53,6 +57,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging && mounted) {
         setState(() {});
+        // Recompute the Announcement badge when that tab is opened.
+        if (_tabController.index == 2) {
+          AnnouncementUnreadService.instance.refresh();
+        }
       }
     });
   }
@@ -398,6 +406,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                     ),
                   ),
                 ),
+                Tab(
+                  child: AnnouncementBadgeTabLabel(label: language.announcement),
+                ),
               ],
             ),
           ),
@@ -408,6 +419,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         children: [
           _buildNotificationList('leave_request', _leaveRequestNotifications),
           _buildNotificationList('leave_approval', _leaveApprovalNotifications),
+          const AnnouncementListScreen(embedded: true),
         ],
       ),
     );
@@ -494,93 +506,101 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                notification.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            if (!notification.isRead)
-              Container(
-                margin: const EdgeInsets.only(left: 8),
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              notification.body,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
-                const SizedBox(width: 4),
-                Text(
-                  notification.timeAgo,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                ),
-              ],
-            ),
-          ],
-        ),
-        onTap: () async {
-          // Prevent duplicate taps
-          if (_isNavigating) return;
-          _isNavigating = true;
-
-          try {
-            final success = await viewModel.markAsRead(notification.id);
-
-            if (success) {
-              _updateFilteredNotifications(viewModel.notifications);
-
-              if (!mounted) return;
-
-              // Handle leave notifications (both request and approval)
-              _handleLeaveNotificationTap(notification);
-            } else {
-              // Show error if marking as read failed
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(language.failedToMarkNotificationAsRead),
-                    backgroundColor: Colors.red,
+      child: Material(
+        // Gives the ListTile its own Material so its ink ripple is
+        // painted above the card's coloured decoration, not hidden
+        // behind it. Clipped to the card radius.
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  notification.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
-                );
+                ),
+              ),
+              if (!notification.isRead)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                notification.body,
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                  const SizedBox(width: 4),
+                  Text(
+                    notification.timeAgo,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          onTap: () async {
+            // Prevent duplicate taps
+            if (_isNavigating) return;
+            _isNavigating = true;
+  
+            try {
+              final success = await viewModel.markAsRead(notification.id);
+  
+              if (success) {
+                _updateFilteredNotifications(viewModel.notifications);
+  
+                if (!mounted) return;
+  
+                // Handle leave notifications (both request and approval)
+                _handleLeaveNotificationTap(notification);
+              } else {
+                // Show error if marking as read failed
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(language.failedToMarkNotificationAsRead),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+  
+                // Still navigate even if marking as read failed
+                if (!mounted) return;
+                _handleLeaveNotificationTap(notification);
               }
-
-              // Still navigate even if marking as read failed
-              if (!mounted) return;
-              _handleLeaveNotificationTap(notification);
+            } finally {
+              // Reset the flag after a brief delay to ensure navigation completes
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (mounted) {
+                  _isNavigating = false;
+                }
+              });
             }
-          } finally {
-            // Reset the flag after a brief delay to ensure navigation completes
-            Future.delayed(const Duration(milliseconds: 300), () {
-              if (mounted) {
-                _isNavigating = false;
-              }
-            });
-          }
-        },
+          },
+        ),
       ),
     );
   }

@@ -28,6 +28,7 @@ class _AttendanceApprovalHistoryScreenState
     with SingleTickerProviderStateMixin {
   late String _selectedMonth;
   late TabController _tabController;
+  bool _isReloading = false;
   late LanguageLogic languageLogic;
   Language language = LanguageLogic().language;
   final Map<String, DateTime> _monthStringToDate = {};
@@ -82,20 +83,60 @@ class _AttendanceApprovalHistoryScreenState
     return '${months[date.month - 1]} ${date.year}';
   }
 
+  /// Builds the month picker options.
+  ///
+  /// The API now returns only the selected month's attendance, so deriving
+  /// the list purely from [requests] would collapse it to a single entry and
+  /// strand the user. The last 12 months are always offered (matching the
+  /// API's default window), unioned with any months actually present in the
+  /// data so nothing is hidden.
   List<String> _generateMonthOptions(
     List<AttendanceAdjustmentRequest> requests,
   ) {
     final Map<DateTime, String> monthMap = {};
-    for (var r in requests) {
-      final date = DateTime.tryParse(r.createdAt);
-      if (date == null) continue;
+
+    void add(DateTime date) {
       final key = DateTime(date.year, date.month, 1);
-      final label = _monthLabel(date);
+      final label = _monthLabel(key);
       monthMap[key] = label;
       _monthStringToDate[label] = key;
     }
+
+    final now = DateTime.now();
+    for (var i = 0; i < 12; i++) {
+      add(DateTime(now.year, now.month - i, 1));
+    }
+
+    for (var r in requests) {
+      final date = DateTime.tryParse(r.createdAt);
+      if (date != null) add(date);
+    }
+
     final sorted = monthMap.keys.toList()..sort((a, b) => b.compareTo(a));
     return ['All', ...sorted.map((k) => monthMap[k]!)];
+  }
+
+  /// Reloads the shared manager summary scoped to [monthLabel] so the
+  /// approved/rejected lists and counts come from the API for that month.
+  ///
+  /// This screen reads the view model directly rather than subscribing to
+  /// it, so the reload is awaited and followed by setState to pick up the
+  /// new data.
+  Future<void> _reloadForSelectedMonth(String monthLabel) async {
+    String? apiMonth;
+    if (monthLabel != 'All') {
+      final date = _monthStringToDate[monthLabel];
+      if (date != null) {
+        apiMonth = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+      }
+    }
+
+    setState(() => _isReloading = true);
+    try {
+      await widget.viewModel.loadAttendanceSummary(month: apiMonth);
+    } finally {
+      if (mounted) setState(() => _isReloading = false);
+    }
   }
 
   bool _isSameMonth(DateTime date, String selectedMonth) {
@@ -307,13 +348,16 @@ class _AttendanceApprovalHistoryScreenState
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildList(filteredApproved, 'approved'),
-                _buildList(filteredRejected, 'rejected'),
-              ],
-            ),
+            child:
+                _isReloading
+                    ? const Center(child: CircularProgressIndicator())
+                    : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildList(filteredApproved, 'approved'),
+                        _buildList(filteredRejected, 'rejected'),
+                      ],
+                    ),
           ),
         ],
       ),
@@ -476,6 +520,7 @@ class _AttendanceApprovalHistoryScreenState
                               _selectedMonth = month;
                             });
                             Navigator.pop(context);
+                            _reloadForSelectedMonth(month);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(

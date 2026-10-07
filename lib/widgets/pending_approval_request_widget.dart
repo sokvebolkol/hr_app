@@ -230,7 +230,7 @@ class _LeaveRequestWidgetState extends State<PendingApprovalRequestWidget> {
                     children: [
                       Icon(
                         widget.status == 'Pending'
-                            ? FontAwesomeIcons.clock
+                            ? FontAwesomeIcons.clock.data
                             : Icons.check_circle,
                         size: 16,
                         color: FileHelper.statusColor(status: widget.status),

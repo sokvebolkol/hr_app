@@ -8,6 +8,9 @@ import '../../localization/language_logic.dart';
 import '../../viewmodels/notification_viewmodel.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
+import '../../widgets/announcement_badge_tab_label.dart';
+import '../../services/announcement_unread_service.dart';
+import '../announcements/announcement_list_screen.dart';
 
 class RequesterNotificationScreen extends StatefulWidget {
   const RequesterNotificationScreen({super.key});
@@ -19,8 +22,9 @@ class RequesterNotificationScreen extends StatefulWidget {
 
 class _RequesterNotificationScreenState
     extends State<RequesterNotificationScreen>
-    with AutomaticKeepAliveClientMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late ScrollController _scrollController;
+  late TabController _tabController;
 
   // Cache filtered notifications - only leave status/approval notifications
   List<NotificationModel> _leaveStatusNotifications = [];
@@ -38,6 +42,17 @@ class _RequesterNotificationScreenState
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    // 2 tabs: Notifications, Announcement.
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging && mounted) {
+        setState(() {});
+        // Recompute the Announcement badge when that tab is opened.
+        if (_tabController.index == 1) {
+          AnnouncementUnreadService.instance.refresh();
+        }
+      }
+    });
     _initializeLanguage();
 
     // Load notifications only once when screen opens
@@ -114,6 +129,7 @@ class _RequesterNotificationScreenState
   @override
   void dispose() {
     _scrollController.dispose();
+    _tabController.dispose();
     _isNavigating = false;
     super.dispose();
   }
@@ -295,8 +311,62 @@ class _RequesterNotificationScreenState
                 ],
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: Colors.white.withOpacity(0.1),
+            child: TabBar(
+              controller: _tabController,
+              indicator: const BoxDecoration(
+                color: secondary,
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicatorPadding: EdgeInsets.zero,
+              dividerColor: Colors.transparent,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 12,
+              ),
+              tabAlignment: TabAlignment.fill,
+              tabs: [
+                Tab(
+                  child: Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    alignment: Alignment.center,
+                    child: Text(
+                      language.notifications,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                Tab(
+                  child: AnnouncementBadgeTabLabel(label: language.announcement),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: Consumer<NotificationViewModel>(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildNotificationsTab(),
+          const AnnouncementListScreen(embedded: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsTab() {
+    return Consumer<NotificationViewModel>(
         builder: (context, viewModel, child) {
           // Show loading only if we haven't initialized and there are no cached notifications
           if (!_isInitialized &&
@@ -355,7 +425,6 @@ class _RequesterNotificationScreenState
             ),
           );
         },
-      ),
     );
   }
 
@@ -404,125 +473,133 @@ class _RequesterNotificationScreenState
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 12,
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: Material(
+        // Gives the ListTile its own Material so its ink ripple is
+        // painted above the card's coloured decoration, not hidden
+        // behind it. Clipped to the card radius.
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 12,
           ),
-          child: Icon(iconData, color: primary, size: 28),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                notification.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-              ),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            if (!notification.isRead)
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 6),
-            Text(
-              notification.body,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-                height: 1.4,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 16, color: Colors.grey.shade500),
-                const SizedBox(width: 6),
-                Text(
-                  notification.timeAgo,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                ),
-              ],
-            ),
-          ],
-        ),
-        onTap: () async {
-          // Prevent duplicate taps
-          if (_isNavigating) return;
-          _isNavigating = true;
-
-          try {
-            // Show loading indicator
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: SpinKitFadingCircle(size: 16, color: primary),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(language.openingLeaveRequest),
-                  ],
-                ),
-                duration: const Duration(seconds: 1),
-              ),
-            );
-
-            final success = await viewModel.markAsRead(notification.id);
-
-            if (success) {
-              _updateFilteredNotifications(viewModel.notifications);
-
-              if (!mounted) return;
-
-              // Handle leave status notification
-              _handleLeaveStatusTap(notification);
-            } else {
-              // Show error if marking as read failed
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(language.failedToMarkNotificationAsRead),
-                    backgroundColor: Colors.red,
+            child: Icon(iconData, color: primary, size: 28),
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  notification.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.black87,
                   ),
-                );
+                ),
+              ),
+              if (!notification.isRead)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 6),
+              Text(
+                notification.body,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade700,
+                  height: 1.4,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 16, color: Colors.grey.shade500),
+                  const SizedBox(width: 6),
+                  Text(
+                    notification.timeAgo,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          onTap: () async {
+            // Prevent duplicate taps
+            if (_isNavigating) return;
+            _isNavigating = true;
+  
+            try {
+              // Show loading indicator
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: SpinKitFadingCircle(size: 16, color: primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(language.openingLeaveRequest),
+                    ],
+                  ),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+  
+              final success = await viewModel.markAsRead(notification.id);
+  
+              if (success) {
+                _updateFilteredNotifications(viewModel.notifications);
+  
+                if (!mounted) return;
+  
+                // Handle leave status notification
+                _handleLeaveStatusTap(notification);
+              } else {
+                // Show error if marking as read failed
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(language.failedToMarkNotificationAsRead),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+  
+                // Still navigate even if marking as read failed
+                if (!mounted) return;
+                _handleLeaveStatusTap(notification);
               }
-
-              // Still navigate even if marking as read failed
-              if (!mounted) return;
-              _handleLeaveStatusTap(notification);
+            } finally {
+              Future.delayed(const Duration(milliseconds: 300), () {
+                if (mounted) {
+                  _isNavigating = false;
+                }
+              });
             }
-          } finally {
-            Future.delayed(const Duration(milliseconds: 300), () {
-              if (mounted) {
-                _isNavigating = false;
-              }
-            });
-          }
-        },
+          },
+        ),
       ),
     );
   }

@@ -957,7 +957,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               width: screenWidth / 2 * 0.87,
               child: FunctionIconCardWidget(
                 iconColor: secondary.withOpacity(0.8),
-                iconData: FontAwesomeIcons.networkWired,
+                iconData: FontAwesomeIcons.networkWired.data,
                 iconSize: 30,
                 label: language.chokcheyTeam,
                 textSize: 14,
@@ -976,7 +976,7 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
               width: screenWidth / 2 * 0.87,
               child: FunctionIconCardWidget(
                 iconColor: secondary.withOpacity(0.8),
-                iconData: FontAwesomeIcons.userClock,
+                iconData: FontAwesomeIcons.userClock.data,
                 iconSize: 30,
                 label: language.staffAttendances,
                 textSize: 14,

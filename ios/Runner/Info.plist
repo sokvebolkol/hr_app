@@ -109,6 +109,11 @@
 	<array>
 		<string>msauthv2</string>
 		<string>msauthv3</string>
+		<!-- Required for canLaunchUrl to detect the Microsoft Teams app
+		     when opening team/channel/message deep links. Without this,
+		     iOS reports Teams as unavailable and links fall back to the
+		     browser even when Teams is installed. -->
+		<string>msteams</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>

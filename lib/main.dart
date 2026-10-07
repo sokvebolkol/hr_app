@@ -12,6 +12,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
 import 'services/internet_connection_service.dart';
 import 'services/global_service.dart';
+import 'services/announcement_unread_service.dart';
 import 'services/device_integrity_service.dart';
 import 'firebase_options.dart';
 
@@ -48,6 +49,10 @@ void main() async {
     // Evaluate device integrity (root / jailbreak) once at startup so the
     // result is cached before any sensitive screen is reachable.
     await DeviceIntegrityService.instance.evaluate();
+
+    // Warm the Announcement badge in the background. Deliberately not
+    // awaited: it makes several network calls and must never delay startup.
+    unawaited(AnnouncementUnreadService.instance.refresh());
 
     // Check internet connection before Firebase initialization
     final hasInternet = await checkInternetConnection();

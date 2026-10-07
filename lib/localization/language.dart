@@ -133,6 +133,35 @@ class Language {
   String get requiredUpdate => "Required Update";
 
   // Check for update (user initiated)
+  // Announcement feed (Microsoft Teams)
+  String get announcement => "Announcement";
+  String get openInTeams => "Open in Teams";
+  String get allChannels => "All Channels";
+  String get unread => "Unread";
+  String get noAnnouncements => "No announcements yet";
+  String get noContent => "This message has no content.";
+  String get attachments => "Attachments";
+  String get markAsRead => "Mark as read";
+  String get markAsUnread => "Mark as unread";
+  String get imageMessage => "[Image]";
+  String get selectChannel => "Select channel";
+  String get searchChannel => "Search channel";
+  String get noChannelFound => "No channel found";
+  String get loadingAnnouncements => "Loading announcements...";
+  String get channels => "channels";
+  String get read => "Read";
+  String get markAsReadHint => "Remove it from your unread count";
+  String get markAsUnreadHint => "Keep it highlighted to read later";
+  String get openInTeamsHint => "View the full post in Microsoft Teams";
+  String get imageViewInTeams => "Image, tap to view in Microsoft Teams";
+  String get important => "IMPORTANT";
+  String get edited => "edited";
+  String get unknownSender => "Unknown";
+  String get noAccess => "No Access";
+  String get linkNotAvailable => "This link is not available.";
+  String get couldNotOpenTeams =>
+      "Could not open Microsoft Teams. Please try again.";
+
   String get checkForUpdate => "Check for Update";
   String get checkingForUpdate => "Checking for update...";
   String get newVersionReady => "Update Available";
@@ -834,6 +863,61 @@ class Khmer implements Language {
   String get whatsNew => "កំណែថ្មីៗ";
   @override
   String get requiredUpdate => "ការធ្វើបច្ចុប្បន្នភាពចាំបាច់";
+
+  // Announcement feed (Microsoft Teams)
+  @override
+  String get announcement => "សេចក្តីជូនដំណឹង";
+  @override
+  String get openInTeams => "បើកក្នុង Teams";
+  @override
+  String get allChannels => "ឆានែលទាំងអស់";
+  @override
+  String get unread => "មិនទាន់អាន";
+  @override
+  String get noAnnouncements => "មិនទាន់មានសេចក្តីជូនដំណឹង";
+  @override
+  String get noContent => "សារនេះគ្មានមាតិកាទេ។";
+  @override
+  String get attachments => "ឯកសារភ្ជាប់";
+  @override
+  String get markAsRead => "សម្គាល់ថាបានអាន";
+  @override
+  String get markAsUnread => "សម្គាល់ថាមិនទាន់អាន";
+  @override
+  String get imageMessage => "[រូបភាព]";
+  @override
+  String get selectChannel => "ជ្រើសរើសឆានែល";
+  @override
+  String get searchChannel => "ស្វែងរកឆានែល";
+  @override
+  String get noChannelFound => "រកមិនឃើញឆានែល";
+  @override
+  String get loadingAnnouncements => "កំពុងផ្ទុកសេចក្តីជូនដំណឹង...";
+  @override
+  String get channels => "ឆានែល";
+  @override
+  String get read => "បានអាន";
+  @override
+  String get markAsReadHint => "ដកចេញពីចំនួនមិនទាន់អាន";
+  @override
+  String get markAsUnreadHint => "រក្សាទុកជាមិនទាន់អាន ដើម្បីអានពេលក្រោយ";
+  @override
+  String get openInTeamsHint => "មើលសារពេញលេញក្នុង Microsoft Teams";
+  @override
+  String get imageViewInTeams => "រូបភាព ចុចដើម្បីមើលក្នុង Microsoft Teams";
+  @override
+  String get important => "សំខាន់";
+  @override
+  String get edited => "បានកែ";
+  @override
+  String get unknownSender => "មិនស្គាល់";
+  @override
+  String get noAccess => "គ្មានសិទ្ធិចូលប្រើ";
+  @override
+  String get linkNotAvailable => "តំណនេះមិនអាចប្រើបានទេ។";
+  @override
+  String get couldNotOpenTeams =>
+      "មិនអាចបើក Microsoft Teams បានទេ។ សូមព្យាយាមម្តងទៀត។";
 
   // Check for update (user initiated)
   @override
