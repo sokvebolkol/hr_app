@@ -30,22 +30,6 @@ class AttendanceCalendarViewModel extends ChangeNotifier {
   AttendanceSummary? get summary => _attendanceData?.summary;
   UserInfo? get userInfo => _attendanceData?.userInfo;
 
-  // Get attendance for a specific day
-  AttendanceReport? getAttendanceForDay(DateTime day) {
-    final dateString = DateFormat('yyyy-MM-dd').format(day);
-    try {
-      return attendanceReports.firstWhere(
-        (report) => report.date == dateString,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // Get selected day attendance
-  AttendanceReport? get selectedDayAttendance =>
-      getAttendanceForDay(_selectedDay);
-
   // Initialize
   void initialize() {
     loadCurrentMonthAttendance();
@@ -107,17 +91,6 @@ class AttendanceCalendarViewModel extends ChangeNotifier {
     _focusedDay = focusedDay;
     loadAttendanceForMonth(focusedDay);
     notifyListeners();
-  }
-
-  void onFormatChanged(CalendarFormat format) {
-    _calendarFormat = format;
-    notifyListeners();
-  }
-
-  // Get events for calendar
-  List<AttendanceReport> getEventsForDay(DateTime day) {
-    final attendance = getAttendanceForDay(day);
-    return attendance != null ? [attendance] : [];
   }
 
   // Get attendance status color

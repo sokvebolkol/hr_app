@@ -40,8 +40,6 @@ class AnnouncementViewModel extends ChangeNotifier {
   String get search => _search;
   bool get isLoading => _isLoading;
   bool get isLoadingMore => _isLoadingMore;
-  bool get isRefreshing => _isRefreshing;
-  bool get isMarkingAll => _isMarkingAll;
   String? get errorMessage => _errorMessage;
   bool get noAccess => _noAccess;
   int get unreadCount => _meta.unreadCount;
@@ -250,25 +248,11 @@ class AnnouncementViewModel extends ChangeNotifier {
 
   // ──────────────────────────── Filtering ─────────────────────────────
 
-  void setFilter(AnnouncementFilter filter) {
-    if (_filter == filter) return;
-    _filter = filter;
-    _notify();
-    load();
-  }
-
   void setChannel(String? channelId) {
     if (_channelId == channelId) return;
     _channelId = channelId;
     _notify();
     load();
-  }
-
-  /// Debounced so typing does not fire a request per keystroke.
-  void onSearchChanged(String value) {
-    _search = value;
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 400), load);
   }
 
   // ─────────────────────────── Read state ─────────────────────────────

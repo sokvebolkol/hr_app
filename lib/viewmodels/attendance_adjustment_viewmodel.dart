@@ -20,8 +20,6 @@ class AttendanceAdjustmentViewModel extends ChangeNotifier {
   bool get canSubmit =>
       _selectedAttendance.isNotEmpty && _reason.trim().isNotEmpty;
 
-  int get selectedCount => _selectedAttendance.length;
-
   bool get canRequestMore => _data?.requestLimit.canRequest ?? false;
 
   // Load attendance adjustment data
@@ -48,41 +46,6 @@ class AttendanceAdjustmentViewModel extends ChangeNotifier {
     }
 
     _isLoading = false;
-    notifyListeners();
-  }
-
-  // Toggle attendance selection
-  void toggleAttendanceSelection(AttendanceMissing attendance) {
-    final index = _data?.attendanceMissing.indexWhere(
-      (a) => a.date == attendance.date,
-    );
-    if (index != null && index != -1) {
-      _data!.attendanceMissing[index].isSelected =
-          !_data!.attendanceMissing[index].isSelected;
-
-      if (_data!.attendanceMissing[index].isSelected) {
-        _selectedAttendance.add(_data!.attendanceMissing[index]);
-      } else {
-        _selectedAttendance.removeWhere((a) => a.date == attendance.date);
-      }
-      notifyListeners();
-    }
-  }
-
-  // Update reason
-  void updateReason(String reason) {
-    _reason = reason;
-    notifyListeners();
-  }
-
-  // Clear selection
-  void clearSelection() {
-    _selectedAttendance.clear();
-    if (_data != null) {
-      for (var attendance in _data!.attendanceMissing) {
-        attendance.isSelected = false;
-      }
-    }
     notifyListeners();
   }
 

@@ -1,6 +1,5 @@
 import '../models/adjustment_request_model.dart';
 import '../models/ceo_dashboard_model.dart';
-import '../repositories/manager_dashboard_repository.dart';
 import 'leave_history_model.dart';
 
 class NotificationModel {
@@ -203,60 +202,6 @@ class NotificationModel {
           adj['document_url']?.toString() ??
           adj['adjustment_support_doc_url']?.toString(),
       profileImageUrl: adj['profile_image_url']?.toString(),
-    );
-  }
-
-  // Convert to PendingLeaveRequest (for ApproverLeaveDetailScreen)
-  PendingLeaveRequest toPendingLeaveRequest() {
-    final leave = leaveData;
-
-    if (leave == null) {
-      throw Exception('No leave information available');
-    }
-
-    return PendingLeaveRequest(
-      lreid: leave['lreid']?.toString() ?? '',
-      orgid: leave['orgid']?.toString() ?? '',
-      eid: leave['eid']?.toString() ?? '',
-      leaid: leave['leaid']?.toString() ?? '',
-      frdat: leave['frdat']?.toString() ?? '',
-      todat: leave['todat']?.toString() ?? '',
-      numleav: leave['numleav']?.toString() ?? '',
-      lfor: leave['lfor']?.toString() ?? '',
-      lnot: leave['lnot']?.toString() ?? '',
-      reason: leave['reason']?.toString() ?? '',
-      remark: leave['remark']?.toString() ?? '',
-      file: leave['file']?.toString(),
-      createdate: leave['createdate']?.toString() ?? '',
-      statu: leave['statu']?.toString() ?? '0',
-      holiday: leave['holiday']?.toString() ?? '0',
-      ltyp: leave['ltyp']?.toString() ?? '',
-      requesterName:
-          leave['dname']?.toString() ??
-          leave['requester_name']?.toString() ??
-          '',
-      staffId: leave['staff_id']?.toString() ?? '',
-      email: leave['email']?.toString() ?? '',
-      positionName: leave['position_name']?.toString() ?? '',
-      departmentName: leave['department_name']?.toString() ?? '',
-      branchShortName: leave['branch_short_name']?.toString() ?? '',
-      branchFullName: leave['branch_full_name']?.toString() ?? '',
-      leaveNote: leave['leave_note']?.toString() ?? '',
-      statuText: leave['statu_text']?.toString() ?? '',
-      prioList:
-          (leave['prio_list'] as List<dynamic>?)
-              ?.map(
-                (prio) => ApprovalItem.fromJson({
-                  'approver_name': prio['approver_name'],
-                  'prio': prio['prio'],
-                  'apstatu': prio['apstatu'],
-                  'remark': prio['remark'],
-                  'apstatu_text': prio['apstatu_text'],
-                  'prio_text': prio['prio_text'],
-                }),
-              )
-              .toList() ??
-          [],
     );
   }
 

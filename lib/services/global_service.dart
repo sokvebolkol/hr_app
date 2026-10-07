@@ -80,21 +80,6 @@ class ServerService {
     await prefs.setString(_envKey, env.name);
   }
 
-  /// Switch to Production environment
-  Future<void> switchToProd() async {
-    _setEnvironment(Environment.production);
-  }
-
-  /// Switch to UAT environment
-  Future<void> switchToUat() async {
-    _setEnvironment(Environment.uat);
-  }
-
-  /// Switch to Development environment
-  Future<void> switchToDev() async {
-    _setEnvironment(Environment.development);
-  }
-
   /// Switch to any environment
   Future<void> switchToEnvironment(Environment env) async {
     _setEnvironment(env);

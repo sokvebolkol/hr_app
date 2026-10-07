@@ -140,20 +140,3 @@ class PriorityModel {
   bool get isRejected => apstatu == 0;
 }
 
-class LeaveHistoryResponse {
-  final bool success;
-  final List<LeaveHistoryModel> data;
-
-  LeaveHistoryResponse({required this.success, required this.data});
-
-  factory LeaveHistoryResponse.fromJson(Map<String, dynamic> json) {
-    return LeaveHistoryResponse(
-      success: json['success'] ?? false,
-      data:
-          (json['data'] as List<dynamic>?)
-              ?.map((item) => LeaveHistoryModel.fromJson(item))
-              .toList() ??
-          [],
-    );
-  }
-}

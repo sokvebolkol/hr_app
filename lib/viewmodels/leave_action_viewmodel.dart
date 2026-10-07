@@ -24,8 +24,6 @@ class LeaveActionViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
   bool get hasActionTaken => _hasActionTaken;
-  String? get lastAction => _lastAction;
-  String? get lastRemark => _lastRemark;
 
   // Approve leave request
   Future<bool> approveLeave({required String leaveId, String? remark}) async {
@@ -100,29 +98,10 @@ class LeaveActionViewModel extends ChangeNotifier {
     }
   }
 
-  // Clear all messages
-  void clearMessages() {
-    _clearMessages();
-  }
-
   // Clear error
   void clearError() {
     _errorMessage = null;
     notifyListeners();
-  }
-
-  // Clear success
-  void clearSuccess() {
-    _successMessage = null;
-    notifyListeners();
-  }
-
-  // Reset action state
-  void resetActionState() {
-    _hasActionTaken = false;
-    _lastAction = null;
-    _lastRemark = null;
-    _clearMessages();
   }
 
   // Private methods

@@ -36,10 +36,6 @@ class AttendanceClockViewModel extends ChangeNotifier {
 
   List<Branch> get branches => _attendanceData?.branches ?? [];
 
-  // Get only branches that have valid coordinates
-  List<Branch> get branchesWithCoordinates =>
-      branches.where((branch) => branch.hasValidCoordinates).toList();
-
   List<AttendanceRecord> get todayAttendance {
     if (_attendanceData == null) return [];
 
@@ -294,14 +290,6 @@ class AttendanceClockViewModel extends ChangeNotifier {
     } else {
       return '${(distance / 1000).toStringAsFixed(1)}km';
     }
-  }
-
-  // Get branch validation message
-  String getBranchValidationMessage(Branch branch) {
-    if (!branch.hasValidCoordinates) {
-      return 'No coordinates available';
-    }
-    return '';
   }
 
   // Check if any branches have coordinates

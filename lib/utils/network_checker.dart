@@ -81,34 +81,4 @@ class NetworkChecker {
     return _connectivity.onConnectivityChanged;
   }
 
-  /// Get current connectivity status as a readable string
-  static Future<String> getConnectionType() async {
-    try {
-      final result = await _connectivity.checkConnectivity();
-      if (result.contains(ConnectivityResult.wifi)) {
-        return 'WiFi';
-      } else if (result.contains(ConnectivityResult.mobile)) {
-        return 'Mobile Data';
-      } else if (result.contains(ConnectivityResult.ethernet)) {
-        return 'Ethernet';
-      } else {
-        return 'No Connection';
-      }
-    } catch (e) {
-      return 'Unknown';
-    }
-  }
-
-  /// Check if specific host is reachable
-  static Future<bool> canReachHost(
-    String host, {
-    Duration timeout = const Duration(seconds: 5),
-  }) async {
-    try {
-      final result = await InternetAddress.lookup(host).timeout(timeout);
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
 }

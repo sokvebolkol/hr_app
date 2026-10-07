@@ -27,8 +27,6 @@ class UpdateCheckResult {
     this.errorMessage,
   });
 
-  bool get hasUpdate => state == UpdateCheckState.updateAvailable;
-
   /// Store URL for the running platform.
   String get updateUrl {
     if (latest == null) return '';
@@ -52,18 +50,6 @@ class AppUpdateService {
     try {
       final info = await PackageInfo.fromPlatform();
       return info.version;
-    } catch (_) {
-      return '';
-    }
-  }
-
-  /// Installed version with build number, e.g. "1.0.4 (28)".
-  Future<String> currentVersionWithBuild() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      return info.buildNumber.isEmpty
-          ? info.version
-          : '${info.version} (${info.buildNumber})';
     } catch (_) {
       return '';
     }

@@ -344,7 +344,6 @@ class AnnouncementMessage {
   bool get hasAttachments => attachments.isNotEmpty;
   bool get hasReactions => reactions.isNotEmpty;
   bool get isEdited => lastEditedAt != null;
-  bool get isDeleted => deletedAt != null;
 
   /// True for a reply in a thread rather than a top-level announcement.
   bool get isReply => replyToId != null;
@@ -359,8 +358,6 @@ class AnnouncementMessage {
 
   /// Reactions as "✍️ 4  ❤️ 1".
   String get reactionsLabel => reactions.map((r) => r.label).join('  ');
-  int get totalReactionCount =>
-      reactions.fold(0, (sum, r) => sum + (r.count == 0 ? 1 : r.count));
 
   String get senderInitial =>
       senderName.trim().isEmpty ? '?' : senderName.trim()[0].toUpperCase();

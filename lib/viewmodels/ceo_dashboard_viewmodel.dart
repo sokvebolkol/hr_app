@@ -90,23 +90,4 @@ class CeoDashboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Get attendance stats for charts/displays
-  Map<String, int> getAttendanceStats() {
-    return {
-      'Present': presentCount,
-      'Late': lateCount,
-      'Absent': absentCount,
-      'On Leave': onLeaveCount,
-    };
-  }
-
-  // Get leave stats
-  Map<String, int> getLeaveStats() {
-    return {
-      'Pending': pendingLeavesCount,
-      'Approved': approvedLeavesCount,
-      'Rejected': rejectedLeavesCount,
-      'Today': onLeaveCount,
-    };
-  }
 }

@@ -140,43 +140,4 @@ class LeaveActionRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getLeaveRequestScreen() async {
-    try {
-      SharedPreferences pref = await SharedPreferences.getInstance();
-      final token = pref.getString("token");
-
-      if (token == null) {
-        throw Exception('Token not found in local storage');
-      }
-
-      final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}leave-request-screen'),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      final responseData = json.decode(response.body);
-
-      if (response.statusCode == 200) {
-        return {'success': true, 'data': responseData['data']};
-      } else {
-        return {
-          'success': false,
-          'message':
-              responseData['message'] ??
-              'Failed to get leave request screen data',
-          'error': responseData['error'],
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-        'error': e.toString(),
-      };
-    }
-  }
 }

@@ -293,7 +293,6 @@ class LeaveRequest {
   DateTime get toDate => DateTime.tryParse(todat) ?? DateTime.now();
   DateTime get requestDate => DateTime.tryParse(createdate) ?? DateTime.now();
   double get numLeaveDays => double.tryParse(numleav) ?? 0.0;
-  bool get isHalfDay => numLeaveDays == 0.5;
   bool get isFullDay => numLeaveDays >= 1.0;
   String get statusText {
     switch (statu) {

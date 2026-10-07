@@ -45,8 +45,6 @@ class ProfileViewModel extends ChangeNotifier {
   String get joinedDate => _userProfile?.formattedJoinedDate ?? "";
   String get employmentType => _userProfile?.employmentType ?? "";
   String get gender => _userProfile?.gender ?? "";
-  String get currentLanguage =>
-      _languageLogic.language.code == "EN" ? "English" : "ខ្មែរ (Khmer)";
 
   // Landing screen preference (which screen opens after launching the app).
   // Defaults to Dashboard.

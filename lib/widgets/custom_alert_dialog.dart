@@ -1,4 +1,3 @@
-import 'package:chokchey_hr_app/constants/constant.dart';
 import 'package:flutter/material.dart';
 
 /// A simple customizable alert dialog widget that can be used throughout the app
@@ -92,82 +91,6 @@ class CustomAlertDialog extends StatelessWidget {
           iconBackgroundColor: iconBackgroundColor,
         );
       },
-    );
-  }
-
-  /// Show an error dialog
-  static Future<void> showError(
-    BuildContext context, {
-    String title = 'Error',
-    required String message,
-    String buttonText = 'OK',
-    VoidCallback? onPressed,
-  }) {
-    return show(
-      context,
-      title: title,
-      message: message,
-      icon: Icons.error_outline,
-      iconColor: primary,
-      primaryButtonText: buttonText,
-      onPrimaryPressed: onPressed ?? () => Navigator.of(context).pop(),
-    );
-  }
-
-  /// Show a success dialog
-  static Future<void> showSuccess(
-    BuildContext context, {
-    String title = 'Success',
-    required String message,
-    String buttonText = 'OK',
-    VoidCallback? onPressed,
-  }) {
-    return show(
-      context,
-      title: title,
-      message: message,
-      icon: Icons.check_circle_outline,
-      iconColor: Colors.green,
-      primaryButtonText: buttonText,
-      onPrimaryPressed: onPressed ?? () => Navigator.of(context).pop(),
-    );
-  }
-
-  /// Show a warning dialog
-  static Future<void> showWarning(
-    BuildContext context, {
-    String title = 'Warning',
-    required String message,
-    String buttonText = 'OK',
-    VoidCallback? onPressed,
-  }) {
-    return show(
-      context,
-      title: title,
-      message: message,
-      icon: Icons.warning_amber_outlined,
-      iconColor: Colors.orange,
-      primaryButtonText: buttonText,
-      onPrimaryPressed: onPressed ?? () => Navigator.of(context).pop(),
-    );
-  }
-
-  /// Show an info dialog
-  static Future<void> showInfo(
-    BuildContext context, {
-    String title = 'Information',
-    required String message,
-    String buttonText = 'OK',
-    VoidCallback? onPressed,
-  }) {
-    return show(
-      context,
-      title: title,
-      message: message,
-      icon: Icons.info_outline,
-      iconColor: Colors.blue,
-      primaryButtonText: buttonText,
-      onPrimaryPressed: onPressed ?? () => Navigator.of(context).pop(),
     );
   }
 

@@ -235,7 +235,6 @@ class StaffMember {
     return dailyRecords.first.clockOut;
   }
 
-  bool get hasIssues => lateCount > 0 || leaveCount > 0 || absentCount > 0;
 }
 
 class OverallSummary {
@@ -263,6 +262,4 @@ class OverallSummary {
     );
   }
 
-  int get totalIssues =>
-      totalLateOccurrences + totalLeaveOccurrences + totalAbsentOccurrences;
 }

@@ -81,9 +81,6 @@ class AttendanceReport {
   DateTime get dateTime => DateTime.parse(date);
 
   bool get hasAttendance => scanIn != null || clockIn != null;
-  bool get isComplete =>
-      (scanIn != null && scanOut != null) ||
-      (clockIn != null && clockOut != null);
   bool get isWeekend => status.toLowerCase() == 'weekend';
   bool get isOnLeave => status.toLowerCase() == 'on leave';
   bool get isAbsent => status.toLowerCase() == 'absent';

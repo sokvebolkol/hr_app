@@ -6,7 +6,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     as local_notifications;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_model.dart';
-import '../repositories/notification_repository.dart';
 
 class FirebaseNotificationService {
   static final FirebaseNotificationService _instance =
@@ -17,7 +16,6 @@ class FirebaseNotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final local_notifications.FlutterLocalNotificationsPlugin
   _localNotifications = local_notifications.FlutterLocalNotificationsPlugin();
-  final NotificationRepository _repository = NotificationRepository();
 
   bool _isInitialized = false;
   String? _fcmToken;
@@ -463,92 +461,6 @@ class FirebaseNotificationService {
       default:
         return 'General notifications';
     }
-  }
-
-  /// Test notification (for debugging)
-  Future<void> showTestNotification() async {
-    final testNotification = NotificationModel(
-      id: DateTime.now().millisecondsSinceEpoch,
-      title: 'Test Notification',
-      body: 'This is a test notification from CHOKCHEY',
-      type: 'test',
-      category: 'info',
-      data: {'test': 'true'},
-      isRead: false,
-      readAt: null,
-      createdAt: DateTime.now().toIso8601String(),
-      timeAgo: 'now',
-      isRecent: true,
-    );
-
-    await _showLocalNotification(testNotification);
-  }
-
-  /// Get current FCM token
-  String? get fcmToken => _fcmToken;
-
-  /// Subscribe to topic
-  Future<void> subscribeToTopic(String topic) async {
-    try {
-      await _firebaseMessaging.subscribeToTopic(topic);
-      print('✅ Subscribed to topic: $topic');
-    } catch (e) {
-      print('❌ Error subscribing to topic $topic: $e');
-    }
-  }
-
-  /// Unsubscribe from topic
-  Future<void> unsubscribeFromTopic(String topic) async {
-    try {
-      await _firebaseMessaging.unsubscribeFromTopic(topic);
-      print('✅ Unsubscribed from topic: $topic');
-    } catch (e) {
-      print('❌ Error unsubscribing from topic $topic: $e');
-    }
-  }
-
-  /// Clear all notifications
-  Future<void> clearAllNotifications() async {
-    await _localNotifications.cancelAll();
-    print('🧹 All notifications cleared');
-  }
-
-  /// Get badge count
-  Future<int> getBadgeCount() async {
-    try {
-      final response = await _repository.getUnreadCount();
-      return response.unreadCount;
-    } catch (e) {
-      print('❌ Error getting badge count: $e');
-      return 0;
-    }
-  }
-
-  /// Check iOS notification permissions
-  Future<bool> hasIOSPermissions() async {
-    if (Platform.isIOS) {
-      final settings = await _firebaseMessaging.getNotificationSettings();
-      return settings.authorizationStatus == AuthorizationStatus.authorized ||
-          settings.authorizationStatus == AuthorizationStatus.provisional;
-    }
-    return true;
-  }
-
-  /// Get detailed permission status
-  Future<Map<String, dynamic>> getPermissionStatus() async {
-    final settings = await _firebaseMessaging.getNotificationSettings();
-
-    return {
-      'authorizationStatus': settings.authorizationStatus.toString(),
-      'alert': settings.alert.toString(),
-      'badge': settings.badge.toString(),
-      'sound': settings.sound.toString(),
-      'hasAPNSToken':
-          Platform.isIOS
-              ? (await _firebaseMessaging.getAPNSToken()) != null
-              : null,
-      'fcmToken': _fcmToken,
-    };
   }
 
   /// Enhanced debugging method to check all notification states

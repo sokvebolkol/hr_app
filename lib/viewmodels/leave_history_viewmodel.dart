@@ -17,19 +17,10 @@ class LeaveHistoryViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Computed properties for leave requests
-  int get pendingCount =>
-      _leaveHistory.where((leave) => leave.isPending).length;
   int get approvedCount =>
       _leaveHistory.where((leave) => leave.isApproved).length;
   int get rejectedCount =>
       _leaveHistory.where((leave) => leave.isRejected).length;
-  int get cancelledCount =>
-      _leaveHistory.where((leave) => leave.isCancelled).length;
-
-  List<String> get availableLeaveTypes {
-    return _leaveHistory.map((leave) => leave.ltyp).toSet().toList();
-  }
 
   // Fetch leave history
   Future<void> fetchLeaveHistory() async {
@@ -51,27 +42,6 @@ class LeaveHistoryViewModel extends ChangeNotifier {
   // Refresh data
   Future<void> refresh() async {
     await fetchLeaveHistory();
-  }
-
-  // Filter leave history
-  List<LeaveHistoryModel> getFilteredHistory({
-    String? status,
-    String? leaveType,
-  }) {
-    var filtered = _leaveHistory;
-
-    if (status != null) {
-      filtered = filtered.where((leave) => leave.statu == status).toList();
-    }
-
-    if (leaveType != null) {
-      filtered = filtered.where((leave) => leave.ltyp == leaveType).toList();
-    }
-
-    // Sort by created date (newest first)
-    filtered.sort((a, b) => b.createdDate.compareTo(a.createdDate));
-
-    return filtered;
   }
 
   // Private helper methods

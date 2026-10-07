@@ -17,7 +17,6 @@ class AttendanceAdjustmentActionViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
   bool get hasActionTaken => _hasActionTaken;
-  String? get actionType => _actionType;
   bool get isProcessing => _isApproving || _isRejecting;
   bool get isApproving => _isApproving;
   bool get isRejecting => _isRejecting;

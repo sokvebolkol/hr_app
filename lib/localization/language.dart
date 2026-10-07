@@ -4,11 +4,6 @@ class Language {
   String get code => "EN";
   String get login => "Login";
   String get logout => "Logout";
-  String get deleteMyAccount => "Delete My Account";
-  String get removeAccount => "Delete Account";
-  String get msgRemoveAccount =>
-      "Would you really like to delete your account?";
-  String get register => "Register";
   String get selectLanguage => "Select Language";
   String get language => "Language";
   String get landingScreen => "Landing Screen";
@@ -18,8 +13,6 @@ class Language {
   String get staffId => "Staff ID";
   String get password => "Password";
   String get forgotPassword => "Forgot Password?";
-  String get noAccount => "Don't have an account?";
-  String get createAccount => "Create Account";
   String get enterStaffId => "Enter Staff ID";
   String get enterPassword => "Enter Password";
   String get invalidCredentials => "Invalid Staff ID or Password";
@@ -35,37 +28,16 @@ class Language {
   String get home => "Home";
   String get settings => "Settings";
   String get profile => "Profile";
-  String get updateProfile => "Update Profile";
-  String get saveChanges => "Save Changes";
-  String get changesSaved => "Changes saved successfully!";
-  String get errorSavingChanges => "Error saving changes. Please try again.";
   String get logoutConfirmation => "Are you sure you want to logout?";
   String get yes => "Yes";
   String get no => "No";
   String get ok => "OK";
   String get technicalDetails => "Technical Details";
-  String get cancelOperation => "Cancel Operation";
-  String get operationCancelled => "Operation cancelled.";
-  String get deleteAccount => "Delete Account";
-  String get accountDeleted => "Your account has been deleted.";
-  String get errorDeletingAccount =>
-      "Error deleting account. Please try again.";
   String get notifications => "Notification";
-  String get enableNotifications => "Enable Notification";
-  String get disableNotifications => "Disable Notification";
-  String get notificationsEnabled => "Notification enabled.";
-  String get notificationsDisabled => "Notification disabled.";
   String get serverExperiencingIssues =>
       "The server is currently experiencing issues. Please try again later.";
-  String get technicalIssueDetails =>
-      "If the problem persists, please contact support with the following details:";
   String get noInternetConnection =>
       "No internet connection. Please check your network settings.";
-  String get timeoutError => "The request timed out. Please try again.";
-  String get unknownErrorDetails =>
-      "An unknown error occurred. Please try again.";
-  String get unexpectedError =>
-      "An unexpected error occurred. Please try again.";
   String get dataError => "Data error. Please try again.";
   String get invalidResponseFromServer =>
       "Invalid response from server. Please try again.";
@@ -77,7 +49,6 @@ class Language {
       "Please enter both Staff ID and Password.";
   String get copyrightText => "© 2024 Chokchey HR. All rights reserved.";
   String get loginWithMicrosoft => "Sign in with Microsoft";
-  String get signingInWithMicrosoft => "Signing in...";
   String get microsoftLoginFailed =>
       "Microsoft sign-in failed. Please try again.";
   String get orDivider => "or continue with";
@@ -85,16 +56,9 @@ class Language {
       "Please create a strong password that you haven\'t used before.";
 
   String get passwordChangeRequired => "Password Change Required";
-  String get authenticationFailed => "Authentication Failed";
   String get validationError => "Validation Error";
   String get validationErrorOccurred => "Validation error occurred.";
-  String get pleaseCheckYourInput => "Please check your input and try again.";
-  String get serverError => "Server Error";
-  String get createStrongPasswordHint =>
-      "Please create a strong password that you haven't used before.";
   String get changePasswordNow => "Change Password Now";
-  String get securityPasswordChangeMessage =>
-      "For security reasons, you need to change your password before continuing.";
   String get resetYourPassword => "Reset your password";
   String get enterStaffIdAndEmail =>
       "Please enter your Staff ID with Company Email to receive an OTP";
@@ -215,7 +179,6 @@ class Language {
   // Leave Types
   String get annualLeave => "Annual Leave";
   String get sickLeave => "Sick Leave";
-  String get unpaidLeave => "Unpaid Leave";
   String get maternityLeave => "Maternity Leave";
   String get specialLeave => "Special Leave";
 
@@ -226,8 +189,6 @@ class Language {
   String get afternoon => "Afternoon";
 
   // Approval Levels
-  String get firstApprover => "First Approver";
-  String get secondApprover => "Second Approver";
 
   // Staff Attendance Screen
   String get today => "Today";
@@ -263,19 +224,9 @@ class Language {
   String get joinedDate => "Joined Date";
   String get gender => "Gender";
   String get position => "Position";
-  String get pleaseChooseOne => "Please choose one";
   String get camera => "Camera";
   String get gallery => "Gallery";
-  String get permissionRequired => "Permission Required";
-  String get cameraPermissionRequired => "Camera Permission Required";
-  String get photosPermissionRequired => "Photos Permission Required";
-  String get pleaseEnablePermission =>
-      "Please enable permission in app settings to use this feature.";
   String get openSettings => "Open Settings";
-  String get cameraPermissionDenied => "Camera permission denied";
-  String get photoLibraryPermissionDenied => "Photo library permission denied";
-  String get noImageSelected => "No image selected";
-  String get errorSelectingImage => "Error selecting image";
 
   // Menu Screen
   String get myProfile => "My Profile";
@@ -285,7 +236,6 @@ class Language {
   String get loggedOutSuccessfully => "Logged out successfully";
   String get loggedOutLocally => "Logged out locally";
   String get networkErrorLoggedOut => "Network error. Logged out locally.";
-  String get unableToRetrieveUserInfo => "Unable to retrieve user information";
 
   // Notification Screen
   String get markAllAsRead => "Mark all as read";
@@ -298,14 +248,12 @@ class Language {
   String get openingLeaveRequest => "Opening leave request...";
   String get failedToMarkNotificationAsRead =>
       "Failed to mark notification as read";
-  String get noInformationAvailable => "No information available";
   String get error => "Error";
   String get failedToLoadNotifications => "Failed to load notifications";
   String get unknownErrorOccurred => "Unknown error occurred";
   String get tryAgain => "Try Again";
   String get allCaughtUp => "All Caught Up! 🎉";
   String get noNewLeaveRequests => "No new leave requests to review";
-  String get newLabel => "NEW";
 
   String get all => "All";
   String get noApprovedLeavesFound => "No approved leaves found";
@@ -330,15 +278,9 @@ class Language {
   String get noAttendanceRecordsFound => "No attendance records found";
   String get request => "Request";
   String get monthlyRequestLimit => "Monthly Request Limit";
-  String get missedScan => "Missed scan";
-  String get leaveEarly => "Leave early";
-  String get lateScan => "Late scan";
-  String get noCheckOut => "No Check-Out";
   String get requestLimit => "Request Limit";
   String get requestsRemaining => "requests remaining";
   String get requestsUsed => "requests used";
-  String get cannotRequestMore => "Cannot request more this month";
-  String get attendanceAdjustment => "Attendance Adjustment";
 
   // Dashboard Functions
   String get clockInOut => "Clock In | Out";
@@ -356,36 +298,18 @@ class Language {
   String get noAttendanceDataFound => "No attendance data found";
   String get records => "records";
   String get date => "Date";
-  String get fingerIn => "Finger In";
-  String get fingerOut => "Finger Out";
   String get clockIn => "Clock In";
   String get clockOut => "Clock Out";
   String get status => "Status";
-  String get notAvailable => "N/A";
   String get historyRequests => "History Requests";
   String get holidays => "Holidays";
   String get memo => "Memo";
   String get more => "More";
   String get leaveHistory => "Leave History";
-  String get attendanceAdjustmentsHistory => "Adjustment History";
-  String get attendances => "Attendances";
-  String get myLeaveRequest => "My Leave Request";
-  String get noLeaveRequestsFound => "No leave requests found";
-  String get recentlyLeaveRequest => "Recently Leave Request";
-  String get requestSubmitted => "Request submitted successfully";
   String get requestFailed => "Failed to submit request";
-  String get pleaseProvideReason =>
-      "Please provide a reason for the adjustment request";
-  String get confirmAdjustmentRequest => "Confirm Adjustment Request";
-  String get reviewRequestDetails =>
-      "Please review your request details before submitting";
   String get adjustmentType => "Adjustment Type";
   String get reason => "Reason";
   String get attachment => "Attachment";
-  String get photoAttached => "Photo attached";
-  String get submittingRequest => "Submitting Request";
-  String get pleaseWaitProcessing =>
-      "Please wait while we process your adjustment request";
   String get submitRequest => "Submit Request";
 
   // Additional UI strings for attendance adjustment detail screen
@@ -398,10 +322,8 @@ class Language {
   String get uploadPhoto => "Upload Photo";
   String get tapToSelectPhoto => "Tap to select photo from camera or gallery";
   String get photoSelected => "Photo selected";
-  String get readyToSubmit => "Ready to submit";
   String get change => "Change";
   String get approvers => "Approvers";
-  String get noApproversAssigned => "No approvers assigned";
   String get selectPhotoSource => "Select Photo Source";
   String get takeNewPhoto => "Take a new photo";
   String get chooseFromGallery => "Choose from gallery";
@@ -432,7 +354,6 @@ class Language {
   String get pleaseSelectLeaveType => "Please select leave type";
   String get leaveDate => "Leave Date";
   String get pleaseSelectLeaveDate => "Please select leave date";
-  String get calendarDays => "Calendar Days";
   String maternityLeaveExceedsLimit(int maxDays, int selectedDays) =>
       "Maternity leave cannot exceed $maxDays days, including weekends and holidays. Your selected range is $selectedDays days.";
   String get totalLeave => "Total Leave";
@@ -468,17 +389,12 @@ class Language {
   String get annualLeaveUsed => "Annual Leave";
   String get pending => "Pending";
   String get leaveBalance => "Leave Balance";
-  String get annualLeaveSummary => "Annual Leave Summary";
   String get leaveUsedByYearly => "Leave Used by Year";
   String get used => "Used";
   String get balance => "Balance";
-  String get entitlement => "Entitlement";
-  String get leaveBalanceDetails => "Leave Balance Details";
   String get selectYear => "Select Year";
   String get loadingLeaveBalance => "Loading leave balance...";
   String get errorLoadingLeaveBalance => "Error loading leave balance";
-  String get daysUsed => "days used";
-  String get leaveRequestStatistics => "Leave Request Statistics";
   String get remainingLeaveBalance => "Leave Balance";
   String get usedLeave => "Used";
   String get dayAvailableText => "day available";
@@ -490,13 +406,7 @@ class Language {
   // Manager Leave History Screen
   String get myRequest => "My Request";
   String get userApprovers => "Approvers";
-  String get myStaffRequest => "My Staff Request";
   String get attendanceAdjustments => "Attendance Adjustments";
-  String get errorLoadingLeaveHistory => "Error loading leave history";
-  String get noStaffLeaveRequestsFound => "No staff leave requests found";
-  String get leaveRequestsWillAppearHere => "Leave requests will appear here";
-  String get filterMyRequests => "Filter My Requests";
-  String get filterStaffRequests => "Filter Staff Requests";
   String get staffMember => "Staff Member";
   String get name => "Name";
   String get office => "Office";
@@ -546,12 +456,6 @@ class Language {
       "Are you sure you want to cancel this leave request? This action cannot be undone.";
   String get yesCancelRequest => "Yes, Cancel";
   String get send => "Send";
-  String get leaveRequestCancelledSuccessfully =>
-      "Leave request cancelled successfully";
-  String get failedToCancelLeaveRequest =>
-      "Failed to cancel leave request. Please try again.";
-  String get failedToSendFollowUp =>
-      "Failed to send follow-up. Please try again.";
 
   // Dashboard
   String get pendingLeave => "Pending Leave";
@@ -566,8 +470,6 @@ class Language {
   String get joinAsEmployee => "Join as Employee";
   String get signInToYourAccount => "Sign in to your account";
   String get newEmployeeRegisterHere => "New Employee? Register here";
-  String get trustedPlatform => "Trusted Platform";
-  String get employeesCount => "200+ Employees";
 
   // Adjustment Approval Detail
   String get adjustmentDetail => "Adjustment Detail";
@@ -628,18 +530,6 @@ class Khmer implements Language {
   String get logout => "ចាកចេញ";
 
   @override
-  String get deleteMyAccount => "ធ្វើការលុបគណនី";
-
-  @override
-  String get removeAccount => "ធ្វើការលុបគណនី";
-
-  @override
-  String get msgRemoveAccount => "តើអ្នកចង់លុបគណនីរបស់អ្នកមែនទេ?";
-
-  @override
-  String get register => "ចុះឈ្មោះ";
-
-  @override
   String get selectLanguage => "ជ្រើសរើសភាសា";
 
   @override
@@ -665,12 +555,6 @@ class Khmer implements Language {
 
   @override
   String get forgotPassword => "ភ្លេចពាក្យសម្ងាត់?";
-
-  @override
-  String get noAccount => "មិនមានគណនីទេ?";
-
-  @override
-  String get createAccount => "បង្កើតគណនី";
 
   @override
   String get enterStaffId => "លេខសម្គាល់បុគ្គលិករបស់អ្នក";
@@ -706,15 +590,6 @@ class Khmer implements Language {
   @override
   String get profile => "ប្រូហ្វាល់";
   @override
-  String get updateProfile => "ធ្វើបច្ចុប្បន្នភាពប្រូហ្វាល់";
-  @override
-  String get saveChanges => "រក្សាទុកការផ្លាស់ប្តូរ";
-  @override
-  String get changesSaved => "ការផ្លាស់ប្តូរត្រូវបានរក្សាទុកដោយជោគជ័យ!";
-  @override
-  String get errorSavingChanges =>
-      "មានបញ្ហាក្នុងការរក្សាទុកការផ្លាស់ប្តូរ សូមព្យាយាមម្តងទៀត";
-  @override
   String get logoutConfirmation => "តើអ្នកប្រាកដថាចង់ចាកចេញមែនទេ?";
   @override
   String get yes => "បាទ/ចាស";
@@ -723,42 +598,14 @@ class Khmer implements Language {
   String get ok => "យល់ព្រម";
   String get technicalDetails => "ព័ត៌មានបច្ចេកទេស";
   @override
-  String get cancelOperation => "បោះបង់ប្រតិបត្តិការ";
-  @override
-  String get operationCancelled => "ប្រតិបត្តិការត្រូវបានបោះបង់";
-  @override
-  String get deleteAccount => "លុបគណនី";
-  @override
-  String get accountDeleted => "គណនីរបស់អ្នកត្រូវបានលុប";
-  @override
-  String get errorDeletingAccount =>
-      "មានបញ្ហាក្នុងការលុបគណនី សូមព្យាយាមម្តងទៀត";
-  @override
   String get notifications => "ការជូនដំណឹង";
-  @override
-  String get enableNotifications => "បើកការជូនដំណឹង";
-  @override
-  String get disableNotifications => "បិទ  ការជូនដំណឹង";
-  @override
-  String get notificationsEnabled => "ការជូនដំណឹងត្រូវបានបើក";
-  @override
-  String get notificationsDisabled => "ការជូនដំណឹងត្រូវបានបិទ";
   @override
   String get serverExperiencingIssues =>
       "ម៉ាស៊ីនមេកំពុងមានបញ្ហា សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ";
   @override
-  String get technicalIssueDetails =>
-      "បើបញ្ហានេះនៅតែមាន សូមទាក់ទងការគាំទ្រជាមួយព័ត៌មានដូចខាងក្រោម៖";
-  @override
   String get noInternetConnection =>
       "មិនមានការតភ្ជាប់អ៊ីនធឺណិត សូមពិនិត្យការកំណត់បណ្តាញរបស់អ្នក";
-  @override
-  String get timeoutError => "ការស្នើសុំបានផុតកំណត់ សូមព្យាយាមម្តងទៀត";
-  @override
-  String get unknownErrorDetails => "មានបញ្ហាមិនស្គាល់ សូមព្យាយាមម្តងទៀត";
 
-  @override
-  String get unexpectedError => "មានបញ្ហាមិនស្គាល់ សូមព្យាយាមម្តងទៀត";
   @override
   String get dataError => "មានបញ្ហាទិន្នន័យ សូមព្យាយាមម្តងទៀត";
   @override
@@ -777,24 +624,11 @@ class Khmer implements Language {
   @override
   String get passwordChangeRequired => "តម្រូវការផ្លាស់ប្តូរពាក្យសម្ងាត់";
   @override
-  String get authenticationFailed => "ការផ្ទៀងផ្ទាត់បរាជ័យ";
-  @override
   String get validationError => "កំហុសក្នុងការផ្ទៀងផ្ទាត់";
   @override
   String get validationErrorOccurred => "មានកំហុសក្នុងការផ្ទៀងផ្ទាត់";
   @override
-  String get pleaseCheckYourInput =>
-      "សូមពិនិត្យការបញ្ចូលរបស់អ្នក ហើយព្យាយាមម្តងទៀត";
-  @override
-  String get serverError => "កំហុសម៉ាស៊ីនមេ";
-  @override
-  String get createStrongPasswordHint =>
-      "សូមបង្កើតពាក្យសម្ងាត់ដែលមានភាពរឹងមាំ ដែលអ្នកមិនបានប្រើមុន";
-  @override
   String get changePasswordNow => "ផ្លាស់ប្តូរពាក្យសម្ងាត់ឥឡូវនេះ";
-  @override
-  String get securityPasswordChangeMessage =>
-      "សម្រាប់ហេតុផលសុវត្ថិភាព អ្នកត្រូវតែផ្លាស់ប្តូរពាក្យសម្ងាត់របស់អ្នក មុនពេលបន្ត";
   @override
   String get resetYourPassword => "កំណត់ពាក្យសម្ងាត់ឡើងវិញ";
   @override
@@ -1018,8 +852,6 @@ class Khmer implements Language {
   @override
   String get sickLeave => "ច្បាប់ឈឺ";
   @override
-  String get unpaidLeave => "ច្បាប់គ្មានប្រាក់ខែ";
-  @override
   String get maternityLeave => "ច្បាប់សម្រាលកូន";
   @override
   String get specialLeave => "ច្បាប់ពិសេស";
@@ -1035,10 +867,6 @@ class Khmer implements Language {
   String get afternoon => "រសៀល";
 
   // Approval Levels
-  @override
-  String get firstApprover => "អ្នកអនុម័តទីមួយ";
-  @override
-  String get secondApprover => "អ្នកអនុម័តទីពីរ";
 
   // Staff Attendance Screen
   @override
@@ -1105,30 +933,11 @@ class Khmer implements Language {
   @override
   String get position => "តួនាទី";
   @override
-  String get pleaseChooseOne => "សូមជ្រើសរើសមួយ";
-  @override
   String get camera => "កាមេរ៉ា";
   @override
   String get gallery => "វិចិត្រសាល";
   @override
-  String get permissionRequired => "តម្រូវការសិទ្ធិប្រើប្រាស់";
-  @override
-  String get cameraPermissionRequired => "តម្រូវការសិទ្ធិប្រើកាមេរ៉ា";
-  @override
-  String get photosPermissionRequired => "តម្រូវការសិទ្ធិប្រើរូបភាព";
-  @override
-  String get pleaseEnablePermission =>
-      "សូមបើកសិទ្ធិនៅក្នុងការកំណត់កម្មវិធីដើម្បីប្រើមុខងារនេះ។";
-  @override
   String get openSettings => "បើកការកំណត់";
-  @override
-  String get cameraPermissionDenied => "សិទ្ធិប្រើកាមេរ៉ាត្រូវបានបដិសេធ";
-  @override
-  String get photoLibraryPermissionDenied => "សិទ្ធិប្រើរូបភាពត្រូវបានបដិសេធ";
-  @override
-  String get noImageSelected => "មិនបានជ្រើសរើសរូបភាព";
-  @override
-  String get errorSelectingImage => "មានបញ្ហាក្នុងការជ្រើសរើសរូបភាព";
 
   // Menu Screen
   @override
@@ -1148,8 +957,6 @@ class Khmer implements Language {
       "អស់ពេលក្នុងការតភ្ជាប់។ បានចាកចេញក្នុងមូលដ្ឋាន។";
   @override
   String get networkErrorLoggedOut => "បញ្ហាបណ្តាញ។ បានចាកចេញក្នុងមូលដ្ឋាន។";
-  @override
-  String get unableToRetrieveUserInfo => "មិនអាចទទួលបានព័ត៌មានអ្នកប្រើប្រាស់";
   // Notification Screen
   @override
   String get markAllAsRead => "សម្គាល់ទាំងអស់ថាបានអាន";
@@ -1172,8 +979,6 @@ class Khmer implements Language {
   String get failedToMarkNotificationAsRead =>
       "បរាជ័យក្នុងការសម្គាល់ការជូនដំណឹងថាបានអាន";
   @override
-  String get noInformationAvailable => "មិនមានពេ័ត៌មាន";
-  @override
   String get error => "កំហុស";
   @override
   String get failedToLoadNotifications => "បរាជ័យក្នុងការផ្ទុកការជូនដំណឹង";
@@ -1185,8 +990,6 @@ class Khmer implements Language {
   String get allCaughtUp => "បានធ្វើរួចរាល់! 🎉";
   @override
   String get noNewLeaveRequests => "មិនមានសំណើច្បាប់ថ្មីសម្រាប់ពិនិត្យ។";
-  @override
-  String get newLabel => "ថ្មី";
   @override
   String get all => "ទាំងអស់";
   @override
@@ -1232,23 +1035,11 @@ class Khmer implements Language {
   @override
   String get monthlyRequestLimit => "កំណត់ការស្នើសុំប្រចាំខែ";
   @override
-  String get missedScan => "ខកស្កេន";
-  @override
-  String get leaveEarly => "ចេញមុន";
-  @override
-  String get lateScan => "ស្កេនយឺត";
-  @override
-  String get noCheckOut => "មិនបានចេញ";
-  @override
   String get requestLimit => "កំណត់ការស្នើសុំ";
   @override
   String get requestsRemaining => "ការស្នើសុំនៅសល់";
   @override
   String get requestsUsed => "ការស្នើសុំបានប្រើ";
-  @override
-  String get cannotRequestMore => "មិនអាចស្នើសុំបន្ថែមទៀតខែនេះ";
-  @override
-  String get attendanceAdjustment => "កែតម្រូវវត្តមាន";
 
   // Dashboard Functions
   @override
@@ -1280,17 +1071,11 @@ class Khmer implements Language {
   @override
   String get date => "កាលបរិច្ឆេទ";
   @override
-  String get fingerIn => "ចូលម្រាមដៃ";
-  @override
-  String get fingerOut => "ចេញម្រាមដៃ";
-  @override
   String get clockIn => "ចូល";
   @override
   String get clockOut => "ចេញ";
   @override
   String get status => "ស្ថានភាព";
-  @override
-  String get notAvailable => "គ្មាន";
   @override
   String get historyRequests => "ប្រវត្តិស្នើសុំ";
   @override
@@ -1302,39 +1087,13 @@ class Khmer implements Language {
   @override
   String get leaveHistory => "ប្រវត្តិឈប់សម្រាក";
   @override
-  String get attendanceAdjustmentsHistory => "ប្រវត្តិកែតម្រូវវត្តមាន";
-  @override
-  String get attendances => "វត្តមាន";
-  @override
-  String get myLeaveRequest => "ការស្នើសុំឈប់សម្រាករបស់ខ្ញុំ";
-  @override
-  String get noLeaveRequestsFound => "រកមិនឃើញសំណើឈប់សម្រាក";
-  @override
-  String get recentlyLeaveRequest => "ការស្នើសុំឈប់សម្រាកថ្មីៗ";
-  @override
-  String get requestSubmitted => "ការស្នើសុំត្រូវបានដាក់ស្នើដោយជោគជ័យ";
-  @override
   String get requestFailed => "បរាជ័យក្នុងការដាក់ស្នើ";
-  @override
-  String get pleaseProvideReason => "សូមផ្តល់ហេតុផលសម្រាប់ការស្នើសុំកែតម្រូវ";
-  @override
-  String get confirmAdjustmentRequest => "បញ្ជាក់ការស្នើសុំកែតម្រូវ";
-  @override
-  String get reviewRequestDetails =>
-      "សូមពិនិត្យលម្អិតការស្នើសុំរបស់អ្នកមុនពេលដាក់ស្នើ";
   @override
   String get adjustmentType => "ប្រភេទកែតម្រូវ";
   @override
   String get reason => "មូលហេតុ";
   @override
   String get attachment => "ឯកសារភ្ជាប់";
-  @override
-  String get photoAttached => "រូបភាពបានភ្ជាប់";
-  @override
-  String get submittingRequest => "កំពុងដាក់ស្នើ";
-  @override
-  String get pleaseWaitProcessing =>
-      "សូមរង់ចាំ យើងកំពុងដំណើរការស្នើសុំកែតម្រូវរបស់អ្នក";
   @override
   String get submitRequest => "ដាក់ស្នើ";
 
@@ -1357,13 +1116,9 @@ class Khmer implements Language {
   @override
   String get photoSelected => "រូបថតត្រូវបានជ្រើសរើស";
   @override
-  String get readyToSubmit => "រួចរាល់ដាក់ស្នើ";
-  @override
   String get change => "ផ្លាស់ប្តូរ";
   @override
   String get approvers => "អ្នកអនុម័ត";
-  @override
-  String get noApproversAssigned => "មិនមានអ្នកអនុម័ត";
   @override
   String get selectPhotoSource => "ជ្រើសរើសប្រភពរូបភាព";
   @override
@@ -1418,8 +1173,6 @@ class Khmer implements Language {
   String get leaveDate => "កាលបរិច្ឆេទច្បាប់";
   @override
   String get pleaseSelectLeaveDate => "សូមជ្រើសរើសកាលបរិច្ឆេទច្បាប់";
-  @override
-  String get calendarDays => "ថ្ងៃប្រតិទិន";
   @override
   String maternityLeaveExceedsLimit(int maxDays, int selectedDays) =>
       "ច្បាប់សម្រាលកូនមិនអាចលើសពី $maxDays ថ្ងៃ រួមទាំងថ្ងៃឈប់សម្រាក និងចុងសប្តាហ៍។ ចន្លោះពេលដែលអ្នកបានជ្រើសរើសគឺ $selectedDays ថ្ងៃ។";
@@ -1491,27 +1244,17 @@ class Khmer implements Language {
   @override
   String get leaveBalance => "សមតុល្យច្បាប់";
   @override
-  String get annualLeaveSummary => "សង្ខេបច្បាប់ប្រចាំឆ្នាំ";
-  @override
   String get leaveUsedByYearly => "ច្បាប់បានប្រើតាមឆ្នាំ";
   @override
   String get used => "បានប្រើ";
   @override
   String get balance => "នៅសល់";
   @override
-  String get entitlement => "សិទ្ធិច្បាប់សរុប";
-  @override
-  String get leaveBalanceDetails => "ព័ត៌មានលម្អិតសមតុល្យច្បាប់";
-  @override
   String get selectYear => "ជ្រើសរើសឆ្នាំ";
   @override
   String get loadingLeaveBalance => "កំពុងផ្ទុកសមតុល្យច្បាប់...";
   @override
   String get errorLoadingLeaveBalance => "មានបញ្ហាក្នុងការផ្ទុកសមតុល្យច្បាប់";
-  @override
-  String get daysUsed => "ថ្ងៃបានប្រើ";
-  @override
-  String get leaveRequestStatistics => "ស្ថិតិសំណើច្បាប់";
   @override
   String get remainingLeaveBalance => "សមតុល្យច្បាប់នៅសល់";
   @override
@@ -1532,21 +1275,7 @@ class Khmer implements Language {
   @override
   String get userApprovers => "អ្នកអនុម័ត";
   @override
-  String get myStaffRequest => "ការស្នើសុំបុគ្គលិករបស់ខ្ញុំ";
-  @override
   String get attendanceAdjustments => "ការកែសម្រួលវត្តមាន";
-  @override
-  String get errorLoadingLeaveHistory =>
-      "មានបញ្ហាក្នុងការផ្ទុកប្រវត្តិឈប់សម្រាក";
-  @override
-  String get noStaffLeaveRequestsFound => "រកមិនឃើញការស្នើសុំឈប់សម្រាកបុគ្គលិក";
-  @override
-  String get leaveRequestsWillAppearHere =>
-      "ការស្នើសុំឈប់សម្រាកនឹងបង្ហាញនៅទីនេះ";
-  @override
-  String get filterMyRequests => "ច្រោះការស្នើសុំរបស់ខ្ញុំ";
-  @override
-  String get filterStaffRequests => "ច្រោះការស្នើសុំបុគ្គលិក";
   @override
   String get staffMember => "បុគ្គលិក";
 
@@ -1639,15 +1368,6 @@ class Khmer implements Language {
   String get yesCancelRequest => "បាទ/ចាស, បោះបង់";
   @override
   String get send => "ផ្ញើ";
-  @override
-  String get leaveRequestCancelledSuccessfully =>
-      "ការស្នើសុំឈប់សម្រាកត្រូវបានបោះបង់ដោយជោគជ័យ";
-  @override
-  String get failedToCancelLeaveRequest =>
-      "មានបញ្ហាក្នុងការបោះបង់ការស្នើសុំ។ សូមព្យាយាមម្តងទៀត។";
-  @override
-  String get failedToSendFollowUp =>
-      "មានបញ្ហាក្នុងការផ្ញើតាមដាន។ សូមព្យាយាមម្តងទៀត។";
 
   // Dashboard
   @override
@@ -1671,10 +1391,6 @@ class Khmer implements Language {
   String get signInToYourAccount => "ចូលប្រើប្រាស់គណនីរបស់អ្នក";
   @override
   String get newEmployeeRegisterHere => "បុគ្គលិកថ្មី? ចុះឈ្មោះនៅទីនេះ";
-  @override
-  String get trustedPlatform => "Platform ដែលទុកចិត្ត";
-  @override
-  String get employeesCount => "បុគ្គលិក 200+";
 
   // Adjustment Approval Detail
   @override
@@ -1753,8 +1469,6 @@ class Khmer implements Language {
   String get staffIdOrCode4Digits => "លេខបុគ្គលិក ឬកូដត្រូវតែមានចំនួន ៤ ខ្ទង់";
   @override
   String get loginWithMicrosoft => "ចូលដោយ Microsoft";
-  @override
-  String get signingInWithMicrosoft => "កំពុងចូល...";
   @override
   String get microsoftLoginFailed =>
       "ការចូលតាម Microsoft បានបរាជ័យ។ សូមព្យាយាមម្ដងទៀត";

@@ -1,4 +1,3 @@
-import 'package:chokchey_hr_app/views/leaves/leave_request/leave_request_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,12 +59,6 @@ class _ManagerDashboardState extends State<ManagerDashboard> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_kShowStaffViewKey, value);
     setState(() => _showStaffView = value);
-  }
-
-  void _refreshPersonalDashboard() {
-    setState(() {
-      _triggerPersonalRefresh = !_triggerPersonalRefresh;
-    });
   }
 
   @override
