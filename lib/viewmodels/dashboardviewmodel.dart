@@ -63,8 +63,10 @@ class DashboardViewModel extends ChangeNotifier {
     await fetchDashboard();
   }
 
-  // Fetch dashboard data
-  Future<void> fetchDashboard() async {
+  // Fetch dashboard data. The profile comes from cache unless
+  // [forceRefresh] is true (pull-to-refresh, Retry).
+  Future<void> fetchDashboard({bool forceRefresh = false}) async {
+    if (_isLoading || _isSilentRefreshing) return; // already loading
     try {
       _setLoading(true);
       _setError(null);
@@ -81,7 +83,7 @@ class DashboardViewModel extends ChangeNotifier {
       // Fetch dashboard data and user profile in parallel
       final results = await Future.wait([
         _repository.getDashboardData(),
-        _profileRepository.getUserProfile(),
+        _profileRepository.getUserProfile(forceRefresh: forceRefresh),
       ]);
 
       final dashboardData = results[0] as DashboardData;
@@ -102,6 +104,30 @@ class DashboardViewModel extends ChangeNotifier {
     }
   }
 
+  bool _isSilentRefreshing = false;
+
+  /// Reloads Home data in the background, without the full-screen spinner
+  /// and without surfacing errors (the current data simply stays). Used
+  /// after a leave request or attendance adjustment is submitted.
+  Future<void> silentRefresh() async {
+    if (_isLoading || _isSilentRefreshing) return;
+    _isSilentRefreshing = true;
+    try {
+      final dashboardData = await _repository.getDashboardData();
+      _user = dashboardData.user;
+      _leaves = dashboardData.leaves;
+      _adjustmentRequests = dashboardData.adjustmentRequests;
+      _leaveBalance = dashboardData.leaveBalance;
+      _monthlySummary = dashboardData.monthlySummary;
+      _appVersion = dashboardData.appVersion;
+      notifyListeners();
+    } catch (e, stackTrace) {
+      ErrorHandler.logError(e, stackTrace);
+    } finally {
+      _isSilentRefreshing = false;
+    }
+  }
+
   // Get user ID
   Future<String?> getUserId() async {
     try {
@@ -114,14 +140,15 @@ class DashboardViewModel extends ChangeNotifier {
 
   // Refresh dashboard data
   Future<void> refresh() async {
-    await fetchDashboard();
+    await fetchDashboard(forceRefresh: true);
   }
 
-  // Refresh only user profile data (more efficient when only profile changed)
+  /// Refetches only the profile. Call after a profile edit.
   Future<void> refreshProfile() async {
     try {
-      final userProfile = await _profileRepository.getUserProfile();
-      _userProfile = userProfile;
+      final userProfile =
+          await _profileRepository.getUserProfile(forceRefresh: true);
+      if (userProfile != null) _userProfile = userProfile;
       notifyListeners();
     } catch (e) {
       // Don't show error for profile refresh failures, just keep existing data
@@ -144,6 +171,12 @@ class DashboardViewModel extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  /// Clears the error without notifying, so it can be called during build
+  /// after the error has been handed to a snackbar.
+  void clearErrorSilently() {
+    _errorMessage = null;
   }
 
   // Force logout (for inactive users)

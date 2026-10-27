@@ -114,20 +114,60 @@ class MessageContent {
   /// Plain text for previews. Falls back to stripping [raw] when the API
   /// only supplies HTML.
   String get preview {
-    if (text.trim().isNotEmpty) return text.trim();
-    if (raw.trim().isEmpty) return '';
-    return raw
-        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), ' ')
-        .replaceAll(RegExp(r'</(p|div|li|h[1-6])>', caseSensitive: false), ' ')
-        .replaceAll(RegExp(r'<[^>]+>'), '')
+    // `text` is meant to be plain, but Teams can still embed markup in it,
+    // e.g. `<attachment id="tab::...">` on an "I added a tab" notice. So the
+    // result is always sanitised, whichever field it comes from.
+    final source = text.trim().isNotEmpty ? text : raw;
+    return toPlainText(source);
+  }
+
+  static final RegExp _nonText = RegExp(
+    r'<(script|style)\b[^>]*>.*?</\1>',
+    caseSensitive: false,
+    dotAll: true,
+  );
+  static final RegExp _placeholders = RegExp(
+    r'<(attachment|img)\b[^>]*>(\s*</\1>)?',
+    caseSensitive: false,
+  );
+  static final RegExp _blockBreaks = RegExp(
+    r'<br\s*/?>|</(p|div|li|h[1-6]|tr)>',
+    caseSensitive: false,
+  );
+
+  /// A real tag only: `<` or `</` followed directly by a letter. Plain text
+  /// such as "salary < 500 > 300" does not match and is left intact.
+  static final RegExp _tag = RegExp(r'</?[a-zA-Z][\w:.-]*(?:\s[^<>]*)?/?>');
+
+  /// Converts Teams message markup to a single line of plain text.
+  static String toPlainText(String input) {
+    if (input.trim().isEmpty) return '';
+    var s = input
+        .replaceAll(_nonText, '')
+        // Attachments and images carry no readable text.
+        .replaceAll(_placeholders, ' ')
+        // Keep words from running together across lines and paragraphs.
+        .replaceAll(_blockBreaks, ' ')
+        .replaceAll(_tag, '');
+    // Decode entities only after tags are gone, so an escaped "&lt;b&gt;"
+    // the author typed shows as "<b>" instead of being stripped as a tag.
+    s = s
         .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')
         .replaceAll('&quot;', '"')
         .replaceAll('&#39;', "'")
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
+        .replaceAll('&apos;', "'")
+        .replaceAllMapped(RegExp(r'&#(\d+);'), (m) {
+          final code = int.tryParse(m.group(1)!);
+          // Out-of-range code points would throw; keep them as written.
+          return (code == null || code > 0x10FFFF)
+              ? m.group(0)!
+              : String.fromCharCode(code);
+        })
+        // &amp; last, so "&amp;lt;" becomes the literal text "&lt;".
+        .replaceAll('&amp;', '&');
+    return s.replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 }
 

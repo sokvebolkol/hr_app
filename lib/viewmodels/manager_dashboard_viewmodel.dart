@@ -92,6 +92,7 @@ class ManagerDashboardViewModel extends ChangeNotifier {
   /// Reloads using the month filter already in effect, so a pull-to-refresh
   /// does not silently reset the view back to "All".
   Future<void> refresh() async {
+    if (_isLoading) return; // reuse the load already in flight
     await loadAttendanceSummary(month: _selectedMonth);
   }
 

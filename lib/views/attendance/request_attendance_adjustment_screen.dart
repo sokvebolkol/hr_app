@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../constants/constant.dart';
 import '../../models/attendance_adjustment_model.dart';
 import '../../repositories/attendance_repository.dart';
+import '../../services/dashboard_refresh_signal.dart';
 import '../../utils/file_helper.dart';
 import '../../widgets/custom_alert_dialog.dart';
 import '../../widgets/horizontal_approver_flow.dart';
@@ -1249,6 +1250,9 @@ class _RequestAttendanceAdjustmentScreenState
               : 'Failed to submit request');
 
       if (success) {
+        // Home shows recent adjustment requests; reload it.
+        DashboardRefreshSignal.instance.notifyDataChanged();
+
         // Show success dialog
         await CustomAlertDialog.show(
           context,

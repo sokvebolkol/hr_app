@@ -6,6 +6,7 @@ import '../constants/constant.dart';
 import '../models/leave_type_model.dart';
 import '../models/approver_model.dart';
 import '../repositories/leave_request_repository.dart';
+import '../services/dashboard_refresh_signal.dart';
 
 class LeaveRequestViewModel extends ChangeNotifier {
   final LeaveRequestRepository _repository = LeaveRequestRepository();
@@ -215,6 +216,10 @@ class LeaveRequestViewModel extends ChangeNotifier {
 
       _isSubmitting = false;
       notifyListeners();
+      if (response.success) {
+        // Home shows leave balance and recent requests; reload it.
+        DashboardRefreshSignal.instance.notifyDataChanged();
+      }
       return response;
     } catch (e) {
       _isSubmitting = false;

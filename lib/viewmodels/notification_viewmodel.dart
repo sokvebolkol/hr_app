@@ -29,29 +29,65 @@ class NotificationViewModel extends ChangeNotifier {
   String? _selectedType;
   bool? _selectedReadStatus;
 
-  // Timer for periodic updates
+  // Unread-count polling. One timer only; a tick is skipped while the
+  // previous request is still running; polling pauses in background.
+  static const Duration _pollInterval = Duration(minutes: 2);
   Timer? _timer;
+  bool _pollingRequested = false;
+  bool _unreadInFlight = false;
+  bool _observingLifecycle = false;
+  late final _NotificationLifecycleObserver _lifecycleObserver =
+      _NotificationLifecycleObserver(this);
 
+  /// Starts polling (idempotent). Fetches once now, then every 2 minutes.
   void startPeriodicUnreadCountUpdate() {
-    fetchUnreadCount(); // Initial fetch
-
-    _timer = Timer.periodic(const Duration(minutes: 2), (_) {
-      fetchUnreadCount();
-    });
+    _pollingRequested = true;
+    if (!_observingLifecycle) {
+      WidgetsBinding.instance.addObserver(_lifecycleObserver);
+      _observingLifecycle = true;
+    }
+    _startTimer(fetchNow: true);
   }
 
   void stopPeriodicUnreadCountUpdate() {
+    _pollingRequested = false;
     _timer?.cancel();
     _timer = null;
+    if (_observingLifecycle) {
+      WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+      _observingLifecycle = false;
+    }
+  }
+
+  void _startTimer({required bool fetchNow}) {
+    _timer?.cancel(); // never more than one timer
+    if (fetchNow) fetchUnreadCount();
+    _timer = Timer.periodic(_pollInterval, (_) => fetchUnreadCount());
+  }
+
+  void _onLifecycleChanged(AppLifecycleState state) {
+    if (!_pollingRequested) return;
+    if (state == AppLifecycleState.resumed) {
+      if (_timer == null) _startTimer(fetchNow: true);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   Future<void> fetchUnreadCount() async {
+    if (_unreadInFlight) return; // previous call still running
+    _unreadInFlight = true;
     try {
       final response = await _repository.getUnreadCount();
       _unreadCount = response.unreadCount;
       notifyListeners();
     } catch (e) {
       // Don't show error to user for background updates
+    } finally {
+      _unreadInFlight = false;
     }
   }
 
@@ -231,5 +267,15 @@ class NotificationViewModel extends ChangeNotifier {
   void dispose() {
     stopPeriodicUnreadCountUpdate();
     super.dispose();
+  }
+}
+
+class _NotificationLifecycleObserver with WidgetsBindingObserver {
+  _NotificationLifecycleObserver(this._owner);
+  final NotificationViewModel _owner;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _owner._onLifecycleChanged(state);
   }
 }

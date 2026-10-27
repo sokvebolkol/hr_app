@@ -13,10 +13,49 @@ import '../utils/exceptions.dart';
 class AnnouncementRepository {
   final ServerService _serverService = ServerService();
 
-  /// Chokchey Finance. Fixed because the feed is a single company team.
-  static const String teamId = '23550c47-751a-4881-b59f-278ff7a8cb40';
+  /// Teams whose channels make up the feed. The first is Chokchey Finance.
+  static const List<String> teamIds = [
+    '23550c47-751a-4881-b59f-278ff7a8cb40',
+    '03bc38e3-7843-48d1-abd4-7d14b7d5fd7f',
+  ];
 
-  String get _base => '${_serverService.baseUrl}teams/$teamId';
+  /// Which team owns each channel, learned from every channel, message and
+  /// unread count fetched. Static so all repository instances share it.
+  static final Map<String, String> _teamByChannel = {};
+
+  String _base(String teamId) => '${_serverService.baseUrl}teams/$teamId';
+
+  void _remember(String channelId, String teamId) {
+    if (channelId.isNotEmpty) _teamByChannel[channelId] = teamId;
+  }
+
+  /// The team owning [channelId], or the first team if not yet known.
+  String _teamFor(String channelId) =>
+      _teamByChannel[channelId] ?? teamIds.first;
+
+  /// Runs [call] against every team at once. A team that fails (e.g. the user
+  /// is not a member) is skipped; the error is rethrown only if all fail.
+  Future<List<T>> _acrossTeams<T>(
+    Future<T> Function(String teamId) call,
+  ) async {
+    final ok = <T>[];
+    Object? firstError;
+    StackTrace? firstStack;
+    await Future.wait(
+      teamIds.map((teamId) async {
+        try {
+          ok.add(await call(teamId));
+        } catch (e, st) {
+          firstError ??= e;
+          firstStack ??= st;
+        }
+      }),
+    );
+    if (ok.isEmpty && firstError != null) {
+      Error.throwWithStackTrace(firstError!, firstStack!);
+    }
+    return ok;
+  }
 
   Future<String> _token() async {
     final prefs = await SharedPreferences.getInstance();
@@ -103,6 +142,9 @@ class AnnouncementRepository {
   ///
   /// [status] is `all`, `unread` or `read`. [channelId] filters to one
   /// channel; it contains `:` and `@` so it is URL-encoded by [Uri].
+  ///
+  /// Without a channel, page [page] is fetched from every team and merged
+  /// newest first; the meta sums totals and keeps the furthest last page.
   Future<AnnouncementPage> getMessages({
     String? channelId,
     String status = 'all',
@@ -118,40 +160,87 @@ class AnnouncementRepository {
       if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
     };
 
-    // Uri.replace percent-encodes the channel_id value for us.
-    final uri = Uri.parse('$_base/messages').replace(queryParameters: query);
+    Future<AnnouncementPage> fetch(String teamId) async {
+      // Uri.replace percent-encodes the channel_id value for us.
+      final uri = Uri.parse(
+        '${_base(teamId)}/messages',
+      ).replace(queryParameters: query);
 
-    final response = await HttpService.getAllowingErrors(
-      url: uri.toString(),
-      headers: await _headers(),
-    );
-    final body = _decode(response);
+      final response = await HttpService.getAllowingErrors(
+        url: uri.toString(),
+        headers: await _headers(),
+      );
+      final body = _decode(response);
+      final items = _list(body).map(AnnouncementMessage.fromJson).toList();
+      for (final m in items) {
+        _remember(m.channelId, teamId);
+      }
+      return AnnouncementPage(
+        items: items,
+        meta: AnnouncementMeta.fromJson(_meta(body)),
+      );
+    }
 
+    if (channelId != null && channelId.isNotEmpty) {
+      return fetch(_teamFor(channelId));
+    }
+
+    final pages = await _acrossTeams(fetch);
+    final items = [for (final p in pages) ...p.items]..sort((a, b) {
+      final at = a.createdAt, bt = b.createdAt;
+      if (at == null || bt == null) return at == null ? 1 : -1;
+      return bt.compareTo(at);
+    });
     return AnnouncementPage(
-      items: _list(body).map(AnnouncementMessage.fromJson).toList(),
-      meta: AnnouncementMeta.fromJson(_meta(body)),
+      items: items,
+      meta: AnnouncementMeta(
+        currentPage: page,
+        lastPage: pages.fold(
+          page,
+          (max, p) => p.meta.lastPage > max ? p.meta.lastPage : max,
+        ),
+        total: pages.fold(0, (sum, p) => sum + p.meta.total),
+        unreadCount: pages.fold(0, (sum, p) => sum + p.meta.unreadCount),
+      ),
     );
   }
 
   // ────────────────────────── 2. Unread count ────────────────────────────
 
-  /// GET /teams/{teamId}/messages/unread-count
+  /// GET /teams/{teamId}/messages/unread-count, summed across teams.
   Future<UnreadCountResult> getUnreadCount({String? channelId}) async {
     final query = <String, String>{
       if (channelId != null && channelId.isNotEmpty) 'channel_id': channelId,
     };
-    final uri = Uri.parse(
-      '$_base/messages/unread-count',
-    ).replace(queryParameters: query.isEmpty ? null : query);
 
-    final response = await HttpService.getAllowingErrors(
-      url: uri.toString(),
-      headers: await _headers(),
-    );
-    final body = _decode(response);
-    final data = body['data'];
-    return UnreadCountResult.fromJson(
-      data is Map<String, dynamic> ? data : body,
+    Future<UnreadCountResult> fetch(String teamId) async {
+      final uri = Uri.parse(
+        '${_base(teamId)}/messages/unread-count',
+      ).replace(queryParameters: query.isEmpty ? null : query);
+
+      final response = await HttpService.getAllowingErrors(
+        url: uri.toString(),
+        headers: await _headers(),
+      );
+      final body = _decode(response);
+      final data = body['data'];
+      final result = UnreadCountResult.fromJson(
+        data is Map<String, dynamic> ? data : body,
+      );
+      for (final c in result.byChannel) {
+        _remember(c.id, teamId);
+      }
+      return result;
+    }
+
+    if (channelId != null && channelId.isNotEmpty) {
+      return fetch(_teamFor(channelId));
+    }
+
+    final results = await _acrossTeams(fetch);
+    return UnreadCountResult(
+      totalUnread: results.fold(0, (sum, r) => sum + r.totalUnread),
+      byChannel: [for (final r in results) ...r.byChannel],
     );
   }
 
@@ -162,14 +251,16 @@ class AnnouncementRepository {
     required String channelId,
     required List<String> messageIds,
   }) async {
-    final response = await http.post(
-      Uri.parse('$_base/messages/$path'),
-      headers: await _headers(),
-      body: json.encode({
-        'channel_id': channelId,
-        'message_ids': messageIds,
-      }),
-    );
+    final response = await http
+        .post(
+          Uri.parse('${_base(_teamFor(channelId))}/messages/$path'),
+          headers: await _headers(),
+          body: json.encode({
+            'channel_id': channelId,
+            'message_ids': messageIds,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
     _decode(response);
   }
 
@@ -197,29 +288,45 @@ class AnnouncementRepository {
 
   /// POST /teams/{teamId}/messages/read-all
   ///
-  /// Sends `{channel_id: ...}` to clear one channel, or `{}` for every
-  /// channel.
+  /// Sends `{channel_id: ...}` to the owning team to clear one channel, or
+  /// `{}` to every team to clear all channels.
   Future<void> markAllRead({String? channelId}) async {
-    final response = await http.post(
-      Uri.parse('$_base/messages/read-all'),
-      headers: await _headers(),
-      body: json.encode(
-        channelId == null || channelId.isEmpty ? {} : {'channel_id': channelId},
-      ),
-    );
-    _decode(response);
+    Future<void> post(String teamId, Map<String, String> payload) async {
+      final response = await http
+          .post(
+            Uri.parse('${_base(teamId)}/messages/read-all'),
+            headers: await _headers(),
+            body: json.encode(payload),
+          )
+          .timeout(const Duration(seconds: 15));
+      _decode(response);
+    }
+
+    if (channelId != null && channelId.isNotEmpty) {
+      await post(_teamFor(channelId), {'channel_id': channelId});
+      return;
+    }
+    await _acrossTeams((teamId) => post(teamId, {}));
   }
 
   // ───────────────────────────── 6. Channels ─────────────────────────────
 
-  /// GET /teams/{teamId}/channels — used for the filter chips.
+  /// GET /teams/{teamId}/channels for every team — used for the filter
+  /// chips.
   Future<List<AnnouncementChannel>> getChannels() async {
-    final response = await HttpService.getAllowingErrors(
-      url: '$_base/channels',
-      headers: await _headers(),
-    );
-    final body = _decode(response);
-    return _list(body).map(AnnouncementChannel.fromJson).toList();
+    final lists = await _acrossTeams((teamId) async {
+      final response = await HttpService.getAllowingErrors(
+        url: '${_base(teamId)}/channels',
+        headers: await _headers(),
+      );
+      final body = _decode(response);
+      final channels = _list(body).map(AnnouncementChannel.fromJson).toList();
+      for (final c in channels) {
+        _remember(c.id, teamId);
+      }
+      return channels;
+    });
+    return [for (final l in lists) ...l];
   }
 }
 

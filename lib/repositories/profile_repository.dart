@@ -5,26 +5,75 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile_model.dart';
 import '../services/global_service.dart';
 import '../services/announcement_unread_service.dart';
+import '../services/http_service.dart';
 
 class ProfileRepository {
   final ServerService _serverService = ServerService();
 
-  // Get user profile from API
-  Future<UserProfile?> getUserProfile() async {
+  // Profile cache shared by every ProfileRepository instance, so Home,
+  // detail screens and re-mounted dashboards reuse one response. It is keyed
+  // by server + user + token, so logging in as someone else, a new token or
+  // an environment switch never reads a stale entry.
+  static UserProfile? _cachedProfile;
+  static String? _cacheKey;
+  static Future<UserProfile?>? _inFlight;
+  static String? _inFlightKey;
+
+  /// Drops the cached profile. Called on logout.
+  static void clearCache() {
+    _cachedProfile = null;
+    _cacheKey = null;
+    _inFlight = null;
+    _inFlightKey = null;
+  }
+
+  /// Returns the user profile.
+  ///
+  /// Served from cache unless [forceRefresh] is true (pull-to-refresh or
+  /// after a profile edit). Concurrent calls share one request. Returns null
+  /// on failure and keeps any previously cached profile.
+  Future<UserProfile?> getUserProfile({bool forceRefresh = false}) async {
     try {
       SharedPreferences pref = await SharedPreferences.getInstance();
       final userId = pref.getString("userId");
       final token = pref.getString("token");
 
-      if (userId == null) {
-        throw Exception('User ID not found in local storage');
+      if (userId == null || token == null) return null;
+
+      final key = '${_serverService.baseUrl}|$userId|$token';
+
+      if (!forceRefresh && _cacheKey == key && _cachedProfile != null) {
+        return _cachedProfile;
       }
 
-      if (token == null) {
-        throw Exception('Token not found in local storage');
+      final running = _inFlight;
+      if (running != null && _inFlightKey == key) return await running;
+
+      final request = _fetchProfile(userId, token);
+      _inFlight = request;
+      _inFlightKey = key;
+      try {
+        final profile = await request;
+        if (profile != null) {
+          _cachedProfile = profile;
+          _cacheKey = key;
+        }
+        return profile ?? (_cacheKey == key ? _cachedProfile : null);
+      } finally {
+        if (identical(_inFlight, request)) {
+          _inFlight = null;
+          _inFlightKey = null;
+        }
       }
-      final response = await http.get(
-        Uri.parse('${_serverService.baseUrl}user/profile/$userId'),
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<UserProfile?> _fetchProfile(String userId, String token) async {
+    try {
+      final response = await HttpService.getAllowingErrors(
+        url: '${_serverService.baseUrl}user/profile/$userId',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -35,13 +84,10 @@ class ProfileRepository {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return UserProfile.fromJson(data);
-      } else {
-        throw Exception('Failed to fetch user profile: ${response.statusCode}');
       }
-    } catch (e) {
-      // Remove print statement to avoid redundancy
       return null;
-      // throw Exception('Error fetching profile: $e');
+    } catch (e) {
+      return null;
     }
   }
 
@@ -80,6 +126,9 @@ class ProfileRepository {
       if (response.statusCode == 200) {
         final respStr = await response.stream.bytesToString();
         final data = json.decode(respStr);
+
+        // The cached profile now has a stale image; next read refetches.
+        clearCache();
 
         return ProfileUploadResult(
           success: true,
@@ -125,7 +174,7 @@ class ProfileRepository {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
           },
-        );
+        ).timeout(const Duration(seconds: 15));
 
         // Log the response for debugging (optional)
         print('Logout response: ${response.statusCode}');
@@ -151,6 +200,7 @@ class ProfileRepository {
       // Drop the Teams read markers so the next user on this device does
       // not inherit the previous user's badge state.
       await AnnouncementUnreadService.instance.reset();
+      clearCache();
     }
   }
 }

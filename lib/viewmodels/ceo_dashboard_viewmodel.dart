@@ -71,6 +71,7 @@ class CeoDashboardViewModel extends ChangeNotifier {
 
   // Refresh data
   Future<void> refresh() async {
+    if (_isLoading) return; // reuse the load already in flight
     await loadAttendanceSummary();
   }
 

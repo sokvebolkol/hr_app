@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:provider/provider.dart';
 import '../../constants/constant.dart';
-import '../../utils/error_handler.dart';
 import '../../viewmodels/dashboardviewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/leave_balance_viewmodel.dart';
@@ -35,6 +34,7 @@ import '../../localization/language_logic.dart';
 import '../notifications/manager_notifcation_screen.dart';
 import '../notifications/requester_notification_screen.dart';
 import '../birthday_screen.dart';
+import '../../services/dashboard_refresh_signal.dart';
 
 class RequesterDashboardScreen extends StatefulWidget {
   final bool hideBottomNav;
@@ -80,6 +80,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     _currentIndex = widget.initialIndex;
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
+    DashboardRefreshSignal.instance.addListener(_onDashboardDataChanged);
     _dashboardViewModel = DashboardViewModel();
     _dashboardViewModel.initialize();
     // _dashboardViewModel.initialize().then((_) => _checkAndShowBirthday());
@@ -290,19 +291,32 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                     });
                   }
 
-                  // Error handling
+                  // Error handling. Nothing retries automatically; the user
+                  // taps Retry. No data yet: full-screen error with Retry.
+                  // Data already shown (e.g. pull-to-refresh failed): one
+                  // snackbar with Retry, then the error is cleared so it is
+                  // not shown again on the next rebuild.
                   if (viewModel.errorMessage != null) {
+                    if (viewModel.user == null) {
+                      return _buildLoadError(viewModel);
+                    }
+                    final message = viewModel.errorMessage!;
+                    viewModel.clearErrorSilently();
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      ErrorHandler.showErrorDialog(
-                        context,
-                        message: viewModel.errorMessage!,
-                        onRetry: () {
-                          _dashboardViewModel.fetchDashboard();
-                        },
-                        onDismiss: () {
-                          viewModel.clearError();
-                        },
-                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text(message),
+                            backgroundColor: Colors.red,
+                            action: SnackBarAction(
+                              label: language.retry,
+                              textColor: Colors.white,
+                              onPressed: () => _dashboardViewModel.refresh(),
+                            ),
+                          ),
+                        );
                     });
                   }
 
@@ -540,23 +554,93 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     }
   }
 
+  /// A leave request or attendance adjustment was submitted elsewhere;
+  /// reload Home quietly so it is current when the user comes back.
+  void _onDashboardDataChanged() {
+    if (mounted) _dashboardViewModel.silentRefresh();
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    DashboardRefreshSignal.instance.removeListener(
+      _onDashboardDataChanged,
+    );
     ProfileViewModel.onProfileUpdated = null; // Clean up callback
     _dashboardViewModel.dispose();
     super.dispose();
   }
 
+  /// Full-screen error shown when the first Home load fails.
+  Widget _buildLoadError(DashboardViewModel viewModel) {
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.cloud_off_rounded,
+                  size: 48,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                language.somethingWentWrong,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                viewModel.errorMessage ?? '',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed:
+                    viewModel.isLoading
+                        ? null
+                        : () => _dashboardViewModel.fetchDashboard(
+                          forceRefresh: true,
+                        ),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(language.retry),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
-    // Refresh profile data when app resumes (user might have updated profile in another part of the app)
-    if (state == AppLifecycleState.resumed &&
-        (_currentIndex == 0 || widget.hideBottomNav)) {
-      _dashboardViewModel.refreshProfile();
-    }
+    // The profile is cached; it is refetched only on pull-to-refresh or
+    // after a profile edit (see ProfileViewModel.onProfileUpdated).
   }
 
   // Open the Leave Request form when the landing screen preference is set to
@@ -653,12 +737,6 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
     super.initState();
     _initializeLanguage();
     _tabController = TabController(length: 2, vsync: this);
-
-    // Refresh profile data when dashboard content is first created
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = Provider.of<DashboardViewModel>(context, listen: false);
-      viewModel.refreshProfile();
-    });
   }
 
   @override

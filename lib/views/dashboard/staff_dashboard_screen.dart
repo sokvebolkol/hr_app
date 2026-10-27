@@ -30,6 +30,7 @@ import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../menu/menu_screen.dart';
 import '../notifications/manager_notifcation_screen.dart';
 import '../profile/profile_screen.dart';
+import '../../services/dashboard_refresh_signal.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToMenu;
@@ -63,6 +64,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    DashboardRefreshSignal.instance.addListener(_onDashboardDataChanged);
     _dashboardViewModel = DashboardViewModel();
     _managerDashboardViewModel = ManagerDashboardViewModel();
     _initializeLanguage();
@@ -335,15 +337,25 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                 });
               }
 
+              // One snackbar per error, with a manual Retry (no auto-retry).
               if (dashboardViewModel.errorMessage != null) {
+                final message = dashboardViewModel.errorMessage!;
+                dashboardViewModel.clearErrorSilently();
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(dashboardViewModel.errorMessage!),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  dashboardViewModel.clearError();
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(message),
+                        backgroundColor: Colors.red,
+                        action: SnackBarAction(
+                          label: language.retry,
+                          textColor: Colors.white,
+                          onPressed: () => dashboardViewModel.refresh(),
+                        ),
+                      ),
+                    );
                 });
               }
 
@@ -528,9 +540,18 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
     }
   }
 
+  /// A leave request or attendance adjustment was submitted elsewhere;
+  /// reload Home quietly so it is current when the user comes back.
+  void _onDashboardDataChanged() {
+    if (mounted) _dashboardViewModel.silentRefresh();
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    DashboardRefreshSignal.instance.removeListener(
+      _onDashboardDataChanged,
+    );
     ProfileViewModel.onProfileUpdated = null;
     _dashboardViewModel.dispose();
     _managerDashboardViewModel.dispose();
@@ -542,7 +563,6 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed && _currentIndex == 0) {
-      _dashboardViewModel.refreshProfile();
       _managerDashboardViewModel.refresh();
     }
   }
@@ -605,8 +625,8 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
     _progressAnimationController.forward();
 
     // Refresh data when dashboard content is first created
+    // (skipped automatically while the first load is still running)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.dashboardViewModel.refreshProfile();
       widget.managerViewModel.refresh();
     });
   }
