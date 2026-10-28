@@ -9,8 +9,10 @@ import '../../viewmodels/notification_viewmodel.dart';
 import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../../widgets/announcement_badge_tab_label.dart';
+import '../../widgets/notification_tab_label.dart';
 import '../../services/announcement_unread_service.dart';
 import '../announcements/announcement_list_screen.dart';
+import '../announcements/announcement_notification_router.dart';
 
 class RequesterNotificationScreen extends StatefulWidget {
   const RequesterNotificationScreen({super.key});
@@ -337,14 +339,9 @@ class _RequesterNotificationScreenState
               tabAlignment: TabAlignment.fill,
               tabs: [
                 Tab(
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    alignment: Alignment.center,
-                    child: Text(
-                      language.notifications,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  child: NotificationTabLabel(
+                    label: language.notifications,
+                    count: _leaveStatusNotifications.where((n) => !n.isRead).length,
                   ),
                 ),
                 Tab(
@@ -549,23 +546,25 @@ class _RequesterNotificationScreenState
             _isNavigating = true;
   
             try {
-              // Show loading indicator
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: SpinKitFadingCircle(size: 16, color: primary),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(language.openingLeaveRequest),
-                    ],
+              // Show loading indicator (leave notifications only)
+              if (!AnnouncementNotificationRouter.handles(notification)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: SpinKitFadingCircle(size: 16, color: primary),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(language.openingLeaveRequest),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 1),
                   ),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
+                );
+              }
   
               final success = await viewModel.markAsRead(notification.id);
   
@@ -606,6 +605,12 @@ class _RequesterNotificationScreenState
 
   // Handle leave status notification tap
   void _handleLeaveStatusTap(NotificationModel notification) {
+    // Announcements and Teams join requests have their own screens.
+    if (AnnouncementNotificationRouter.open(context, notification)) {
+      _isNavigating = false;
+      return;
+    }
+
     try {
       // Route attendance adjustment notifications to dedicated handler
       if (notification.type == 'attendance_adjustment') {

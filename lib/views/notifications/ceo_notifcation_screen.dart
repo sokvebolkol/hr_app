@@ -8,8 +8,10 @@ import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../widgets/announcement_badge_tab_label.dart';
+import '../../widgets/notification_tab_label.dart';
 import '../../services/announcement_unread_service.dart';
 import '../announcements/announcement_list_screen.dart';
+import '../announcements/announcement_notification_router.dart';
 
 class CeoNotificationScreen extends StatefulWidget {
   const CeoNotificationScreen({super.key});
@@ -337,14 +339,9 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
               tabAlignment: TabAlignment.fill,
               tabs: [
                 Tab(
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    alignment: Alignment.center,
-                    child: Text(
-                      language.notifications,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  child: NotificationTabLabel(
+                    label: language.notifications,
+                    count: _leaveRequestNotifications.where((n) => !n.isRead).length,
                   ),
                 ),
                 Tab(
@@ -525,23 +522,25 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
             _isNavigating = true;
   
             try {
-              // Show loading indicator
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: SpinKitCircle(color: secondary, size: 50.0),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(language.openingLeaveRequest),
-                    ],
+              // Show loading indicator (leave notifications only)
+              if (!AnnouncementNotificationRouter.handles(notification)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: SpinKitCircle(color: secondary, size: 50.0),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(language.openingLeaveRequest),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 1),
                   ),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
+                );
+              }
   
               final success = await viewModel.markAsRead(notification.id);
   
@@ -582,6 +581,12 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
 
   // Handle leave request notification tap
   void _handleLeaveRequestTap(NotificationModel notification) {
+    // Announcements and Teams join requests have their own screens.
+    if (AnnouncementNotificationRouter.open(context, notification)) {
+      _isNavigating = false;
+      return;
+    }
+
     try {
       if (notification.staffLeaveRequest == null) {
         _showErrorDialog('No information available');

@@ -32,6 +32,9 @@ class AnnouncementViewModel extends ChangeNotifier {
   bool _noAccess = false;
   bool _disposed = false;
 
+  /// Requests to join teams this user owns, waiting for an answer.
+  int _pendingJoinRequests = 0;
+
   // Getters
   List<AnnouncementMessage> get messages => List.unmodifiable(_messages);
   List<AnnouncementChannel> get channels => List.unmodifiable(_channels);
@@ -42,6 +45,7 @@ class AnnouncementViewModel extends ChangeNotifier {
   bool get isLoadingMore => _isLoadingMore;
   String? get errorMessage => _errorMessage;
   bool get noAccess => _noAccess;
+  int get pendingJoinRequests => _pendingJoinRequests;
   int get unreadCount => _meta.unreadCount;
   bool get hasMore => _meta.hasMore;
   bool get isEmpty => !_isLoading && _messages.isEmpty && _errorMessage == null;
@@ -71,8 +75,36 @@ class AnnouncementViewModel extends ChangeNotifier {
 
   /// Initial load: channels for the filter chips, then the first page.
   Future<void> initialize() async {
-    await Future.wait([loadChannels(), load()]);
+    await Future.wait([loadChannels(), load(), loadJoinRequestCount()]);
   }
+
+  /// Number of join requests waiting for this user as a team owner. Zero
+  /// for everyone who owns no team; errors are ignored (banner just hides).
+  ///
+  /// If the server does not have the endpoint yet (404), the check is turned
+  /// off until the app restarts, so it is not retried on every refresh.
+  Future<void> loadJoinRequestCount() async {
+    if (_joinRequestsUnsupported) return;
+    try {
+      final rows = await _repository.getIncomingJoinRequests();
+      if (rows.length != _pendingJoinRequests) {
+        _pendingJoinRequests = rows.length;
+        _notify();
+      }
+    } on NotFoundException {
+      _joinRequestsUnsupported = true;
+      if (_pendingJoinRequests != 0) {
+        _pendingJoinRequests = 0;
+        _notify();
+      }
+    } catch (e) {
+      debugPrint('Join request count failed: $e');
+    }
+  }
+
+  /// Set when `GET /teams/join-requests/incoming` returns 404 (route not
+  /// deployed on this server). Static so it holds for the whole launch.
+  static bool _joinRequestsUnsupported = false;
 
   /// The feed shows top-level announcements only; thread replies are
   /// dropped.
@@ -195,6 +227,7 @@ class AnnouncementViewModel extends ChangeNotifier {
       _syncBadge();
       // Keep chip counts fresh too.
       unawaited(AnnouncementUnreadService.instance.refresh());
+      unawaited(loadJoinRequestCount());
     } catch (e) {
       _errorMessage = _describe(e);
       _noAccess = e is AnnouncementForbiddenException;

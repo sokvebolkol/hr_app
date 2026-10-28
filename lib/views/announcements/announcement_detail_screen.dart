@@ -7,6 +7,7 @@ import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../models/announcement_model.dart';
 import '../../widgets/simple_html_text.dart';
+import 'join_team_sheet.dart';
 
 /// Microsoft Teams brand purple, used only for the external "Open in Teams"
 /// action so it reads as leaving the app.
@@ -57,7 +58,20 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   /// Opens the message in the Microsoft Teams app, falling back to the
   /// browser. Always external: an in-app WebView would hit a login wall and
   /// would not hand off to the installed Teams app.
+  ///
+  /// Not a member of the team: shows "Request to join" instead, since Teams
+  /// would only answer "no access".
   Future<void> _openInTeams() async {
+    if (!widget.message.canOpenInTeams) {
+      HapticFeedback.selectionClick();
+      final choice = await JoinTeamSheet.show(
+        context,
+        message: widget.message,
+        language: language,
+      );
+      if (!mounted || choice != JoinTeamSheetResult.openInTeams) return;
+    }
+
     final url = widget.message.webUrl;
     if (url == null || url.trim().isEmpty) {
       _toast(language.linkNotAvailable);
@@ -153,7 +167,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    message.channelName,
+                    message.channelDisplayName,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -346,10 +360,20 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _openInTeams,
-              icon: const Icon(Icons.open_in_new_rounded, size: 18),
-              label: Text(language.openInTeams),
+              icon: Icon(
+                message.canOpenInTeams
+                    ? Icons.open_in_new_rounded
+                    : Icons.group_add_rounded,
+                size: 18,
+              ),
+              label: Text(
+                message.canOpenInTeams
+                    ? language.openInTeams
+                    : language.requestToJoin,
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: teamsPurple,
+                backgroundColor:
+                    message.canOpenInTeams ? teamsPurple : primary,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: Colors.grey.shade300,
                 padding: const EdgeInsets.symmetric(vertical: 14),

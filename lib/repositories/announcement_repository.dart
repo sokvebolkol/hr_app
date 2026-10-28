@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/announcement_model.dart';
+import '../models/team_join_request_model.dart';
 import '../services/global_service.dart';
 import '../services/http_service.dart';
 import '../utils/exceptions.dart';
@@ -327,6 +328,101 @@ class AnnouncementRepository {
       return channels;
     });
     return [for (final l in lists) ...l];
+  }
+}
+
+extension TeamJoinRequestApi on AnnouncementRepository {
+  // ───────────────────────── 7. Request to join ──────────────────────────
+
+  Map<String, dynamic> _dataMap(Map<String, dynamic> body) {
+    final data = body['data'];
+    return data is Map<String, dynamic> ? data : const {};
+  }
+
+  /// The team owning [channelId] (learned from the feed).
+  String teamIdForChannel(String channelId) => _teamFor(channelId);
+
+  /// GET /teams/{teamId}/membership
+  Future<TeamMembership> getMembership({required String channelId}) async {
+    final response = await HttpService.getAllowingErrors(
+      url: '${_base(_teamFor(channelId))}/membership',
+      headers: await _headers(),
+    );
+    return TeamMembership.fromJson(_dataMap(_decode(response)));
+  }
+
+  /// POST /teams/{teamId}/join-requests. Returns the new request, or the
+  /// open one when the user already asked (no duplicate is created).
+  Future<TeamJoinRequest> requestJoin({
+    required String channelId,
+    String? messageId,
+    String? note,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse('${_base(_teamFor(channelId))}/join-requests'),
+          headers: await _headers(),
+          body: json.encode({
+            'channel_id': channelId,
+            if (messageId != null && RegExp(r'^\d{10,20}$').hasMatch(messageId))
+              'message_id': messageId,
+            if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    return TeamJoinRequest.fromJson(_dataMap(_decode(response)));
+  }
+
+  /// DELETE /teams/{teamId}/join-requests/{id} (own pending request only).
+  Future<TeamJoinRequest> cancelJoinRequest(TeamJoinRequest request) async {
+    final teamId =
+        request.teamId.isNotEmpty
+            ? request.teamId
+            : _teamFor(request.channelId ?? '');
+    final response = await http
+        .delete(
+          Uri.parse('${_base(teamId)}/join-requests/${request.id}'),
+          headers: await _headers(),
+        )
+        .timeout(const Duration(seconds: 15));
+    return TeamJoinRequest.fromJson(_dataMap(_decode(response)));
+  }
+
+  /// GET /teams/join-requests/incoming: requests for teams the user owns.
+  /// Empty for users who own no team.
+  Future<List<TeamJoinRequest>> getIncomingJoinRequests({
+    String status = TeamJoinRequest.pending,
+  }) async {
+    final uri = Uri.parse(
+      '${_serverService.baseUrl}teams/join-requests/incoming',
+    ).replace(queryParameters: {'status': status, 'per_page': '100'});
+    final response = await HttpService.getAllowingErrors(
+      url: uri.toString(),
+      headers: await _headers(),
+    );
+    return _list(_decode(response)).map(TeamJoinRequest.fromJson).toList();
+  }
+
+  /// POST /teams/join-requests/{id}/approve or /reject. Returns the API's
+  /// message, e.g. "Approved. The user will be added … within a few minutes."
+  Future<String> decideJoinRequest({
+    required int id,
+    required bool approve,
+    String? note,
+  }) async {
+    final response = await http
+        .post(
+          Uri.parse(
+            '${_serverService.baseUrl}teams/join-requests/$id/'
+            '${approve ? 'approve' : 'reject'}',
+          ),
+          headers: await _headers(),
+          body: json.encode({
+            if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    return _decode(response)['message']?.toString() ?? '';
   }
 }
 

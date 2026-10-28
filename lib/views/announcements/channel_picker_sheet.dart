@@ -76,7 +76,7 @@ class _ChannelPickerSheetState extends State<ChannelPickerSheet> {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return widget.channels;
     return widget.channels
-        .where((c) => c.name.toLowerCase().contains(q))
+        .where((c) => c.displayName.toLowerCase().contains(q))
         .toList();
   }
 
@@ -283,9 +283,9 @@ class _ChannelPickerSheetState extends State<ChannelPickerSheet> {
     final count =
         isAll ? unread.totalUnread : unread.unreadForChannel(channel.id);
     final initial =
-        channel.name.trim().isEmpty
+        channel.displayName.isEmpty
             ? '#'
-            : channel.name.trim().characters.first.toUpperCase();
+            : channel.displayName.characters.first.toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
@@ -340,7 +340,7 @@ class _ChannelPickerSheetState extends State<ChannelPickerSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    channel.name,
+                    channel.displayName,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight:

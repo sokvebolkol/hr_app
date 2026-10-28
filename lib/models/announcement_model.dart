@@ -44,6 +44,15 @@ class AnnouncementMeta {
   bool get hasMore => currentPage < lastPage;
 }
 
+/// Strips the ordering prefix Teams channels use, e.g. "1. Notice (HR
+/// Movement)" becomes "Notice (HR Movement)". Names without a numeric prefix
+/// are returned unchanged; a name that is only a number is kept as is.
+String cleanChannelName(String name) {
+  final trimmed = name.trim();
+  final cleaned = trimmed.replaceFirst(RegExp(r'^\d+\s*[.)\-:]\s*'), '');
+  return cleaned.isEmpty ? trimmed : cleaned;
+}
+
 /// A channel, used for the filter chips.
 class AnnouncementChannel {
   final String id;
@@ -68,6 +77,9 @@ class AnnouncementChannel {
             '',
         unread: _toInt(json['unread']),
       );
+
+  /// Name for display, without the "1. " ordering prefix.
+  String get displayName => cleanChannelName(name);
 
   AnnouncementChannel copyWith({int? unread}) =>
       AnnouncementChannel(id: id, name: name, unread: unread ?? this.unread);
@@ -308,6 +320,11 @@ class AnnouncementMessage {
   /// Mirrors Microsoft Teams' `replyToId`, which is only set on replies.
   final String? replyToId;
 
+  /// False when the user is not a member of the Teams team: Teams would only
+  /// show "no access", so the app offers "Request to join" instead. The API
+  /// sends true (or nothing) when membership is unknown.
+  final bool canOpenInTeams;
+
   const AnnouncementMessage({
     required this.id,
     this.channelId = '',
@@ -326,6 +343,7 @@ class AnnouncementMessage {
     this.lastEditedAt,
     this.deletedAt,
     this.replyToId,
+    this.canOpenInTeams = true,
   });
 
   factory AnnouncementMessage.fromJson(Map<String, dynamic> json) {
@@ -356,11 +374,16 @@ class AnnouncementMessage {
       lastEditedAt: _toDate(json['last_edited_at']),
       deletedAt: _toDate(json['deleted_at']),
       replyToId: _nonEmpty(json['reply_to_id']),
+      canOpenInTeams: json['can_open_in_teams'] != false,
     );
   }
 
   /// Used for optimistic read/unread updates so the list does not reload.
-  AnnouncementMessage copyWith({bool? isRead, DateTime? readAt}) =>
+  AnnouncementMessage copyWith({
+    bool? isRead,
+    DateTime? readAt,
+    bool? canOpenInTeams,
+  }) =>
       AnnouncementMessage(
         id: id,
         channelId: channelId,
@@ -379,6 +402,7 @@ class AnnouncementMessage {
         lastEditedAt: lastEditedAt,
         deletedAt: deletedAt,
         replyToId: replyToId,
+        canOpenInTeams: canOpenInTeams ?? this.canOpenInTeams,
       );
 
   bool get hasAttachments => attachments.isNotEmpty;
@@ -402,11 +426,14 @@ class AnnouncementMessage {
   String get senderInitial =>
       senderName.trim().isEmpty ? '?' : senderName.trim()[0].toUpperCase();
 
+  /// Channel name for display, without the "1. " ordering prefix.
+  String get channelDisplayName => cleanChannelName(channelName);
+
   /// Title line: the subject when present, otherwise the channel name.
   String get title =>
       (subject != null && subject!.trim().isNotEmpty)
           ? subject!.trim()
-          : channelName;
+          : channelDisplayName;
 }
 
 /// A page of announcements plus its meta.

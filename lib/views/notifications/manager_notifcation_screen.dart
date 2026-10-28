@@ -11,8 +11,10 @@ import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../../widgets/announcement_badge_tab_label.dart';
+import '../../widgets/notification_tab_label.dart';
 import '../../services/announcement_unread_service.dart';
 import '../announcements/announcement_list_screen.dart';
+import '../announcements/announcement_notification_router.dart';
 
 class ManagerNotificationScreen extends StatefulWidget {
   const ManagerNotificationScreen({super.key});
@@ -24,7 +26,11 @@ class ManagerNotificationScreen extends StatefulWidget {
 
 class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  late ScrollController _scrollController;
+  // One controller per list: the Personal and Staff lists can both be
+  // attached while swiping between tabs, and a ScrollController must not
+  // be shared by two scroll views at once.
+  late final ScrollController _personalScrollController;
+  late final ScrollController _staffScrollController;
   late TabController _tabController;
 
   // Cache filtered notifications - updated to only handle Leave Request and Leave Approval
@@ -42,8 +48,14 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
+    _personalScrollController = ScrollController();
+    _personalScrollController.addListener(
+      () => _onScroll(_personalScrollController),
+    );
+    _staffScrollController = ScrollController();
+    _staffScrollController.addListener(
+      () => _onScroll(_staffScrollController),
+    );
     // 3 tabs: Personal, Staff Member, Announcement.
     _tabController = TabController(length: 3, vsync: this);
     _initializeLanguage();
@@ -122,9 +134,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     }
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+  void _onScroll(ScrollController controller) {
+    if (!controller.hasClients) return;
+    if (controller.position.pixels >=
+        controller.position.maxScrollExtent - 200) {
       _loadMoreNotifications();
     }
   }
@@ -145,7 +158,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _personalScrollController.dispose();
+    _staffScrollController.dispose();
     _tabController.dispose();
     _isNavigating = false; // Reset navigation flag
     super.dispose();
@@ -303,7 +317,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                         // Show count badge if there are unread notifications
                         Consumer<NotificationViewModel>(
                           builder: (context, viewModel, child) {
-                            final unreadCount = viewModel.summary!.unread;
+                            final unreadCount = viewModel.summary?.unread ?? 0;
 
                             if (unreadCount > 0) {
                               return Container(
@@ -371,39 +385,15 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
               tabAlignment: TabAlignment.fill,
               tabs: [
                 Tab(
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            language.personal,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: NotificationTabLabel(
+                    label: language.personal,
+                    count: _leaveRequestNotifications.where((n) => !n.isRead).length,
                   ),
                 ),
                 Tab(
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            language.staffMember,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: NotificationTabLabel(
+                    label: language.staffMember,
+                    count: _leaveApprovalNotifications.where((n) => !n.isRead).length,
                   ),
                 ),
                 Tab(
@@ -453,7 +443,10 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         return RefreshIndicator(
           onRefresh: _refreshNotifications,
           child: ListView.builder(
-            controller: _scrollController,
+            controller:
+                tabType == 'leave_request'
+                    ? _personalScrollController
+                    : _staffScrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(
               top: 8,
@@ -515,6 +508,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
         clipBehavior: Clip.antiAlias,
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: _buildStatusIcon(notification),
           title: Row(
             children: [
               Expanded(
@@ -605,6 +599,49 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     );
   }
 
+  /// Leading icon coloured by what happened: approved, rejected, new
+  /// request or reminder. Attendance items use a clock-style icon.
+  Widget _buildStatusIcon(NotificationModel notification) {
+    final action = notification.data['action']?.toString() ?? '';
+    final isAttendance = notification.type == 'attendance_adjustment';
+
+    IconData icon;
+    Color color;
+    switch (action) {
+      case 'approved':
+        icon = Icons.check_circle_outline_rounded;
+        color = Colors.green.shade600;
+        break;
+      case 'rejected':
+        icon = Icons.cancel_outlined;
+        color = Colors.red.shade600;
+        break;
+      case 'reminder':
+        icon = Icons.alarm_rounded;
+        color = Colors.amber.shade800;
+        break;
+      case 'new_request':
+        icon =
+            isAttendance
+                ? Icons.more_time_rounded
+                : Icons.event_note_rounded;
+        color = Colors.blue.shade600;
+        break;
+      default:
+        icon = Icons.notifications_outlined;
+        color = Colors.grey.shade600;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: color, size: 26),
+    );
+  }
+
   // Handle attendance adjustment notification tap
   void _handleAttendanceAdjustmentNotificationTap(
     NotificationModel notification,
@@ -652,6 +689,12 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
   // Handle leave notification tap (works for both request and approval)
   void _handleLeaveNotificationTap(NotificationModel notification) {
+    // Announcements and Teams join requests have their own screens.
+    if (AnnouncementNotificationRouter.open(context, notification)) {
+      _isNavigating = false;
+      return;
+    }
+
     try {
       final action = notification.data['action']?.toString() ?? '';
 

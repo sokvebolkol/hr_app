@@ -12,6 +12,8 @@ import '../../models/announcement_model.dart';
 import '../../viewmodels/announcement_viewmodel.dart';
 import 'announcement_detail_screen.dart';
 import 'channel_picker_sheet.dart';
+import 'join_requests_screen.dart';
+import 'join_team_sheet.dart';
 
 /// Announcement feed: every channel's messages for Chokchey Finance.
 ///
@@ -92,11 +94,31 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
   /// list updates in place while Teams opens. If the message has no link, or
   /// the launcher cannot open it, the in-app detail screen is used instead
   /// so the tap is never a dead end.
+  ///
+  /// When the user is not a member of the post's team, Teams would only show
+  /// "no access", so the "Request to join" sheet is shown instead.
   Future<void> _openMessage(
     AnnouncementViewModel vm,
     AnnouncementMessage message,
   ) async {
     vm.markRead(message);
+
+    if (!message.canOpenInTeams) {
+      HapticFeedback.selectionClick();
+      final choice = await JoinTeamSheet.show(
+        context,
+        message: message,
+        language: language,
+      );
+      if (!mounted || choice == null) return;
+      if (choice == JoinTeamSheetResult.viewInApp) {
+        await _openDetail(message);
+        return;
+      }
+      // The user became a member since the feed loaded: refresh the flags
+      // and open Teams below.
+      vm.refresh();
+    }
 
     final url = message.webUrl?.trim();
     final uri = (url == null || url.isEmpty) ? null : Uri.tryParse(url);
@@ -117,12 +139,25 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
     }
 
     if (!mounted) return;
-    await Navigator.push(
+    await _openDetail(message);
+  }
+
+  Future<void> _openDetail(AnnouncementMessage message) {
+    return Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => AnnouncementDetailScreen(message: message),
       ),
     );
+  }
+
+  /// Team owners: the requests waiting for them.
+  Future<void> _openJoinRequests(AnnouncementViewModel vm) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const JoinRequestsScreen()),
+    );
+    if (mounted) vm.loadJoinRequestCount();
   }
 
   /// Long-press actions sheet: a preview of the message plus actions.
@@ -201,7 +236,7 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                message.channelName,
+                                message.channelDisplayName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -307,10 +342,19 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
                 ),
                 const SizedBox(height: 8),
                 _sheetAction(
-                  icon: Icons.open_in_new_rounded,
-                  color: teamsPurple,
-                  title: language.openInTeams,
-                  subtitle: language.openInTeamsHint,
+                  icon:
+                      message.canOpenInTeams
+                          ? Icons.open_in_new_rounded
+                          : Icons.group_add_rounded,
+                  color: message.canOpenInTeams ? teamsPurple : primary,
+                  title:
+                      message.canOpenInTeams
+                          ? language.openInTeams
+                          : language.requestToJoin,
+                  subtitle:
+                      message.canOpenInTeams
+                          ? language.openInTeamsHint
+                          : language.requestToJoinHint,
                   onTap: () {
                     Navigator.pop(ctx);
                     _openMessage(vm, message);
@@ -390,6 +434,7 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
         return Column(
           children: [
             _buildChannelDropdown(vm),
+            if (vm.pendingJoinRequests > 0) _buildJoinRequestsBanner(vm),
             Expanded(child: _buildList(vm)),
           ],
         );
@@ -407,6 +452,49 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
         elevation: 0,
       ),
       body: body,
+    );
+  }
+
+  /// Shown to team owners while requests to join their teams are waiting.
+  Widget _buildJoinRequestsBanner(AnnouncementViewModel vm) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Material(
+        color: Colors.orange.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openJoinRequests(vm),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.orange.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.group_add_rounded,
+                  size: 20,
+                  color: Colors.orange,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    language.joinRequestsWaiting(vm.pendingJoinRequests),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: Colors.grey[600]),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -436,7 +524,7 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
                   (c) => c.id == vm.channelId,
                   orElse: () => _allChannelsItem,
                 )
-                .name;
+                .displayName;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),

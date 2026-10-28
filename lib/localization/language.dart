@@ -126,6 +126,25 @@ class Language {
   String get couldNotOpenTeams =>
       "Could not open Microsoft Teams. Please try again.";
 
+  // Request to join a team (announcements)
+  String get requestToJoin => "Request to join";
+  String get requestToJoinHint => "Ask the team owners to add you";
+  String get notTeamMemberTitle => "You are not a member of this team";
+  String get notTeamMemberBody => "You can read this post in the app. To open it in Microsoft Teams, ask a team owner to add you.";
+  String get joinRequestNoteHint => "Message to the team owners (optional)";
+  String get sendJoinRequest => "Send request";
+  String get joinRequestPending => "Your request was sent. Waiting for a team owner to answer.";
+  String get joinRequestApproved => "Approved. You will be added to the team in a few minutes.";
+  String get joinRequestRejected => "Your last request was declined.";
+  String get joinRequestExpired => "Your last request expired without an answer.";
+  String get joinRequestFailed => "You could not be added automatically. Please contact IT or a team owner.";
+  String get viewPostInApp => "View post in the app";
+  String get joinRequests => "Join requests";
+  String get noJoinRequests => "No join requests waiting";
+  String get declineReasonHint => "Reason, shown to the requester (optional)";
+  String joinRequestsWaiting(int count) =>
+      count == 1 ? "1 request to join is waiting" : "$count requests to join are waiting";
+
   String get checkForUpdate => "Check for Update";
   String get checkingForUpdate => "Checking for update...";
   String get newVersionReady => "Update Available";
@@ -752,6 +771,40 @@ class Khmer implements Language {
   @override
   String get couldNotOpenTeams =>
       "មិនអាចបើក Microsoft Teams បានទេ។ សូមព្យាយាមម្តងទៀត។";
+
+  // Request to join a team (announcements)
+  @override
+  String get requestToJoin => "ស្នើសុំចូលរួម";
+  @override
+  String get requestToJoinHint => "ស្នើម្ចាស់ក្រុមឱ្យបន្ថែមអ្នក";
+  @override
+  String get notTeamMemberTitle => "អ្នកមិនទាន់ជាសមាជិកក្រុមនេះទេ";
+  @override
+  String get notTeamMemberBody => "អ្នកអាចអានសារនេះក្នុងកម្មវិធី។ ដើម្បីបើកក្នុង Microsoft Teams សូមស្នើម្ចាស់ក្រុមឱ្យបន្ថែមអ្នក។";
+  @override
+  String get joinRequestNoteHint => "សារទៅម្ចាស់ក្រុម (ជម្រើស)";
+  @override
+  String get sendJoinRequest => "ផ្ញើសំណើ";
+  @override
+  String get joinRequestPending => "សំណើរបស់អ្នកត្រូវបានផ្ញើ។ កំពុងរង់ចាំម្ចាស់ក្រុមឆ្លើយតប។";
+  @override
+  String get joinRequestApproved => "បានអនុម័ត។ អ្នកនឹងត្រូវបានបន្ថែមទៅក្រុមក្នុងរយៈពេលប៉ុន្មាននាទីទៀត។";
+  @override
+  String get joinRequestRejected => "សំណើចុងក្រោយរបស់អ្នកត្រូវបានបដិសេធ។";
+  @override
+  String get joinRequestExpired => "សំណើចុងក្រោយរបស់អ្នកបានផុតកំណត់ ដោយគ្មានការឆ្លើយតប។";
+  @override
+  String get joinRequestFailed => "មិនអាចបន្ថែមអ្នកដោយស្វ័យប្រវត្តិបានទេ។ សូមទាក់ទង IT ឬម្ចាស់ក្រុម។";
+  @override
+  String get viewPostInApp => "មើលសារក្នុងកម្មវិធី";
+  @override
+  String get joinRequests => "សំណើចូលរួម";
+  @override
+  String get noJoinRequests => "មិនមានសំណើចូលរួមកំពុងរង់ចាំទេ";
+  @override
+  String get declineReasonHint => "មូលហេតុ បង្ហាញទៅអ្នកស្នើសុំ (ជម្រើស)";
+  @override
+  String joinRequestsWaiting(int count) => "សំណើចូលរួម $count កំពុងរង់ចាំ";
 
   // Check for update (user initiated)
   @override
