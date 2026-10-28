@@ -9,6 +9,7 @@ import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../models/announcement_model.dart';
+import '../../repositories/announcement_repository.dart';
 import '../../viewmodels/announcement_viewmodel.dart';
 import 'announcement_detail_screen.dart';
 import 'channel_picker_sheet.dart';
@@ -95,16 +96,41 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
   /// the launcher cannot open it, the in-app detail screen is used instead
   /// so the tap is never a dead end.
   ///
-  /// When the user is not a member of the post's team, Teams would only show
-  /// "no access", so the "Request to join" sheet is shown instead.
+  /// Membership is checked live first (see `resolveTeamsAccess`): a
+  /// non-member would land on an empty channel in Teams ("No one has sent
+  /// any messages yet"), so they get the "Request to join" sheet instead.
+  /// When membership cannot be confirmed, the post opens in the app.
   Future<void> _openMessage(
     AnnouncementViewModel vm,
     AnnouncementMessage message,
   ) async {
-    vm.markRead(message);
+    if (_opening) return; // ignore double taps while checking
+    _opening = true;
+    try {
+      await _openMessageChecked(vm, message);
+    } finally {
+      _opening = false;
+    }
+  }
 
-    if (!message.canOpenInTeams) {
-      HapticFeedback.selectionClick();
+  bool _opening = false;
+
+  Future<void> _openMessageChecked(
+    AnnouncementViewModel vm,
+    AnnouncementMessage message,
+  ) async {
+    vm.markRead(message);
+    HapticFeedback.selectionClick();
+
+    final access = await AnnouncementRepository().resolveTeamsAccess(message);
+    if (!mounted) return;
+
+    if (access == TeamsAccess.unknown) {
+      await _openDetail(message);
+      return;
+    }
+
+    if (access == TeamsAccess.notMember) {
       final choice = await JoinTeamSheet.show(
         context,
         message: message,

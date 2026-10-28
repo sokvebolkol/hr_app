@@ -15,6 +15,7 @@ import 'services/global_service.dart';
 import 'services/announcement_unread_service.dart';
 import 'services/device_integrity_service.dart';
 import 'firebase_options.dart';
+import 'views/announcements/announcement_notification_router.dart';
 
 /// Check if device has internet connection
 /// Returns true if connected, false otherwise
@@ -133,6 +134,19 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _setupConnectionListener();
+    _setupPushNavigation();
+  }
+
+  /// Push taps for announcements open the post (or the join requests
+  /// screen). Other click_actions are ignored by the router, as before.
+  void _setupPushNavigation() {
+    try {
+      FirebaseNotificationService().onNavigationRequired =
+          AnnouncementNotificationRouter.openFromPush;
+    } catch (e) {
+      // Firebase may have failed to start; push navigation is then off.
+      debugPrint('Push navigation not set up: $e');
+    }
   }
 
   void _setupConnectionListener() {
@@ -157,6 +171,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: AnnouncementNotificationRouter.navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'CHOKCHEY',
       theme: ThemeData(

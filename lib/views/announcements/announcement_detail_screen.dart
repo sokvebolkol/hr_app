@@ -6,6 +6,7 @@ import '../../constants/constant.dart';
 import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../models/announcement_model.dart';
+import '../../repositories/announcement_repository.dart';
 import '../../widgets/simple_html_text.dart';
 import 'join_team_sheet.dart';
 
@@ -62,7 +63,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   /// Not a member of the team: shows "Request to join" instead, since Teams
   /// would only answer "no access".
   Future<void> _openInTeams() async {
-    if (!widget.message.canOpenInTeams) {
+    // Live membership check; only a confirmed non-member gets the sheet.
+    // "Unknown" still opens Teams here because the user asked for it.
+    final access = await AnnouncementRepository().resolveTeamsAccess(
+      widget.message,
+    );
+    if (!mounted) return;
+    if (access == TeamsAccess.notMember) {
       HapticFeedback.selectionClick();
       final choice = await JoinTeamSheet.show(
         context,

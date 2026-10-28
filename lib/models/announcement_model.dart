@@ -325,6 +325,11 @@ class AnnouncementMessage {
   /// sends true (or nothing) when membership is unknown.
   final bool canOpenInTeams;
 
+  /// The raw `can_open_in_teams` value: null when the API left it out.
+  /// Only an explicit `false` is trusted as "not a member"; anything else is
+  /// checked live before opening Teams (see `resolveTeamsAccess`).
+  final bool? canOpenInTeamsFromApi;
+
   const AnnouncementMessage({
     required this.id,
     this.channelId = '',
@@ -344,6 +349,7 @@ class AnnouncementMessage {
     this.deletedAt,
     this.replyToId,
     this.canOpenInTeams = true,
+    this.canOpenInTeamsFromApi,
   });
 
   factory AnnouncementMessage.fromJson(Map<String, dynamic> json) {
@@ -375,6 +381,10 @@ class AnnouncementMessage {
       deletedAt: _toDate(json['deleted_at']),
       replyToId: _nonEmpty(json['reply_to_id']),
       canOpenInTeams: json['can_open_in_teams'] != false,
+      canOpenInTeamsFromApi:
+          json['can_open_in_teams'] is bool
+              ? json['can_open_in_teams'] as bool
+              : null,
     );
   }
 
@@ -403,6 +413,7 @@ class AnnouncementMessage {
         deletedAt: deletedAt,
         replyToId: replyToId,
         canOpenInTeams: canOpenInTeams ?? this.canOpenInTeams,
+        canOpenInTeamsFromApi: canOpenInTeams ?? canOpenInTeamsFromApi,
       );
 
   bool get hasAttachments => attachments.isNotEmpty;

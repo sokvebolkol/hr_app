@@ -206,6 +206,40 @@ class AnnouncementRepository {
     );
   }
 
+  /// GET /teams/{teamId}/channels/{channelId}/messages/{messageId}?mark_read=1
+  ///
+  /// Loads one post, e.g. the one a notification points to, and marks it
+  /// read. When the response leaves out `channel_id` or `id`, they are
+  /// filled from the arguments so the message can still be opened.
+  Future<AnnouncementMessage> getMessage({
+    required String teamId,
+    required String channelId,
+    required String messageId,
+  }) async {
+    final uri = Uri.parse(
+      '${_base(teamId)}/channels/${Uri.encodeComponent(channelId)}'
+      '/messages/$messageId',
+    ).replace(queryParameters: const {'mark_read': '1'});
+
+    final response = await HttpService.getAllowingErrors(
+      url: uri.toString(),
+      headers: await _headers(),
+    );
+    final body = _decode(response);
+    final data = body['data'];
+    final json = Map<String, dynamic>.from(
+      data is Map<String, dynamic> ? data : body,
+    );
+
+    if ((json['channel_id']?.toString() ?? '').isEmpty) {
+      json['channel_id'] = channelId;
+    }
+    if ((json['id']?.toString() ?? '').isEmpty) json['id'] = messageId;
+
+    _remember(channelId, teamId);
+    return AnnouncementMessage.fromJson(json);
+  }
+
   // ────────────────────────── 2. Unread count ────────────────────────────
 
   /// GET /teams/{teamId}/messages/unread-count, summed across teams.
@@ -331,6 +365,25 @@ class AnnouncementRepository {
   }
 }
 
+/// Whether the signed-in user can see a post in Microsoft Teams.
+enum TeamsAccess {
+  /// Member of the post's team: open the Teams link.
+  member,
+
+  /// Not a member: Teams would open an empty channel ("No one has sent any
+  /// messages yet"), so show "Request to join" instead.
+  notMember,
+
+  /// Could not be confirmed (membership not synced or endpoint missing):
+  /// show the post in the app, which still offers "Open in Teams".
+  unknown,
+}
+
+/// Team ids confirmed as "member" in this session, keyed with the server and
+/// token so a different user or environment never reuses them. Only positive
+/// results are cached, so a user who was just added is picked up next tap.
+final Set<String> _confirmedTeamMembers = {};
+
 extension TeamJoinRequestApi on AnnouncementRepository {
   // ───────────────────────── 7. Request to join ──────────────────────────
 
@@ -341,6 +394,36 @@ extension TeamJoinRequestApi on AnnouncementRepository {
 
   /// The team owning [channelId] (learned from the feed).
   String teamIdForChannel(String channelId) => _teamFor(channelId);
+
+  /// Decides what tapping [message] should do, based on a live
+  /// `GET /teams/{teamId}/membership` check.
+  ///
+  /// The feed's `can_open_in_teams` is only trusted when it is `false`: the
+  /// API also sends `true` (or nothing) when it does not know, and opening
+  /// Teams for a non-member shows an empty channel instead of the post.
+  Future<TeamsAccess> resolveTeamsAccess(AnnouncementMessage message) async {
+    if (message.canOpenInTeamsFromApi == false) return TeamsAccess.notMember;
+    if (message.channelId.isEmpty) return TeamsAccess.unknown;
+
+    try {
+      final teamId = _teamFor(message.channelId);
+      final key = '${_serverService.baseUrl}|${await _token()}|$teamId';
+      if (_confirmedTeamMembers.contains(key)) return TeamsAccess.member;
+
+      final membership = await getMembership(channelId: message.channelId);
+      switch (membership.isMember) {
+        case true:
+          _confirmedTeamMembers.add(key);
+          return TeamsAccess.member;
+        case false:
+          return TeamsAccess.notMember;
+        default:
+          return TeamsAccess.unknown;
+      }
+    } catch (e) {
+      return TeamsAccess.unknown;
+    }
+  }
 
   /// GET /teams/{teamId}/membership
   Future<TeamMembership> getMembership({required String channelId}) async {
