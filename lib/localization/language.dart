@@ -103,6 +103,12 @@ class Language {
   String get allChannels => "All Channels";
   String get unread => "Unread";
   String get noAnnouncements => "No announcements yet";
+  String get noAnnouncementsSubtitle =>
+      "There are no announcements right now. New posts from your teams will appear here.";
+  String get noChannelAnnouncements => "No announcements in this channel";
+  String get noChannelAnnouncementsSubtitle =>
+      "This channel has no announcements yet. Try another channel or view all channels.";
+  String get showAllChannels => "Show All Channels";
   String get noContent => "This message has no content.";
   String get attachments => "Attachments";
   String get markAsRead => "Mark as read";
@@ -728,6 +734,16 @@ class Khmer implements Language {
   String get unread => "មិនទាន់អាន";
   @override
   String get noAnnouncements => "មិនទាន់មានសេចក្តីជូនដំណឹង";
+  @override
+  String get noAnnouncementsSubtitle =>
+      "បច្ចុប្បន្នមិនទាន់មានសេចក្តីជូនដំណឹងទេ។ ការផ្សាយថ្មីៗពីក្រុមរបស់អ្នកនឹងបង្ហាញនៅទីនេះ។";
+  @override
+  String get noChannelAnnouncements => "មិនមានសេចក្តីជូនដំណឹងក្នុងឆានែលនេះទេ";
+  @override
+  String get noChannelAnnouncementsSubtitle =>
+      "ឆានែលនេះមិនទាន់មានសេចក្តីជូនដំណឹងទេ។ សូមសាកល្បងឆានែលផ្សេង ឬមើលឆានែលទាំងអស់។";
+  @override
+  String get showAllChannels => "បង្ហាញឆានែលទាំងអស់";
   @override
   String get noContent => "សារនេះគ្មានមាតិកាទេ។";
   @override

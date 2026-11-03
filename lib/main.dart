@@ -12,7 +12,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_notification_service.dart';
 import 'services/internet_connection_service.dart';
 import 'services/global_service.dart';
-import 'services/announcement_unread_service.dart';
 import 'services/device_integrity_service.dart';
 import 'firebase_options.dart';
 import 'views/announcements/announcement_notification_router.dart';
@@ -51,9 +50,8 @@ void main() async {
     // result is cached before any sensitive screen is reachable.
     await DeviceIntegrityService.instance.evaluate();
 
-    // Warm the Announcement badge in the background. Deliberately not
-    // awaited: it makes several network calls and must never delay startup.
-    unawaited(AnnouncementUnreadService.instance.refresh());
+    // Notification and announcement counts are loaded by the Dashboard
+    // (NotificationViewModel.loadAll), in one request, once the user is in.
 
     // Check internet connection before Firebase initialization
     final hasInternet = await checkInternetConnection();

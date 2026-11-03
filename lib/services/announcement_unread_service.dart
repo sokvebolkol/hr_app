@@ -5,8 +5,9 @@ import '../repositories/announcement_repository.dart';
 
 /// Owns the Announcement tab's unread badge.
 ///
-/// Backed by `GET /messages/unread-count`, so the count is authoritative and
-/// server-side rather than derived on the device.
+/// Filled by the notification overview loaded with the Dashboard (see
+/// `NotificationViewModel.loadAll`); [refresh] is the fallback when the
+/// overview endpoint is not available.
 class AnnouncementUnreadService extends ChangeNotifier {
   AnnouncementUnreadService._();
   static final AnnouncementUnreadService instance =
@@ -21,13 +22,37 @@ class AnnouncementUnreadService extends ChangeNotifier {
   List<AnnouncementChannel> _byChannel = const [];
   bool _isRefreshing = false;
 
+  /// Goes up each time every announcement was marked read from outside the
+  /// Announcement tab (the Notification screen's "Mark all as read"), so an
+  /// open announcement list can mark its items read too.
+  int _allReadVersion = 0;
+  int get allReadVersion => _allReadVersion;
+
   int get totalUnread => _totalUnread;
   List<AnnouncementChannel> get byChannel => List.unmodifiable(_byChannel);
-  bool get hasUnread => _totalUnread > 0;
+  /// Join requests waiting for this user as a team owner.
+  int _pendingJoinRequests = 0;
+  int get pendingJoinRequests => _pendingJoinRequests;
+
+  /// Announcement tab badge: unread posts + waiting join requests, so the
+  /// owner sees both in one number. [totalUnread] stays posts only (used
+  /// by the channel picker).
+  int get badgeCount => _totalUnread + _pendingJoinRequests;
+
+  bool get hasUnread => badgeCount > 0;
 
   /// Display string, e.g. "99+" past the ceiling.
   String get badgeText =>
-      _totalUnread > maxBadgeCount ? '$maxBadgeCount+' : '$_totalUnread';
+      badgeCount > maxBadgeCount ? '$maxBadgeCount+' : '$badgeCount';
+
+  /// Updates the waiting join-request count (from the overview or from
+  /// GET /teams/join-requests/incoming).
+  void setPendingJoinRequests(int count) {
+    final next = count < 0 ? 0 : count;
+    if (_pendingJoinRequests == next) return;
+    _pendingJoinRequests = next;
+    notifyListeners();
+  }
 
   int unreadForChannel(String channelId) {
     for (final channel in _byChannel) {
@@ -51,6 +76,14 @@ class AnnouncementUnreadService extends ChangeNotifier {
     } finally {
       _isRefreshing = false;
     }
+  }
+
+  /// Applies counts that arrived with another response (e.g. the
+  /// notification overview), so no separate request is needed.
+  void apply(UnreadCountResult result) {
+    _totalUnread = result.totalUnread;
+    _byChannel = result.byChannel;
+    notifyListeners();
   }
 
   /// Applies a known total immediately, e.g. from the message list's
@@ -77,10 +110,20 @@ class AnnouncementUnreadService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Every announcement in every team was marked read: clears the badge and
+  /// tells open announcement lists (see [allReadVersion]).
+  void markAllReadLocally() {
+    _totalUnread = 0;
+    _byChannel = const [];
+    _allReadVersion++;
+    notifyListeners();
+  }
+
   /// Resets state on logout so the next user does not inherit a count.
   Future<void> reset() async {
     _totalUnread = 0;
     _byChannel = const [];
+    _pendingJoinRequests = 0;
     notifyListeners();
   }
 }

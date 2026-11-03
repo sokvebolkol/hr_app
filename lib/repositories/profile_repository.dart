@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile_model.dart';
 import '../services/global_service.dart';
+import '../services/announcement_feed_cache.dart';
 import '../services/announcement_unread_service.dart';
 import '../services/http_service.dart';
 
@@ -200,6 +201,7 @@ class ProfileRepository {
       // Drop the Teams read markers so the next user on this device does
       // not inherit the previous user's badge state.
       await AnnouncementUnreadService.instance.reset();
+      AnnouncementFeedCache.instance.clear();
       clearCache();
     }
   }

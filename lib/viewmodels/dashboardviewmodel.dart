@@ -216,8 +216,21 @@ class DashboardViewModel extends ChangeNotifier {
     return updateAvailable && isMandatory;
   }
 
+  // The screen that owns this view model can close while a request is
+  // still running (e.g. logout or switching screens). When that request
+  // finishes, skip the UI update instead of throwing "used after being
+  // disposed".
+  bool _disposed = false;
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     super.dispose();
   }
 }

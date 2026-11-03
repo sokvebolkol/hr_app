@@ -12,6 +12,53 @@ class NotificationRepository {
     return prefs.getString('token');
   }
 
+  /// Per server: whether `GET /notifications/overview` has worked (true) or
+  /// answered 404 because it is not deployed yet (false).
+  static final Map<String, bool> _overviewAvailable = {};
+
+  /// GET /notifications/overview: HR notifications, announcements and all
+  /// unread counts in one call. With [countsOnly] only the counts are sent.
+  ///
+  /// Returns the response's `data`, or null when the server does not have
+  /// this endpoint, so the caller can use the older endpoints instead.
+  Future<Map<String, dynamic>?> getOverview({
+    bool countsOnly = false,
+    int perPage = 20,
+  }) async {
+    if (_overviewAvailable[baseUrl] == false) return null;
+
+    final token = await _getAuthToken();
+    if (token == null) throw Exception('No authentication token found');
+
+    final uri = Uri.parse('${baseUrl}notifications/overview').replace(
+      queryParameters: {
+        'per_page': '$perPage',
+        if (countsOnly) 'counts_only': '1',
+      },
+    );
+    final response = await http
+        .get(uri, headers: _getHeaders(token))
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 404 && _overviewAvailable[baseUrl] != true) {
+      _overviewAvailable[baseUrl] = false;
+      return null;
+    }
+    if (response.statusCode == 401) {
+      throw Exception('Unauthorized - Please login again');
+    }
+    if (response.statusCode != 200) {
+      throw Exception('Failed to get overview: ${response.statusCode}');
+    }
+    final body = json.decode(response.body);
+    if (body is! Map<String, dynamic> || body['success'] != true) {
+      throw Exception('API returned success: false');
+    }
+    _overviewAvailable[baseUrl] = true;
+    final data = body['data'];
+    return data is Map<String, dynamic> ? data : <String, dynamic>{};
+  }
+
   Map<String, String> _getHeaders(String? token) {
     return {
       'Content-Type': 'application/json',

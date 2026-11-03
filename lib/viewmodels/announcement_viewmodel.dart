@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/announcement_model.dart';
 import '../repositories/announcement_repository.dart';
+import '../services/announcement_feed_cache.dart';
 import '../services/announcement_unread_service.dart';
 import '../utils/exceptions.dart';
 
@@ -11,7 +12,14 @@ import '../utils/exceptions.dart';
 enum AnnouncementFilter { all, unread }
 
 class AnnouncementViewModel extends ChangeNotifier {
+  AnnouncementViewModel() {
+    AnnouncementUnreadService.instance.addListener(_onUnreadChanged);
+  }
+
   final AnnouncementRepository _repository = AnnouncementRepository();
+
+  /// Last [AnnouncementUnreadService.allReadVersion] applied to this list.
+  int _seenAllReadVersion = AnnouncementUnreadService.instance.allReadVersion;
 
   final List<AnnouncementMessage> _messages = [];
   List<AnnouncementChannel> _channels = [];
@@ -57,7 +65,34 @@ class AnnouncementViewModel extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _searchDebounce?.cancel();
+    AnnouncementUnreadService.instance.removeListener(_onUnreadChanged);
     super.dispose();
+  }
+
+  /// "Mark all as read" was done elsewhere (Notification screen menu): mark
+  /// the loaded items read without another request, and empty the Unread view.
+  void _onUnreadChanged() {
+    final version = AnnouncementUnreadService.instance.allReadVersion;
+    if (version == _seenAllReadVersion || _disposed) return;
+    _seenAllReadVersion = version;
+
+    final now = DateTime.now();
+    for (var i = 0; i < _messages.length; i++) {
+      if (!_messages[i].isRead) {
+        _messages[i] = _messages[i].copyWith(isRead: true, readAt: now);
+      }
+    }
+    _meta = AnnouncementMeta(
+      currentPage: _meta.currentPage,
+      lastPage: _meta.lastPage,
+      total: _meta.total,
+      unreadCount: 0,
+    );
+    if (_filter == AnnouncementFilter.unread) {
+      load();
+    } else {
+      _notify();
+    }
   }
 
   void _notify() {
@@ -73,8 +108,32 @@ class AnnouncementViewModel extends ChangeNotifier {
 
   // ───────────────────────────── Loading ──────────────────────────────
 
-  /// Initial load: channels for the filter chips, then the first page.
+  /// Initial load. Uses the first page, channels and join-request count
+  /// the Dashboard already loaded (notification overview) when available,
+  /// so opening the tab makes no request. Otherwise loads them here.
   Future<void> initialize() async {
+    final cached = AnnouncementFeedCache.instance.take();
+    final firstPage = cached?.firstPage;
+    if (cached != null && firstPage != null) {
+      _messages
+        ..clear()
+        ..addAll(_postsOnly(firstPage.items));
+      _meta = firstPage.meta;
+      _channels = List.of(cached.channels);
+      _mergeChannels(_channelsFromMessages());
+      if (cached.pendingJoinRequests != null) {
+        _setPendingJoinRequests(cached.pendingJoinRequests!);
+      }
+      _notify();
+
+      // Only fetch what the overview did not include.
+      await Future.wait([
+        if (cached.channels.isEmpty) loadChannels(),
+        if (cached.pendingJoinRequests == null) loadJoinRequestCount(),
+      ]);
+      await _topUpIfSparse();
+      return;
+    }
     await Future.wait([loadChannels(), load(), loadJoinRequestCount()]);
   }
 
@@ -87,19 +146,21 @@ class AnnouncementViewModel extends ChangeNotifier {
     if (_joinRequestsUnsupported) return;
     try {
       final rows = await _repository.getIncomingJoinRequests();
-      if (rows.length != _pendingJoinRequests) {
-        _pendingJoinRequests = rows.length;
-        _notify();
-      }
+      _setPendingJoinRequests(rows.length);
     } on NotFoundException {
       _joinRequestsUnsupported = true;
-      if (_pendingJoinRequests != 0) {
-        _pendingJoinRequests = 0;
-        _notify();
-      }
+      _setPendingJoinRequests(0);
     } catch (e) {
       debugPrint('Join request count failed: $e');
     }
+  }
+
+  /// Updates the banner and the shared Announcement tab badge together.
+  void _setPendingJoinRequests(int count) {
+    AnnouncementUnreadService.instance.setPendingJoinRequests(count);
+    if (count == _pendingJoinRequests) return;
+    _pendingJoinRequests = count;
+    _notify();
   }
 
   /// Set when `GET /teams/join-requests/incoming` returns 404 (route not

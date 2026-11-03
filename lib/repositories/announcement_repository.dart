@@ -16,7 +16,7 @@ class AnnouncementRepository {
 
   /// Teams whose channels make up the feed. The first is Chokchey Finance.
   static const List<String> teamIds = [
-    '23550c47-751a-4881-b59f-278ff7a8cb40',
+    // '23550c47-751a-4881-b59f-278ff7a8cb40',
     '03bc38e3-7843-48d1-abd4-7d14b7d5fd7f',
   ];
 
@@ -137,16 +137,149 @@ class AnnouncementRepository {
     return null;
   }
 
+  // ─────────────────────── Combined endpoints ───────────────────────────
+  //
+  // /announcements, /announcements/channels, /announcements/unread-count and
+  // /announcements/read-all cover every team the user can see in one call.
+  // A server that does not have them yet answers 404 on the first call; the
+  // app then uses the per-team endpoints below for the rest of the launch.
+
+  /// Per server: true = combined endpoints work, false = not deployed.
+  static final Map<String, bool> _combinedApi = {};
+
+  bool get _combinedUnavailable =>
+      _combinedApi[_serverService.baseUrl] == false;
+
+  /// True when this 404 means "route not deployed" (first call only). Once a
+  /// combined call has succeeded, a 404 is a real error and is decoded.
+  bool _markCombinedMissing(http.Response response) {
+    final base = _serverService.baseUrl;
+    if (response.statusCode == 404 && _combinedApi[base] != true) {
+      _combinedApi[base] = false;
+      return true;
+    }
+    _combinedApi[base] = true;
+    return false;
+  }
+
+  /// GET on a combined endpoint. Null when the server does not have it.
+  Future<Map<String, dynamic>?> _combinedGet(
+    String path, [
+    Map<String, String> query = const {},
+  ]) async {
+    if (_combinedUnavailable) return null;
+    final uri = Uri.parse(
+      '${_serverService.baseUrl}announcements$path',
+    ).replace(queryParameters: query.isEmpty ? null : query);
+    final response = await HttpService.getAllowingErrors(
+      url: uri.toString(),
+      headers: await _headers(),
+    );
+    if (_markCombinedMissing(response)) return null;
+    return _decode(response);
+  }
+
+  /// Learns channel → team from items that carry `team_id`.
+  void _rememberTeams(List<Map<String, dynamic>> items, String channelKey) {
+    for (final item in items) {
+      final channelId = item[channelKey]?.toString() ?? '';
+      final teamId = item['team_id']?.toString() ?? '';
+      if (teamId.isNotEmpty) _remember(channelId, teamId);
+    }
+  }
+
   // ─────────────────────────── 1. Message list ───────────────────────────
 
-  /// GET /teams/{teamId}/messages
+  /// GET /announcements: one sorted, paginated list across all teams.
+  /// Falls back to [_getMessagesPerTeam] when the server does not have it.
+  Future<AnnouncementPage> getMessages({
+    String? channelId,
+    String status = 'all',
+    String? search,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    final body = await _combinedGet('', {
+      'status': status,
+      'page': '$page',
+      'per_page': '$perPage',
+      if (channelId != null && channelId.isNotEmpty) 'channel_id': channelId,
+      if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+    });
+    if (body == null) {
+      return _getMessagesPerTeam(
+        channelId: channelId,
+        status: status,
+        search: search,
+        page: page,
+        perPage: perPage,
+      );
+    }
+
+    return AnnouncementPage(
+      items: _combinedMessages(_list(body)),
+      meta: AnnouncementMeta.fromJson(_meta(body)),
+    );
+  }
+
+  /// Items from the combined endpoints: learns each channel's team and
+  /// marks `can_open_in_teams` as a confirmed membership result.
+  List<AnnouncementMessage> _combinedMessages(List<Map<String, dynamic>> rows) {
+    _rememberTeams(rows, 'channel_id');
+    return rows.map((row) {
+      final json = Map<String, dynamic>.from(row);
+      json[AnnouncementMessage.canOpenVerifiedKey] =
+          json['can_open_in_teams'] is bool;
+      return AnnouncementMessage.fromJson(json);
+    }).toList();
+  }
+
+  /// Parses the `announcements` block of `GET /notifications/overview`.
+  /// Every part is optional; missing parts come back null or empty.
+  AnnouncementOverview parseOverview(Map<String, dynamic> json) {
+    List<Map<String, dynamic>> maps(dynamic v) =>
+        v is List ? v.whereType<Map<String, dynamic>>().toList() : const [];
+
+    final items = json['items'];
+    final meta = json['meta'];
+    final page =
+        items is List
+            ? AnnouncementPage(
+              items: _combinedMessages(maps(items)),
+              meta: AnnouncementMeta.fromJson(
+                meta is Map<String, dynamic> ? meta : null,
+              ),
+            )
+            : null;
+
+    final channelRows = maps(json['channels']);
+    _rememberTeams(channelRows, 'id');
+    final unreadRows = maps(json['unread_by_channel']);
+    _rememberTeams(unreadRows, 'channel_id');
+
+    final pending = json['pending_join_requests'];
+    return AnnouncementOverview(
+      firstPage: page,
+      channels: channelRows.map(AnnouncementChannel.fromJson).toList(),
+      unread: UnreadCountResult(
+        totalUnread:
+            json['unread'] is num
+                ? (json['unread'] as num).toInt()
+                : (page?.meta.unreadCount ?? 0),
+        byChannel: unreadRows.map(AnnouncementChannel.fromJson).toList(),
+      ),
+      pendingJoinRequests: pending is num ? pending.toInt() : null,
+    );
+  }
+
+  /// Fallback: GET /teams/{teamId}/messages
   ///
   /// [status] is `all`, `unread` or `read`. [channelId] filters to one
   /// channel; it contains `:` and `@` so it is URL-encoded by [Uri].
   ///
   /// Without a channel, page [page] is fetched from every team and merged
   /// newest first; the meta sums totals and keeps the furthest last page.
-  Future<AnnouncementPage> getMessages({
+  Future<AnnouncementPage> _getMessagesPerTeam({
     String? channelId,
     String status = 'all',
     String? search,
@@ -242,11 +375,26 @@ class AnnouncementRepository {
 
   // ────────────────────────── 2. Unread count ────────────────────────────
 
-  /// GET /teams/{teamId}/messages/unread-count, summed across teams.
+  /// GET /announcements/unread-count (all teams in one call), falling back
+  /// to GET /teams/{teamId}/messages/unread-count summed across teams.
   Future<UnreadCountResult> getUnreadCount({String? channelId}) async {
     final query = <String, String>{
       if (channelId != null && channelId.isNotEmpty) 'channel_id': channelId,
     };
+
+    final combined = await _combinedGet('/unread-count', query);
+    if (combined != null) {
+      final data = combined['data'];
+      final json = data is Map<String, dynamic> ? data : combined;
+      final byChannel = json['by_channel'];
+      if (byChannel is List) {
+        _rememberTeams(
+          byChannel.whereType<Map<String, dynamic>>().toList(),
+          'channel_id',
+        );
+      }
+      return UnreadCountResult.fromJson(json);
+    }
 
     Future<UnreadCountResult> fetch(String teamId) async {
       final uri = Uri.parse(
@@ -321,11 +469,26 @@ class AnnouncementRepository {
 
   // ───────────────────────────── 5. Read all ─────────────────────────────
 
-  /// POST /teams/{teamId}/messages/read-all
-  ///
-  /// Sends `{channel_id: ...}` to the owning team to clear one channel, or
-  /// `{}` to every team to clear all channels.
+  /// POST /announcements/read-all (all teams, or one channel), falling back
+  /// to POST /teams/{teamId}/messages/read-all per team.
   Future<void> markAllRead({String? channelId}) async {
+    final payload = <String, String>{
+      if (channelId != null && channelId.isNotEmpty) 'channel_id': channelId,
+    };
+    if (!_combinedUnavailable) {
+      final response = await http
+          .post(
+            Uri.parse('${_serverService.baseUrl}announcements/read-all'),
+            headers: await _headers(),
+            body: json.encode(payload),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (!_markCombinedMissing(response)) {
+        _decode(response);
+        return;
+      }
+    }
+
     Future<void> post(String teamId, Map<String, String> payload) async {
       final response = await http
           .post(
@@ -346,9 +509,16 @@ class AnnouncementRepository {
 
   // ───────────────────────────── 6. Channels ─────────────────────────────
 
-  /// GET /teams/{teamId}/channels for every team — used for the filter
-  /// chips.
+  /// GET /announcements/channels (all teams in one call), falling back to
+  /// GET /teams/{teamId}/channels per team. Used for the channel picker.
   Future<List<AnnouncementChannel>> getChannels() async {
+    final combined = await _combinedGet('/channels');
+    if (combined != null) {
+      final rows = _list(combined);
+      _rememberTeams(rows, 'id');
+      return rows.map(AnnouncementChannel.fromJson).toList();
+    }
+
     final lists = await _acrossTeams((teamId) async {
       final response = await HttpService.getAllowingErrors(
         url: '${_base(teamId)}/channels',
@@ -403,6 +573,11 @@ extension TeamJoinRequestApi on AnnouncementRepository {
   /// Teams for a non-member shows an empty channel instead of the post.
   Future<TeamsAccess> resolveTeamsAccess(AnnouncementMessage message) async {
     if (message.canOpenInTeamsFromApi == false) return TeamsAccess.notMember;
+    // From GET /announcements the flag is already a confirmed result.
+    if (message.canOpenInTeamsVerified &&
+        message.canOpenInTeamsFromApi == true) {
+      return TeamsAccess.member;
+    }
     if (message.channelId.isEmpty) return TeamsAccess.unknown;
 
     try {

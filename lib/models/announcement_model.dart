@@ -95,7 +95,9 @@ class UnreadCountResult {
   factory UnreadCountResult.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const UnreadCountResult();
     return UnreadCountResult(
-      totalUnread: _toInt(json['total_unread']),
+      // Per-team endpoint sends `total_unread`; /announcements/unread-count
+      // sends `total`.
+      totalUnread: _toInt(json['total_unread'] ?? json['total']),
       byChannel:
           _mapList(json['by_channel']).map(AnnouncementChannel.fromJson).toList(),
     );
@@ -297,6 +299,10 @@ List<Map<String, dynamic>> _mapList(dynamic raw) {
 
 /// One announcement (a Teams channel message).
 class AnnouncementMessage {
+  /// Set on the JSON by the repository for items from `GET /announcements`
+  /// (internal marker, not sent by the API).
+  static const String canOpenVerifiedKey = '_can_open_in_teams_verified';
+
   final String id;
   final String channelId;
   final String channelName;
@@ -330,6 +336,11 @@ class AnnouncementMessage {
   /// checked live before opening Teams (see `resolveTeamsAccess`).
   final bool? canOpenInTeamsFromApi;
 
+  /// True when [canOpenInTeamsFromApi] came from `GET /announcements`,
+  /// where the flag is a confirmed membership result (never "unknown"), so
+  /// no extra membership check is needed before opening Teams.
+  final bool canOpenInTeamsVerified;
+
   const AnnouncementMessage({
     required this.id,
     this.channelId = '',
@@ -350,6 +361,7 @@ class AnnouncementMessage {
     this.replyToId,
     this.canOpenInTeams = true,
     this.canOpenInTeamsFromApi,
+    this.canOpenInTeamsVerified = false,
   });
 
   factory AnnouncementMessage.fromJson(Map<String, dynamic> json) {
@@ -385,6 +397,7 @@ class AnnouncementMessage {
           json['can_open_in_teams'] is bool
               ? json['can_open_in_teams'] as bool
               : null,
+      canOpenInTeamsVerified: json[canOpenVerifiedKey] == true,
     );
   }
 
@@ -414,6 +427,7 @@ class AnnouncementMessage {
         replyToId: replyToId,
         canOpenInTeams: canOpenInTeams ?? this.canOpenInTeams,
         canOpenInTeamsFromApi: canOpenInTeams ?? canOpenInTeamsFromApi,
+        canOpenInTeamsVerified: canOpenInTeamsVerified,
       );
 
   bool get hasAttachments => attachments.isNotEmpty;
@@ -445,6 +459,24 @@ class AnnouncementMessage {
       (subject != null && subject!.trim().isNotEmpty)
           ? subject!.trim()
           : channelDisplayName;
+}
+
+/// The `announcements` block of `GET /notifications/overview`.
+class AnnouncementOverview {
+  /// First page for "All Channels"; null when the server sent counts only.
+  final AnnouncementPage? firstPage;
+  final List<AnnouncementChannel> channels;
+  final UnreadCountResult unread;
+
+  /// Join requests waiting for this user as a team owner; null if not sent.
+  final int? pendingJoinRequests;
+
+  const AnnouncementOverview({
+    this.firstPage,
+    this.channels = const [],
+    this.unread = const UnreadCountResult(),
+    this.pendingJoinRequests,
+  });
 }
 
 /// A page of announcements plus its meta.

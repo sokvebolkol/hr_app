@@ -81,6 +81,11 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
     _initializeLanguage();
     WidgetsBinding.instance.addObserver(this);
     DashboardRefreshSignal.instance.addListener(_onDashboardDataChanged);
+    // Load all notification data (HR + announcements + unread counts) in
+    // one go so the bell badge is right as soon as Home opens.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<NotificationViewModel>().loadAll();
+    });
     _dashboardViewModel = DashboardViewModel();
     _dashboardViewModel.initialize();
     // _dashboardViewModel.initialize().then((_) => _checkAndShowBirthday());
@@ -486,7 +491,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                         size: 24,
                       ),
                     ),
-                    if (notificationViewModel.unreadCount > 0)
+                    if (notificationViewModel.totalUnread > 0)
                       Positioned(
                         right: 8,
                         top: 8,
@@ -501,7 +506,7 @@ class _DashboardScreenState extends State<RequesterDashboardScreen>
                             minHeight: 16,
                           ),
                           child: Text(
-                            '${notificationViewModel.unreadCount}',
+                            notificationViewModel.totalUnreadText,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -751,7 +756,11 @@ class _DashboardHomeContentState extends State<_DashboardHomeContent>
       builder: (context, viewModel, child) {
         return RefreshIndicator(
           onRefresh: () async {
-            await viewModel.refresh();
+            // Pull-to-refresh also refreshes notifications and the bell.
+            await Future.wait([
+              viewModel.refresh(),
+              context.read<NotificationViewModel>().loadAll(force: true),
+            ]);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),

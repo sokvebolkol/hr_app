@@ -652,38 +652,7 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
       );
     }
 
-    if (vm.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: vm.refresh,
-        color: primary,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.campaign_outlined,
-                    size: 60,
-                    color: Colors.grey[350],
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    language.noAnnouncements,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    if (vm.isEmpty) return _buildEmptyState(vm);
 
     return RefreshIndicator(
       onRefresh: vm.refresh,
@@ -703,6 +672,107 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
           }
           return _buildTile(vm, vm.messages[index]);
         },
+      ),
+    );
+  }
+
+  /// Shown when there are no announcements. Pull-to-refresh still works.
+  /// With a channel selected, the wording points at that channel and offers
+  /// a one-tap way back to all channels.
+  Widget _buildEmptyState(AnnouncementViewModel vm) {
+    final filtered = vm.channelId != null;
+
+    return RefreshIndicator(
+      onRefresh: vm.refresh,
+      color: primary,
+      child: LayoutBuilder(
+        builder:
+            (context, constraints) => SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                // Fill the tab so the content centres and the pull gesture
+                // works anywhere on the screen.
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 24,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            color: primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            filtered
+                                ? Icons.forum_outlined
+                                : Icons.campaign_outlined,
+                            size: 48,
+                            color: primary,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          filtered
+                              ? language.noChannelAnnouncements
+                              : language.noAnnouncements,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          filtered
+                              ? language.noChannelAnnouncementsSubtitle
+                              : language.noAnnouncementsSubtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        if (filtered)
+                          ElevatedButton.icon(
+                            onPressed: () => vm.setChannel(null),
+                            icon: const Icon(Icons.all_inbox_rounded, size: 18),
+                            label: Text(language.showAllChannels),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          )
+                        else
+                          OutlinedButton.icon(
+                            onPressed: vm.refresh,
+                            icon: const Icon(Icons.refresh_rounded, size: 18),
+                            label: Text(language.refresh),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: primary,
+                              side: const BorderSide(color: primary),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
       ),
     );
   }
@@ -844,26 +914,28 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
                 ),
                 const SizedBox(height: 12),
 
-                // Footer: sender, attachments and posted date/time, with
+                // Footer: channel, attachments and posted date/time, with
                 // reactions at the far right.
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 10,
                       backgroundColor: primary.withOpacity(0.12),
-                      child: Text(
-                        message.senderInitial,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: primary,
-                        ),
+                      child: const Icon(
+                        Icons.forum_outlined,
+                        size: 11,
+                        color: primary,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        message.senderName,
+                        // Channel the post belongs to (e.g. "Loan Approve by
+                        // BM"); the poster's name only if the channel is
+                        // unknown.
+                        message.channelDisplayName.isNotEmpty
+                            ? message.channelDisplayName
+                            : message.senderName,
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey[600],

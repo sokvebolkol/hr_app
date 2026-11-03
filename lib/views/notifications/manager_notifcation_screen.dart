@@ -12,7 +12,6 @@ import '../leaves/leave_approval/approver_leave_detail_screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../../widgets/announcement_badge_tab_label.dart';
 import '../../widgets/notification_tab_label.dart';
-import '../../services/announcement_unread_service.dart';
 import '../announcements/announcement_list_screen.dart';
 import '../announcements/announcement_notification_router.dart';
 
@@ -69,10 +68,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging && mounted) {
         setState(() {});
-        // Recompute the Announcement badge when that tab is opened.
-        if (_tabController.index == 2) {
-          AnnouncementUnreadService.instance.refresh();
-        }
+        // Announcement counts are already loaded with the Dashboard and
+        // kept current by the poll; no extra request when the tab opens.
       }
     });
   }
@@ -92,8 +89,8 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
 
     final viewModel = context.read<NotificationViewModel>();
 
-    // Load all notifications once
-    await viewModel.fetchNotifications(refresh: true);
+    // Reuse what the Dashboard just loaded; fetch only if it is stale.
+    await viewModel.ensureLoaded();
 
     // Filter and cache notifications
     _updateFilteredNotifications(viewModel.notifications);
@@ -102,37 +99,30 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
   }
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
-    // Personal Tab - show approved/rejected leave requests and attendance adjustments
+    // Staff Tab - new leave / attendance requests and reminders to approve
+    bool isStaff(NotificationModel n) =>
+        (n.type == 'leave' || n.type == 'attendance_adjustment') &&
+        (n.data['action'] == 'new_request' || n.data['action'] == 'reminder');
+
+    _leaveApprovalNotifications = allNotifications.where(isStaff).toList();
+
+    // Personal Tab - everything else (own approvals/rejections and other
+    // types). Announcement-related notifications are represented by the
+    // Announcement tab, so they are not listed here as well.
     _leaveRequestNotifications =
         allNotifications
             .where(
-              (n) =>
-                  n.type == 'leave' &&
-                      (n.data['action'] == 'approved' ||
-                          n.data['action'] == 'rejected') ||
-                  n.type == 'attendance_adjustment' &&
-                      (n.data['action'] == 'approved' ||
-                          n.data['action'] == 'rejected'),
-            ) // Approved/rejected/ leaves
-            .toList();
-
-    // Staff Tab - show new leave requests and reminders for pending approvals
-    _leaveApprovalNotifications =
-        allNotifications
-            .where(
-              (n) =>
-                  n.type == 'leave' && n.data['action'] == 'new_request' ||
-                  n.type == 'leave' && n.data['action'] == 'reminder' ||
-                  n.type == 'attendance_adjustment' &&
-                      (n.data['action'] == 'new_request' ||
-                          n.data['action'] == 'reminder'),
-            ) // Only new leave requests and reminders
+              (n) => !isStaff(n) && !AnnouncementNotificationRouter.handles(n),
+            )
             .toList();
 
     if (mounted) {
       setState(() {});
     }
   }
+
+  int get _staffUnread =>
+      _leaveApprovalNotifications.where((n) => !n.isRead).length;
 
   void _onScroll(ScrollController controller) {
     if (!controller.hasClients) return;
@@ -223,8 +213,9 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                     // Close loading dialog
                     if (mounted) Navigator.pop(context);
 
+                    // Show what was marked read, even if one part failed
+                    _updateFilteredNotifications(viewModel.notifications);
                     if (success) {
-                      _updateFilteredNotifications(viewModel.notifications);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -393,7 +384,7 @@ class _ManagerNotificationScreenState extends State<ManagerNotificationScreen>
                 Tab(
                   child: NotificationTabLabel(
                     label: language.staffMember,
-                    count: _leaveApprovalNotifications.where((n) => !n.isRead).length,
+                    count: _staffUnread,
                   ),
                 ),
                 Tab(

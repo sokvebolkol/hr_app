@@ -9,7 +9,6 @@ import '../../localization/language.dart';
 import '../../localization/language_logic.dart';
 import '../../widgets/announcement_badge_tab_label.dart';
 import '../../widgets/notification_tab_label.dart';
-import '../../services/announcement_unread_service.dart';
 import '../announcements/announcement_list_screen.dart';
 import '../announcements/announcement_notification_router.dart';
 
@@ -46,10 +45,8 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging && mounted) {
         setState(() {});
-        // Recompute the Announcement badge when that tab is opened.
-        if (_tabController.index == 1) {
-          AnnouncementUnreadService.instance.refresh();
-        }
+        // Announcement counts are already loaded with the Dashboard and
+        // kept current by the poll; no extra request when the tab opens.
       }
     });
     languageLogic = LanguageLogic();
@@ -75,8 +72,8 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
 
     final viewModel = context.read<NotificationViewModel>();
 
-    // Load all notifications once
-    await viewModel.fetchNotifications(refresh: true);
+    // Reuse what the Dashboard just loaded; fetch only if it is stale.
+    await viewModel.ensureLoaded();
 
     // Filter and cache notifications
     _updateFilteredNotifications(viewModel.notifications);
@@ -85,14 +82,11 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
   }
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
-    // Filter notifications for Leave Requests only (new requests for CEO to approve)
+    // Announcement-related notifications are represented by the
+    // Announcement tab, so they are not listed here as well.
     _leaveRequestNotifications =
         allNotifications
-            .where(
-              (n) =>
-                  n.type == 'leave' && n.data['action'] == 'new_request' ||
-                  n.type == 'leave' && n.data['action'] == 'reminder',
-            ) // Only new leave requests
+            .where((n) => !AnnouncementNotificationRouter.handles(n))
             .toList();
 
     if (mounted) {
@@ -177,8 +171,9 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
                     // Close loading dialog
                     if (mounted) Navigator.pop(context);
 
+                    // Show what was marked read, even if one part failed
+                    _updateFilteredNotifications(viewModel.notifications);
                     if (success) {
-                      _updateFilteredNotifications(viewModel.notifications);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -588,8 +583,10 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
     }
 
     try {
+      // Not a leave request (other notification types): show its text.
       if (notification.staffLeaveRequest == null) {
-        _showErrorDialog('No information available');
+        _isNavigating = false;
+        _showSimpleDetails(notification);
         return;
       }
       // Convert to PendingLeaveRequest for ApproverLeaveDetailScreen
@@ -611,6 +608,38 @@ class _CeoNotificationScreenState extends State<CeoNotificationScreen>
       _isNavigating = false;
       _showErrorDialog('Error opening leave request: ${e.toString()}');
     }
+  }
+
+  /// Title and message of a notification that has no detail screen.
+  void _showSimpleDetails(NotificationModel notification) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(notification.title),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(notification.body),
+                  const SizedBox(height: 12),
+                  Text(
+                    notification.timeAgo,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(language.ok),
+              ),
+            ],
+          ),
+    );
   }
 
   // Show error dialog

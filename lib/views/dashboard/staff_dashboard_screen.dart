@@ -65,6 +65,11 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     DashboardRefreshSignal.instance.addListener(_onDashboardDataChanged);
+    // Load all notification data (HR + announcements + unread counts) in
+    // one go so the bell badge is right as soon as Home opens.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<NotificationViewModel>().loadAll();
+    });
     _dashboardViewModel = DashboardViewModel();
     _managerDashboardViewModel = ManagerDashboardViewModel();
     _initializeLanguage();
@@ -472,7 +477,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                         size: 24,
                       ),
                     ),
-                    if (notificationViewModel.unreadCount > 0)
+                    if (notificationViewModel.totalUnread > 0)
                       Positioned(
                         right: 8,
                         top: 8,
@@ -487,7 +492,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen>
                             minHeight: 16,
                           ),
                           child: Text(
-                            '${notificationViewModel.unreadCount}',
+                            notificationViewModel.totalUnreadText,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -657,6 +662,8 @@ class _StaffDashboardHomeContentState extends State<_StaffDashboardHomeContent>
             await Future.wait([
               widget.dashboardViewModel.refresh(),
               managerViewModel.refresh(),
+              // Also refresh notifications and the bell badge.
+              context.read<NotificationViewModel>().loadAll(force: true),
             ]);
           },
           color: secondary,

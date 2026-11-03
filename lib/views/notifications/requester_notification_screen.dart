@@ -10,7 +10,6 @@ import '../attendance/my_attendance_adjustment_request.screen.dart';
 import '../leaves/leave_detail/my_leave_detail_screen.dart';
 import '../../widgets/announcement_badge_tab_label.dart';
 import '../../widgets/notification_tab_label.dart';
-import '../../services/announcement_unread_service.dart';
 import '../announcements/announcement_list_screen.dart';
 import '../announcements/announcement_notification_router.dart';
 
@@ -49,10 +48,8 @@ class _RequesterNotificationScreenState
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging && mounted) {
         setState(() {});
-        // Recompute the Announcement badge when that tab is opened.
-        if (_tabController.index == 1) {
-          AnnouncementUnreadService.instance.refresh();
-        }
+        // Announcement counts are already loaded with the Dashboard and
+        // kept current by the poll; no extra request when the tab opens.
       }
     });
     _initializeLanguage();
@@ -78,8 +75,8 @@ class _RequesterNotificationScreenState
 
     final viewModel = context.read<NotificationViewModel>();
 
-    // Load all notifications once
-    await viewModel.fetchNotifications(refresh: true);
+    // Reuse what the Dashboard just loaded; fetch only if it is stale.
+    await viewModel.ensureLoaded();
 
     // Filter and cache notifications
     _updateFilteredNotifications(viewModel.notifications);
@@ -88,18 +85,11 @@ class _RequesterNotificationScreenState
   }
 
   void _updateFilteredNotifications(List<NotificationModel> allNotifications) {
-    // Filter notifications for leave status updates only (approved/rejected)
+    // Announcement-related notifications are represented by the
+    // Announcement tab, so they are not listed here as well.
     _leaveStatusNotifications =
         allNotifications
-            .where(
-              (n) =>
-                  n.type == 'leave' &&
-                      (n.data['action'] == 'approved' ||
-                          n.data['action'] == 'rejected') ||
-                  n.type == 'attendance_adjustment' &&
-                      (n.data['action'] == 'approved' ||
-                          n.data['action'] == 'rejected'),
-            )
+            .where((n) => !AnnouncementNotificationRouter.handles(n))
             .toList();
 
     if (mounted) {
@@ -178,8 +168,9 @@ class _RequesterNotificationScreenState
                     // Close loading dialog
                     if (mounted) Navigator.pop(context);
 
+                    // Show what was marked read, even if one part failed
+                    _updateFilteredNotifications(viewModel.notifications);
                     if (success) {
-                      _updateFilteredNotifications(viewModel.notifications);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -618,10 +609,10 @@ class _RequesterNotificationScreenState
         return;
       }
 
-      if (notification.leaveData == null) {
-        _showErrorDialog(
-          'No leave information available for this status update',
-        );
+      // Other notification types: show their details.
+      if (notification.type != 'leave' || notification.leaveData == null) {
+        _isNavigating = false;
+        _showNotificationDetails(notification);
         return;
       }
 

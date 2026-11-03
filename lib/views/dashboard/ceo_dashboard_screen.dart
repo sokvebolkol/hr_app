@@ -64,6 +64,11 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
     _currentIndex = widget.initialIndex;
     WidgetsBinding.instance.addObserver(this);
     DashboardRefreshSignal.instance.addListener(_onDashboardDataChanged);
+    // Load all notification data (HR + announcements + unread counts) in
+    // one go so the bell badge is right as soon as Home opens.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<NotificationViewModel>().loadAll();
+    });
     _dashboardViewModel = DashboardViewModel();
     _ceoDashboardViewModel = CeoDashboardViewModel();
     _initializeLanguage();
@@ -574,7 +579,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                         size: 24,
                       ),
                     ),
-                    if (notificationViewModel.unreadCount > 0)
+                    if (notificationViewModel.totalUnread > 0)
                       Positioned(
                         right: 8,
                         top: 8,
@@ -589,7 +594,7 @@ class _CeoDashboardScreenState extends State<CeoDashboardScreen>
                             minHeight: 16,
                           ),
                           child: Text(
-                            '${notificationViewModel.unreadCount}',
+                            notificationViewModel.totalUnreadText,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -755,6 +760,8 @@ class _CeoDashboardHomeContentState extends State<_CeoDashboardHomeContent>
             await Future.wait([
               widget.dashboardViewModel.refresh(),
               ceoViewModel.refresh(),
+              // Also refresh notifications and the bell badge.
+              context.read<NotificationViewModel>().loadAll(force: true),
             ]);
           },
           color: secondary,
