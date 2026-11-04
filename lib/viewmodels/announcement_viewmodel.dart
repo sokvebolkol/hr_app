@@ -373,28 +373,6 @@ class AnnouncementViewModel extends ChangeNotifier {
     }
   }
 
-  /// Long-press action: mark a message unread again.
-  Future<void> markUnread(AnnouncementMessage message) async {
-    if (!message.isRead) return;
-
-    _applyReadState(message.id, false);
-    AnnouncementUnreadService.instance.applyDelta(1);
-
-    try {
-      await _repository.markUnread(
-        channelId: message.channelId,
-        messageIds: [message.id],
-      );
-      // In the Unread tab the message now belongs in the list; in other
-      // views it simply restyles.
-    } catch (e) {
-      _applyReadState(message.id, true);
-      AnnouncementUnreadService.instance.applyDelta(-1);
-      _errorMessage = _describe(e);
-      _notify();
-    }
-  }
-
   /// "Mark all as read" for the current channel, or every channel when the
   /// "All" chip is selected.
   Future<bool> markAllRead() async {

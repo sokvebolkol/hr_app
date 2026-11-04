@@ -111,8 +111,19 @@ class Language {
   String get showAllChannels => "Show All Channels";
   String get noContent => "This message has no content.";
   String get attachments => "Attachments";
-  String get markAsRead => "Mark as read";
-  String get markAsUnread => "Mark as unread";
+  String get announcementInfo => "Announcement information";
+  String get postedBy => "Posted by";
+  String get channelLabel => "Channel";
+  String get postedOn => "Posted on";
+  String get lastEditedOn => "Last edited";
+  String get readOn => "Read on";
+  String get notReadYet => "Not read yet";
+  String get priority => "Priority";
+  String get priorityHigh => "High";
+  String get priorityUrgent => "Urgent";
+  String get reactionsLabel => "Reactions";
+  String attachmentCount(int count) =>
+      count == 1 ? "1 file" : "$count files";
   String get imageMessage => "[Image]";
   String get selectChannel => "Select channel";
   String get searchChannel => "Search channel";
@@ -120,8 +131,6 @@ class Language {
   String get loadingAnnouncements => "Loading announcements...";
   String get channels => "channels";
   String get read => "Read";
-  String get markAsReadHint => "Remove it from your unread count";
-  String get markAsUnreadHint => "Keep it highlighted to read later";
   String get openInTeamsHint => "View the full post in Microsoft Teams";
   String get imageViewInTeams => "Image, tap to view in Microsoft Teams";
   String get important => "IMPORTANT";
@@ -749,9 +758,29 @@ class Khmer implements Language {
   @override
   String get attachments => "ឯកសារភ្ជាប់";
   @override
-  String get markAsRead => "សម្គាល់ថាបានអាន";
+  String get announcementInfo => "ព័ត៌មានសេចក្តីជូនដំណឹង";
   @override
-  String get markAsUnread => "សម្គាល់ថាមិនទាន់អាន";
+  String get postedBy => "ផ្សាយដោយ";
+  @override
+  String get channelLabel => "ឆានែល";
+  @override
+  String get postedOn => "ផ្សាយនៅ";
+  @override
+  String get lastEditedOn => "កែចុងក្រោយ";
+  @override
+  String get readOn => "បានអាននៅ";
+  @override
+  String get notReadYet => "មិនទាន់អាន";
+  @override
+  String get priority => "អាទិភាព";
+  @override
+  String get priorityHigh => "ខ្ពស់";
+  @override
+  String get priorityUrgent => "បន្ទាន់";
+  @override
+  String get reactionsLabel => "ប្រតិកម្ម";
+  @override
+  String attachmentCount(int count) => "ឯកសារ $count";
   @override
   String get imageMessage => "[រូបភាព]";
   @override
@@ -766,10 +795,6 @@ class Khmer implements Language {
   String get channels => "ឆានែល";
   @override
   String get read => "បានអាន";
-  @override
-  String get markAsReadHint => "ដកចេញពីចំនួនមិនទាន់អាន";
-  @override
-  String get markAsUnreadHint => "រក្សាទុកជាមិនទាន់អាន ដើម្បីអានពេលក្រោយ";
   @override
   String get openInTeamsHint => "មើលសារពេញលេញក្នុង Microsoft Teams";
   @override

@@ -457,16 +457,6 @@ class AnnouncementRepository {
     messageIds: messageIds,
   );
 
-  /// POST /teams/{teamId}/messages/unread
-  Future<void> markUnread({
-    required String channelId,
-    required List<String> messageIds,
-  }) => _postReadState(
-    path: 'unread',
-    channelId: channelId,
-    messageIds: messageIds,
-  );
-
   // ───────────────────────────── 5. Read all ─────────────────────────────
 
   /// POST /announcements/read-all (all teams, or one channel), falling back

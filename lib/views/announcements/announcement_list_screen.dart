@@ -333,40 +333,13 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 8),
-                      Text(
-                        '${message.senderName}  ·  ${_postedAt(message.createdAt)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 14),
 
-                _sheetAction(
-                  icon:
-                      message.isRead
-                          ? Icons.mark_email_unread_rounded
-                          : Icons.mark_email_read_rounded,
-                  color: primary,
-                  title:
-                      message.isRead ? language.markAsUnread : language.markAsRead,
-                  subtitle:
-                      message.isRead
-                          ? language.markAsUnreadHint
-                          : language.markAsReadHint,
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    if (message.isRead) {
-                      vm.markUnread(message);
-                    } else {
-                      vm.markRead(message);
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
+                _buildInfoCard(message),
+                const SizedBox(height: 12),
                 _sheetAction(
                   icon:
                       message.canOpenInTeams
@@ -389,6 +362,117 @@ class _AnnouncementListBodyState extends State<_AnnouncementListBody> {
               ],
             ),
           ),
+    );
+  }
+
+  /// Read-only details of a post for the long-press sheet: who posted it,
+  /// where, when, and its state. Rows without data are left out.
+  Widget _buildInfoCard(AnnouncementMessage message) {
+    final importance = message.importance.toLowerCase();
+    final priority =
+        importance == 'urgent'
+            ? language.priorityUrgent
+            : (importance == 'high' ? language.priorityHigh : null);
+
+    final rows = <Widget>[
+      if (message.senderName.trim().isNotEmpty)
+        _infoRow(Icons.person_outline_rounded, language.postedBy,
+            message.senderName.trim()),
+      if (message.channelDisplayName.isNotEmpty)
+        _infoRow(Icons.forum_outlined, language.channelLabel,
+            message.channelDisplayName),
+      if (message.createdAt != null)
+        _infoRow(Icons.schedule_rounded, language.postedOn,
+            _postedAt(message.createdAt)),
+      if (message.lastEditedAt != null)
+        _infoRow(Icons.edit_outlined, language.lastEditedOn,
+            _postedAt(message.lastEditedAt)),
+      if (priority != null)
+        _infoRow(Icons.priority_high_rounded, language.priority, priority,
+            valueColor: Colors.red),
+      if (message.hasAttachments)
+        _infoRow(Icons.attach_file_rounded, language.attachments,
+            language.attachmentCount(message.attachments.length)),
+      if (message.hasReactions)
+        _infoRow(Icons.emoji_emotions_outlined, language.reactionsLabel,
+            message.reactionsLabel),
+      _infoRow(
+        message.isRead
+            ? Icons.mark_email_read_outlined
+            : Icons.mark_email_unread_outlined,
+        message.isRead ? language.readOn : language.status,
+        message.isRead
+            ? (message.readAt != null
+                ? _postedAt(message.readAt)
+                : language.read)
+            : language.notReadYet,
+        valueColor: message.isRead ? null : Colors.red,
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, size: 18, color: primary),
+              const SizedBox(width: 8),
+              Text(
+                language.announcementInfo,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...rows,
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: Colors.grey[500]),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 96,
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12.5, color: Colors.grey[600]),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
